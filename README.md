@@ -1,22 +1,15 @@
-# Poyang Lake Research Workflow Skills
+# Research Workflow Skills
 
-This repository contains the three ChatGPT Skills currently used in the manuscript and scientific-figure workflow.
+This repository intentionally keeps only two ChatGPT Skills used in the current research workflow.
 
 ## Included skills
 
-### academic-translation-polisher
-Hydrology manuscript first-draft readiness review, Chinese-to-English academic translation, evidence-strength control, cross-section consistency auditing, and submission QA.
-
-### chinese-figure-to-english-python-overlay
-Translate Chinese scientific raster figures into journal-ready English with deterministic Python enhancement, local masking, overlay typography, and figure-level QA while preserving original scientific graphics.
+### swat-paper-reproducer
+Reproduce SWAT / ArcSWAT / SWAT-CUP 2012 papers with structured data preparation, model-output extraction, hydrological metrics, SUFI-2 calibration preflight, parameter-dictionary smoke tests, validation, and external ParallelSWAT-style orchestration when appropriate.
 
 ### qgis-codex-study-area-map
-Build publication-grade study-area maps through verified GIS data acquisition, QGIS/PyQGIS deterministic cartography, controlled style prototyping, China standard-map compliance, layout-state iteration, and final cartographic QA.
+Build publication-grade study-area overview maps through verified GIS data acquisition, Codex/QGIS deterministic cartography, controlled style prototyping from an approved benchmark, China standard-map compliance, layout-state iteration, and final cartographic QA.
 
-## Layout
+## Repository policy
 
-Each Skill is stored under `skills/<skill-name>/` and retains its complete `SKILL.md`, agent metadata, references, scripts, and assets.
-
-## Validation
-
-Run the Skill Creator validator on each skill before publication or installation. Preserve source-data provenance and deterministic scientific-figure workflows.
+Only these two Skill directories are maintained here. Each Skill should retain its `SKILL.md`, agent metadata, references, scripts, and required assets.

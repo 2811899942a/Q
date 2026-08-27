@@ -1,0 +1,12 @@
+interface:
+  display_name: SWAT Paper Reproducer
+  short_description: Reproduce SWAT/ArcSWAT/SWAT-CUP 2012 papers with a standard workflow.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
