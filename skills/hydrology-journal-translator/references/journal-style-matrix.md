@@ -1,0 +1,230 @@
+# Top Hydrology Journal Rhetorical Matrix
+
+Use this reference when translating or restructuring a Chinese hydrology manuscript toward Journal of Hydrology (JH), Journal of Hydrology: Regional Studies (JHRS), Agricultural Water Management (AWM), Water Resources Research (WRR), or Hydrology and Earth System Sciences (HESS).
+
+This is a translation and manuscript-reasoning guide, not an acceptance predictor. Preserve the original evidence and select the strongest rhetorical level that the evidence actually supports.
+
+## 1. Shared high-level pattern
+
+Strong hydrology papers usually move through the following chain:
+
+**hydrological problem -> unresolved process/relationship -> method as an evidence generator -> quantitative evidence -> spatial/temporal contrast -> process interpretation -> transferable or decision-relevant implication**
+
+Do not translate Chinese text as a sequence of factual statements when the paragraph can be reorganized around one scientific message.
+
+### Claim-evidence-mechanism paragraph
+
+Use this internal structure:
+
+1. **Claim:** state the hydrological message.
+2. **Evidence:** give the quantitative or spatial-temporal evidence.
+3. **Contrast:** identify site, period, event, scenario, or component differences.
+4. **Mechanism:** explain only what the study design supports.
+5. **Scope:** state where the interpretation applies.
+
+A Results paragraph normally stops after steps 1-3 or a tightly bounded step 4. A Discussion paragraph can complete steps 4-5.
+
+## 2. Journal-specific translation profiles
+
+### Journal of Hydrology (JH)
+
+Scientific center:
+- catchment and river-lake hydrological processes;
+- drought/flood generation and propagation;
+- model-supported process understanding;
+- hydrological methods with relevance beyond a single local case.
+
+Translation emphasis:
+- put the hydrologic variable or process in subject position;
+- report quantitative magnitude before generic interpretation;
+- connect local Poyang Lake evidence to a process that can be understood in other humid lake-basin systems;
+- distinguish catchment runoff drought, soil-moisture drought, lake-stage drought, and river-lake interaction.
+
+Preferred rhetorical arc:
+**process question -> quantitative pattern -> hydrological linkage -> broader catchment/lake implication**
+
+Weak framing:
+`The results showed that the drought was serious in the Poyang Lake Basin.`
+
+Preferred shape:
+`Hydrological drought intensified during [period], with the strongest deficits occurring in [location/season] and a measurable delay relative to [upstream/meteorological signal].`
+
+Do not invent the bracketed information; use it only when supplied by the manuscript.
+
+### Journal of Hydrology: Regional Studies (JHRS)
+
+Scientific center:
+- a clearly defined study region;
+- a regional hydrological problem;
+- new hydrological insights that emerge specifically from regional heterogeneity, boundary conditions, or management context.
+
+Translation emphasis:
+- state why Poyang Lake Basin is a scientifically informative region, not merely where the study was conducted;
+- foreground north-south, upstream-downstream, seasonal, subbasin, or lake-catchment contrasts when evidence exists;
+- make the regional insight explicit after the quantitative result.
+
+Preferred rhetorical arc:
+**Study region -> Study focus -> regional heterogeneity -> new hydrological insight -> regional implication**
+
+A local result should answer: `What does this result teach us about drought behavior in this type of seasonal lake basin?`
+
+### Agricultural Water Management (AWM)
+
+Scientific center:
+- agricultural water availability, irrigation, crop water use, water productivity, drought management, allocation, or operational decisions.
+
+Translation emphasis:
+- use this profile only when agricultural-water evidence is genuinely central;
+- connect hydrological changes to irrigation timing, water availability, crop-water stress, allocation, or agricultural resilience only when those variables or consequences are supported;
+- avoid adding agricultural-management language to a purely hydrological VIC drought reconstruction.
+
+Preferred rhetorical arc:
+**water constraint -> quantified hydrological/crop response -> management lever -> measurable implication**
+
+For a Poyang VIC paper without agricultural response or management analysis, JH/JHRS/HESS-style framing is generally more natural than forcing AWM language.
+
+### Water Resources Research (WRR)
+
+Scientific center:
+- general hydrologic theory or conceptual advance;
+- mechanisms and process controls;
+- scale, uncertainty, model structural effects, and transferability;
+- conclusions that matter beyond the study basin.
+
+Translation emphasis:
+- convert descriptive findings into a testable process statement only when the analysis supports it;
+- make model limitations scientifically informative rather than treating the model as ground truth;
+- distinguish evidence generated by VIC from independently observed evidence;
+- explain how storage, evapotranspiration, runoff generation, climate forcing, or catchment memory changes the drought response.
+
+Preferred rhetorical arc:
+**general hydrologic question -> process hypothesis -> discriminating evidence -> mechanism -> uncertainty -> broader implication**
+
+High-level gate:
+A WRR-style sentence should usually answer at least one of these questions:
+- What process controls the observed response?
+- Why does the response differ across space, time, climate, or event type?
+- What does the result imply for hydrologic understanding beyond Poyang Lake?
+
+Model-based mechanism claims require caution. Hydrological model structure can influence inferred drought mechanisms; do not present a model-derived process as independently proven without supporting evidence.
+
+### Hydrology and Earth System Sciences (HESS)
+
+Scientific center:
+- hydrological process understanding within the Earth system;
+- hydroclimate interactions and coupled components;
+- methodological transparency, reproducibility, and uncertainty;
+- interdisciplinary interpretation with clear physical links.
+
+Translation emphasis:
+- connect precipitation, evapotranspiration, soil moisture, runoff, storage, and lake/river states through explicit water-cycle logic;
+- state data and model assumptions clearly;
+- preserve uncertainty and evidence provenance;
+- favor process chains over isolated indicators.
+
+Preferred rhetorical arc:
+**hydroclimatic forcing -> catchment storage/process response -> hydrological manifestation -> coupled-system interpretation -> uncertainty**
+
+## 3. Poyang Lake benchmark reasoning patterns
+
+The following published studies are used only as conceptual benchmarks for rhetorical structure. Do not copy their wording.
+
+### River-lake interaction pattern
+
+Representative benchmark: Zhang et al. (2015), Journal of Hydrology, `Examining the influence of river-lake interaction on the drought and water resources in the Poyang Lake basin`, DOI 10.1016/j.jhydrol.2015.01.008.
+
+Abstracted reasoning pattern:
+**long-term drought identification -> concurrent basin/Yangtze conditions -> river-lake interaction -> water-resource consequence**
+
+Use this pattern when the manuscript contains independent evidence about the Yangtze-Poyang interaction. Do not infer river-lake hydraulic mechanisms from VIC runoff fields alone.
+
+### Hydroclimatic contribution pattern
+
+Representative benchmark: Liu and Wu (2016), HESS, `Hydroclimatological influences on recently increased droughts in China's largest freshwater lake`, DOI 10.5194/hess-20-93-2016.
+
+Abstracted reasoning pattern:
+**quantify drought -> partition hydroclimatic components -> compare contributions -> identify event-to-event variability -> bound anthropogenic interpretation**
+
+Use this pattern when contribution analysis exists. Do not translate simple correlation as contribution or attribution.
+
+### Regional extreme-drought pattern
+
+Representative benchmark: recent JHRS studies of Poyang Lake extreme drought and river-lake interaction.
+
+Abstracted reasoning pattern:
+**regional extreme event -> spatial/temporal heterogeneity -> upstream and downstream controls -> regional hydrological insight**
+
+This pattern is particularly suitable for event-based sections describing historical typical droughts.
+
+### Model-structure caution pattern
+
+Representative benchmark: Melsen et al. (2019), Water Resources Research, `Hydrological Drought Simulations: How Climate and Model Structure Control Parameter Sensitivity`, DOI 10.1029/2019WR025230.
+
+Abstracted reasoning pattern:
+**hydrological mechanism hypothesis -> multi-climate/model comparison -> parameter/process sensitivity -> identify structural dependence -> constrain mechanistic inference**
+
+Apply the lesson to VIC translation: use the model to reconstruct and interrogate hydrological behavior, while keeping model-dependent process inference separate from observation-supported conclusions.
+
+## 4. High-tier sentence transformation rules
+
+### Replace report framing with hydrologic subjects
+
+Chinese-style logic:
+`由图可知，2003年以后干旱加剧。`
+
+Preferred English shape:
+`Drought severity increased after 2003 (Fig. X).`
+
+If the indicator is known, name it instead of the generic word `drought`.
+
+### Replace generic difference with quantified contrast
+
+Weak:
+`Spatial differences were obvious.`
+
+Preferred shape:
+`Drought duration was longer in [region A] than in [region B], whereas [indicator] showed the opposite spatial gradient.`
+
+Use only supported comparisons.
+
+### Replace mechanism slogans with explicit water-cycle chains
+
+Weak:
+`Climate change intensified hydrological drought.`
+
+Preferred shape when supported:
+`Reduced precipitation lowered soil-water recharge and runoff generation, thereby prolonging streamflow deficits during [period/event].`
+
+If the intermediate processes were not evaluated, weaken the statement to association or consistency language.
+
+### Replace local conclusion with bounded general insight
+
+Weak:
+`This provides a theoretical basis for drought management in Poyang Lake.`
+
+Preferred shape:
+`The reconstructed drought sequence identifies the seasons and subregions in which hydrological deficits persisted most strongly, providing a process-based basis for drought monitoring in the Poyang Lake Basin.`
+
+## 5. Translation decision hierarchy
+
+Before writing a high-level English sentence, classify the source evidence:
+
+- **L1 Description:** value, trend, event, map pattern.
+- **L2 Relationship:** correlation, lag, concurrence, comparative response.
+- **L3 Process support:** observed or model-resolved intermediate hydrological states support a process chain.
+- **L4 Mechanism test:** competing explanations are explicitly evaluated.
+- **L5 Generalization:** the mechanism is tested across events, subregions, models, datasets, or comparable systems.
+
+Never translate an L1/L2 result with L4/L5 language merely to imitate a Top journal.
+
+## 6. Target-journal final check
+
+Before returning a translated section, ask internally:
+
+- JH: Is the hydrologic process or transferable finding visible?
+- JHRS: Is the new regional hydrological insight visible?
+- AWM: Is a real agricultural-water decision or consequence present?
+- WRR: Is there a defensible mechanism/conceptual advance and uncertainty boundary?
+- HESS: Is the coupled water-cycle/process chain explicit and reproducible?
+
+If the source manuscript cannot support the target journal's preferred rhetorical level, improve clarity and structure while preserving the lower evidence tier.
