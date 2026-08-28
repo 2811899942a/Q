@@ -24,6 +24,9 @@ Choose the smallest workflow that fits the request:
 | Results or Discussion | Also load `references/quality-gates.md` for evidence-strength and Results/Discussion boundary checks. |
 | Full manuscript or long document | Load `references/full-manuscript-protocol.md` before translating. |
 | Terminology uncertainty | Load `references/terminology-glossary.md`. |
+| Target journal is JH, JHRS, AWM, WRR, HESS, or the user asks for Q1/Q2/Top-journal style | Load `references/journal-style-matrix.md`. |
+| Poyang Lake/VIC/drought manuscript | Load `references/poyang-vic-drought.md`. |
+| User asks to evaluate or restructure toward strong CAS Q2/Q1/Top hydrology standards | Load `references/cas-q2-top-knowledge-network.md`. |
 | User asks for examples or rationale | Load `references/examples.md`. |
 | User asks where the workflow came from | Load `references/source-provenance.md`. |
 
@@ -185,6 +188,20 @@ Avoid empty claims such as `has important significance`, `provides a theoretical
 
 Do not add stock transitions merely to make the English appear academic. Use transitions only when they encode a real relation.
 
+## Target-journal adaptation layer
+
+When a target journal is named, preserve the same facts but change rhetorical emphasis according to `references/journal-style-matrix.md`. Journal style is a scientific selection problem before it is a wording problem.
+
+- JH: foreground transferable catchment-scale hydrologic process or method insight.
+- JHRS: foreground the regional problem, heterogeneity, and new hydrological insights for the region.
+- AWM: foreground the direct agricultural-water consequence and management decision.
+- WRR: foreground conceptual/mechanistic advance, uncertainty, generalization, and broader water-science implications.
+- HESS: foreground hydrologic-system/process integration, multidisciplinary context, transparency, and reproducibility.
+
+Never fabricate a stronger novelty tier to imitate a higher-impact journal. Use `references/cas-q2-top-knowledge-network.md` to expose the highest reasoning level actually supported by the manuscript.
+
+For Poyang Lake VIC drought work, load `references/poyang-vic-drought.md` in addition to the journal profile. Treat VIC-based reconstruction, catchment drought, lake drought, and river-lake interaction as distinct evidence layers.
+
 ## Full-document continuity
 
 When translating in chunks:
@@ -204,6 +221,9 @@ See `references/full-manuscript-protocol.md` for the complete procedure.
 - `references/section-workflows.md` — title through conclusions plus figures/tables.
 - `references/quality-gates.md` — submission-oriented translation QA.
 - `references/full-manuscript-protocol.md` — long-document chunking and continuity.
+- `references/journal-style-matrix.md` — JH/JHRS/AWM/WRR/HESS editorial fit and translation profiles.
+- `references/poyang-vic-drought.md` — Poyang Lake VIC drought reconstruction framing and terminology.
+- `references/cas-q2-top-knowledge-network.md` — reasoning ladder and knowledge network for strong CAS Q2/Q1/Top hydrology manuscripts.
 - `references/examples.md` — synthetic before/after patterns.
 - `references/source-provenance.md` — design sources and licensing notes.
 - `scripts/manuscript_guard.py` — deterministic token-fidelity checker.
