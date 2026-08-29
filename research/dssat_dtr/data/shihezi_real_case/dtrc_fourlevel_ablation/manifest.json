@@ -1,0 +1,22 @@
+{
+  "prespec": "research/dssat_dtr/CHECKPOINT_20260829_2232_DTRC_4LEVEL_ABLATION_PRESPEC.md",
+  "thresholds_C": {
+    "T14P0": 14.0,
+    "T14P3": 14.3,
+    "T14P5": 14.5,
+    "T14P8": 14.8
+  },
+  "fixed_alpha_diagnostic": 7.809408336409373,
+  "refit_alpha_from_dense_2000_2016": {
+    "T14P0": 6.805081570269362,
+    "T14P3": 7.309359264083529,
+    "T14P5": 7.592491569441278,
+    "T14P8": 7.809408336409373
+  },
+  "target_temperature_validation": "51463099999 2017-2024",
+  "crop_scenarios": [
+    "RAW_N_OFF",
+    "SRAD19P8_N_OFF"
+  ],
+  "shared_input_gate": true
+}
