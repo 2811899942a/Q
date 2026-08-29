@@ -1,33 +1,37 @@
 # DSSAT-DTR Urumqi Research Handoff
 
-Last checkpoint: 2026-08-29 13:07 CST
+Last checkpoint: 2026-08-29 13:18 CST
 Branch: `research/dssat-dtr-matrix`
 Study: Urumqi DSSAT v4.8.5.0 HTEMP improvement
 
-## Frozen software baseline — PASS
+## 1. Frozen DSSAT v4.8.5.0 baseline — END-TO-END PASS
 
-Formal source/data baseline is fixed:
-- `DSSAT/dssat-csm-os` tag `v4.8.5.0`, commit `0b91373806786b600d89ccfcfff78fa2f82cb26b`
-- `DSSAT/dssat-csm-data` tag `v4.8.5.0`, commit `79cb5db71bbca186add92a6a9695866a09c8b51d`
-- official regression case `Maize/UFGA8201.MZX`, 6 treatments, executable `dscsm048`
+Formal source/data baseline:
+- `DSSAT/dssat-csm-os`, tag `v4.8.5.0`, commit `0b91373806786b600d89ccfcfff78fa2f82cb26b`
+- `DSSAT/dssat-csm-data`, tag `v4.8.5.0`, commit `79cb5db71bbca186add92a6a9695866a09c8b51d`
+- official regression experiment `Maize/UFGA8201.MZX`, 6 treatments, executable `dscsm048`
 
-Corrected GitHub Actions completed the full chain successfully: exact checkout -> compile/install -> matching data -> real UFGA8201 run -> `Summary.OUT` + `PlantGro.OUT` acceptance -> hashes/snapshot committed.
-Frozen baseline: `research/dssat_dtr/data/dssat485_m0_official/`.
+Untouched M0 completed: exact checkout -> compile/install -> matching official data -> real UFGA8201 execution -> `Summary.OUT`/`PlantGro.OUT` acceptance -> output hashes -> repository snapshot.
+Frozen M0 outputs: `research/dssat_dtr/data/dssat485_m0_official/`.
 
-## Confirmed local mechanism
+## 2. Confirmed Urumqi mechanism
 
-Primary station: NOAA `51463099999` + GHCN `CHM00051463`.
-Formal calibration-only trigger: `DTRc=14.8 C`.
+Primary sparse station: NOAA `51463099999` + GHCN `CHM00051463`.
+Second dense station: NOAA `51463599999` (Diwopu), also within Urumqi.
 
-Evidence:
+Formal primary calibration-only failure threshold:
+`DTRc = 14.8 C`.
+
+Observed mechanism:
 - below this regime official HTEMP performs much better;
-- above ~14-15 C, afternoon/hot-shoulder warm bias rises sharply;
-- radiation/cloudiness strongly modulates error severity;
-- DSSAT v4.8.5.0 already computes native `CLOUDS=clamp(1-SRAD/SCLEAR,0,1)` and passes it to `HMET`, so no new weather variable is needed.
+- above ~14-15 C DTR, late-afternoon / sunset warm persistence error increases sharply;
+- solar radiation / cloud state strongly modulates error magnitude;
+- dynamic Tmax timing is not the main general mechanism;
+- DSSAT v4.8.5.0 already computes `CLOUDS = clamp(1 - SRAD/SCLEAR,0,1)` in `SOLAR.for` and passes it to `HMET`, so no new WTH variable is required.
 
-## Statistical reference M10
+## 3. Statistical upper reference M10
 
-Independent 2017-2024 DTR>=15 C:
+Primary-station independent 2017-2024, DTR>=15 C:
 - official RMSE 5.1215 C
 - M10 RMSE 4.4196 C
 - improvement 13.71%
@@ -36,103 +40,149 @@ Independent 2017-2024 DTR>=15 C:
 - 5/5 validation years improved
 - day-block bootstrap improvement 95% CI 10.76%-16.54%.
 
-M10 remains a statistical reference only.
+M10 is a statistical reference only; its direct implementation is not the chosen source formula.
 
-## M12 native-CLOUDS additive prototype — mechanism retained, formula rejected
+## 4. Rejected / intermediate forms
 
-M12 replaced Kt with native DSSAT CLOUDS and retained nearly all performance:
-- high-DTR RMSE 5.1215 -> 4.4332 C = 13.44% improvement
-- R2 0.5559 -> 0.6163.
+### M12 native-CLOUDS additive shoulder
+High-DTR RMSE improved 13.44%, but full-curve QA failed severely: 113/130 rising non-monotonic, 52/130 falling non-monotonic, 37/130 below Tmin, max Tmin undershoot >51 C. Mechanism retained; additive formula permanently rejected.
 
-But full 24-hour shape QA found severe physical violations:
-- 113/130 validation high-DTR days non-monotonic on the rising branch
-- 52/130 non-monotonic on falling branch
-- 37/130 below daily Tmin
-- maximum Tmin undershoot >51 C.
+### M13 monotonic power warp
+0 physical violations; high-DTR improvement only 4.28%; k_pre hit upper bound. Rejected.
 
-Decision: retain `DTR x CLOUDS` mechanism; NEVER implement M12 additive subtraction directly in Fortran.
+### M14 robust crossover monotonic warp
+Calibration median-residual crossover H0=10.455 solar hour. 0 physical violations; high-DTR improvement 7.43%; k_pre still hit upper bound. Rejected as final family; do not continue tuning power-warp form.
 
-## M13 monotonic power warp — physically valid but weak
+## 5. Dense-station sunset-anchor mechanism — STRONGLY SUPPORTED
 
-Endpoint-preserving transform `q_new=q^p`, with `p=1+k*(DTR-DTRc)*CLOUDS`, starting at solar noon.
+Dense Diwopu `51463599999`:
+- 8,806 days with >=20 observed solar hours
+- 3,790 May-Sep dense days
+- HTEMP RMSE breakpoint replicated around 12.8 C calibration / 13.4 C validation.
 
-Result:
-- k_pre=20.0, hit search upper boundary
-- k_post=16.46
-- 0/130 validation physical violations
-- high-DTR RMSE 5.1215 -> 4.9022 C = 4.28% improvement.
+Dense validation DTR 14.5-18 C warm bias grows through afternoon, reaching about +2.02 C at 19 solar h.
 
-Decision: reject as final source candidate. Starting the pre-peak deformation at solar noon is too late and the pre branch remains under-flexible.
+Dedicated sunset-anchor test compared official `T_PL(SNDN)` with the real observation within 45 min of sunset.
 
-## Calibration-only high-DTR hourly residual profile
+Dense calibration 2000-2016 fitted:
+`delta_TS = alpha * max(0,DTR-14.8) * CLOUDS`
+with
+`alpha = 7.8094`.
 
-2000-2016 May-Sep DTR>14.8 C, primary station:
-- ~08.85 solar h: mean Bias +0.538 C but median Bias -0.839 C
-- ~11.85 h: mean +3.892 C, median +0.728 C
-- ~14.85 h: mean +5.016 C
-- ~17.85 h: mean +4.533 C
-- ~20.85 h: mean +1.384 C
-- ~23.85 h: mean -1.135 C.
+Dense independent 2017-2024 high-DTR sunset validation:
+- N=59 days
+- raw sunset Bias +2.389 C
+- raw RMSE 4.536 C
+- corrected Bias +1.023 C
+- corrected RMSE 3.725 C
+- RMSE improvement 17.88%
+- r(sunset error, DTR x CLOUDS)=0.429.
 
-Because the sparse 8.85-h bin mean is outlier-sensitive, the robust calibration median residual changes sign between 8.85 and 11.85 h.
+This directly supports an overly warm official sunset anchor under high-DTR cloudy/radiatively weak conditions.
 
-## M14 robust crossover monotonic warp — improved but still insufficient
+## 6. M15 — PREFERRED SCIENTIFIC/SOURCE FORM
 
-Calibration-only median-residual crossover:
-`H0 = 10.455 solar hour`.
+M15 freezes `alpha=7.8094` from dense Diwopu 2000-2016 and transfers it WITHOUT REFITTING to primary station `51463099999` 2017-2024.
 
-M14 applies the same monotonic power warp from H0 -> modeled Tmax and Tmax -> sunset.
+Formula logic:
+- DTR<=14.8 C or CLOUDS<=0: exact official HTEMP.
+- official Tmax anchor unchanged.
+- `TS1 = max(TMIN, TS0 - 7.8094*(DTR-14.8)*CLOUDS)`.
+- modeled Tmax -> sunset: preserve official normalized cooling progress but rescale endpoint to TS1.
+- night: retain official B=2.2 exponential structure, re-anchored to TS1 and TMIN.
+- pre-peak daytime branch unchanged.
 
-Independent 2017-2024:
-- 0/130 physical violations
-- May-Sep RMSE 2.9469 -> 2.8376 C = 3.71%
-- high-DTR RMSE 5.1215 -> 4.7408 C = 7.43%
-- high-DTR Bias +1.2167 -> +0.7443 C
-- R2 0.5559 -> 0.5756
-- k_pre=20.0 still hits upper bound; k_post=16.455.
+Primary cross-station independent validation 2017-2024:
+- May-Sep RMSE 2.9469 -> 2.8241 C = 4.17%
+- DTR>=15 RMSE 5.1215 -> 4.6783 C = 8.65%
+- Bias +1.2167 -> +0.3784 C
+- R2 0.5559 -> 0.6210
+- complete 24-h physical violations: 0/130
+- high-DTR years: 5/5 improved.
 
-Decision: M14 is evidence that earlier deformation helps, but it does not meet the source-candidate criterion and the power-warp family should not be tuned further.
+DTR bins:
+- 15-<18: 4.8348 -> 4.4542 C
+- 18-<20: 6.2900 -> 5.5425 C
+- >=20: 7.6018 -> 6.7444 C (sparse extreme group).
 
-## Dense Urumqi Diwopu evidence
+Key hours:
+- 17 h 3.951 -> 3.351 C
+- 18 h 4.547 -> 2.922 C
+- 20 h 2.509 -> 2.137 C.
 
-Second station `51463599999` is still within Urumqi and provides dense real-hour observations:
-- 8,806 days with >=20 solar-hour observations
-- 3,790 May-Sep days.
+M15 has less pointwise gain than M10 but substantially stronger evidence structure: second-station mechanism/parameter calibration -> first-station temporal validation, exact physical shape, and clean source implementation.
 
-Dense station official HTEMP RMSE breakpoint:
-- all years 12.7 C
-- calibration 2000-2016 12.8 C
-- validation 2017-2024 13.4 C.
+## 7. M16 sensitivity — NOT ADOPTED
 
-Tmax timing does NOT show a strong general high-DTR shift (median around 14.9 solar h for DTR>=14.5 in calibration), so dynamic Tmax timing is not the main mechanism.
+Dense-station LOYO CV added a CLOUDS hinge and selected c0=0.020, alpha=8.4973.
+Primary high-DTR improvement 8.86% versus M15 8.65%.
+Only +0.21 percentage points while adding a near-zero threshold. Rejected for parsimony; keep as sensitivity analysis only.
 
-Dense validation 14.5-18 C DTR Bias grows through the afternoon:
-- 12 h +0.690 C
-- 14 h +0.898 C
-- 15 h +1.225 C
-- 17 h +1.478 C
-- 18 h +1.793 C
-- 19 h +2.018 C.
+## 8. M15 source integration into DSSAT v4.8.5.0 — FULL PASS
 
-This points to excessive post-peak / late-afternoon thermal persistence and possibly an overly warm DSSAT sunset-temperature anchor `TS`.
+Files:
+- `research/dssat_dtr/dssat485/apply_m15_htemp_patch.py`
+- `research/dssat_dtr/dssat485/build_m15_fortran_unit.py`
+- `.github/workflows/dssat485-m15-source.yml`
 
-## Current calculation
+Successful formal workflow run: `33235735664`.
 
-A dedicated dense-station sunset-anchor diagnostic is running now:
-`diagnose_dense_sunset_anchor_514635.py`
-workflow: `dense-sunset-anchor-514635.yml`.
+The deterministic patch:
+- operates only on exact frozen v4.8.5.0 source anchors;
+- handles legacy `HMET.for` text losslessly with Latin-1;
+- leaves official `HTEMP` subroutine unchanged;
+- adds a separate `HTEMP_DTRCLOUD` called immediately after official `HTEMP`.
 
-It compares official `T_PL(SNDN)` with the real observation nearest sunset and fits, on dense-station calibration years only:
-`sunset_error = alpha * max(0,DTR-14.8) * CLOUDS`.
-Then 2017-2024 dense years are untouched validation.
+Acceptance chain — all PASS:
+1. exact v4.8.5 source/data checkout;
+2. deterministic source patch;
+3. source-extracted real Fortran unit test;
+4. low-DTR exact no-change test;
+5. high-DTR + CLOUDS=0 exact no-change test;
+6. high-DTR cloudy bounded/late-cooling test;
+7. full DSSAT CMake compile/install;
+8. official `UFGA8201.MZX` six-treatment real execution;
+9. `Summary.OUT` and `PlantGro.OUT` generated;
+10. source/output snapshots and M0-vs-M15 diffs committed.
 
-Decision rule:
-- change DSSAT sunset anchor only if raw high-DTR sunset bias is materially positive;
-- DTR x CLOUDS relationship persists independently;
-- frozen calibration alpha reduces validation sunset RMSE without large negative bias.
+Frozen M15 source snapshot:
+`research/dssat_dtr/data/dssat485_m15_source/`
 
-If supported, next prototype will adjust the sunset anchor and construct a monotonic peak-to-sunset curve around it; if not supported, keep original sunset anchor and pursue a different bounded monotonic post-peak shape.
+UFGA8201 M15 outputs are not byte-identical to M0. Phenological dates shown in Summary remain unchanged in the regression case, while small biomass/yield/water/N differences confirm that the new temperature pathway is actually active. Florida is software propagation QA, not Urumqi scientific validation.
 
-## User-input conditions
+## 9. Crop propagation stage — STARTED
 
-Do not ask the user to run DSSAT locally. Continue with GitHub/public data. Stop for user input only if a public-data gap blocks a defensible Anningqu 2021-2022 maize reconstruction or a genuinely major modeling decision is reached.
+Public-data reconstruction file:
+`research/dssat_dtr/anningqu/ANINGQU_PUBLIC_RECONSTRUCTION.md`
+
+Primary public experiment:
+Tang et al. 2024, Sustainability 16(11):4571, DOI 10.3390/su16114571.
+Anningqu, Urumqi, 87.49E/43.95N, ~590 m, 2021-2022.
+
+Known directly from the public paper:
+- six hybrids: KWS3376, Xinyu65, KWS9384, Huamei No.1, Xinyu102, Heyu187;
+- five sowing dates: Apr21, Apr26, May6, May16, May26;
+- six irrigation levels (Water1..Water6) and eight watering stages;
+- nominal totals: 5400, 4455, 3510, 2565, 1620, 675 m3/ha;
+- field spacing: rows 0.6 m, plants 0.25 m, three replications;
+- observed DTT/DTA/DTS/ASI, growth/yield components and final grain yield;
+- Xinyu65 is the preferred first cultivar for reconstruction.
+
+Public same-area soil sources already found:
+- long-term Anningqu gray-desert-soil experiment with pH, nutrient layers, bulk density ~1.25 g/cm3;
+- 2022 Anningqu maize study near the same station with pH 8.10, OM 16.90 g/kg, nitrate N 34.84 mg/kg, Olsen P 14.03 mg/kg, available K 401.05 mg/kg.
+
+## Immediate next work
+
+1. Extract quantitative Xinyu65 phenology/yield observations from Tang 2024 figures/tables.
+2. Search public sources for fertilizer management and a defensible full soil hydraulic profile.
+3. Build 2021-2022 DSSAT WTH from public daily TMAX/TMIN/RAIN/SRAD; M0 and M15 must use the exact same WTH.
+4. Search for published CERES-Maize coefficients for Xinyu65; if unavailable, estimate one frozen cultivar parameter set from public phenology/yield data without separately tuning M0 and M15.
+5. Build and execute the Anningqu M0-vs-M15 crop-response experiment in GitHub Actions.
+
+## User-input / stop conditions
+
+Do NOT ask the user to run DSSAT locally. Continue with GitHub and public data. Stop for user input only if:
+- public sources cannot provide/reconstruct a defensible key Anningqu input;
+- cultivar calibration requires a major choice among scientifically different strategies;
+- M15 causes an unexpected source-level or crop-level behavior that requires a research-direction decision.
