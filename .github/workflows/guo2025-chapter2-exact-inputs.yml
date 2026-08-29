@@ -35,12 +35,15 @@ jobs:
           import re, json
           text=Path('/tmp/guo2/full.txt').read_text(errors='replace')
           lines=text.splitlines()
-          # Locate the actual Chapter 2 body, not the TOC entry.
+          # Locate the actual Chapter 2 body. The first match is the TOC entry; the second is the chapter body.
           starts=[i for i,l in enumerate(lines) if re.search(r'^\s*第\s*2\s*章\s+基于',l)]
           ends=[i for i,l in enumerate(lines) if re.search(r'^\s*第\s*3\s*章\s+',l)]
-          start=starts[-1] if starts else 560
-          end=next((i for i in ends if i>start), min(len(lines), start+1000))
+          body_candidates=[i for i in starts if i>400]
+          start=body_candidates[0] if body_candidates else (starts[1] if len(starts)>1 else (starts[0] if starts else 560))
+          end=next((i for i in ends if i>start+100), min(len(lines), start+1000))
           ch=lines[start:end]
+          if len(ch)<200:
+              raise RuntimeError(f'Chapter 2 extraction suspiciously short: start={start+1}, end={end}, starts={starts}, ends={ends}')
           out=Path('research/dssat_dtr/data/shihezi_real_case/guo2025_chapter2_exact_inputs')
           out.mkdir(parents=True,exist_ok=True)
           (out/'chapter2_full_text.txt').write_text('\n'.join(ch),encoding='utf-8')
@@ -58,7 +61,6 @@ jobs:
                   a=max(0,i-4); b=min(len(ch),i+5)
                   block='\n'.join(ch[a:b]).strip()
                   hits.append({'chapter_line':i+1,'pdf_text_line':start+i+1,'keywords':found,'context':block})
-          # deduplicate contexts
           uniq=[]; seen=set()
           for h in hits:
               if h['context'] not in seen:
@@ -66,6 +68,7 @@ jobs:
           (out/'keyword_context.json').write_text(json.dumps(uniq,ensure_ascii=False,indent=2),encoding='utf-8')
           md=['# Guo 2025 Chapter 2 exact-input extraction','',
               f'- Full public thesis text lines: {len(lines)}.',
+              f'- Chapter-title matches: {[i+1 for i in starts]}.',
               f'- Chapter 2 body: source text lines {start+1}-{end}, {len(ch)} lines.',
               '- Extraction is verbatim text from the publicly accessible thesis attachment; only Chapter 2 and targeted contexts are committed, not the PDF.','',
               '## Keyword/context findings','']
@@ -76,7 +79,7 @@ jobs:
               md.append('```')
               md.append('')
           (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
-          print('\n'.join(md[:800]))
+          print('\n'.join(md[:1000]))
           PY
 
       - name: Commit Chapter 2 extraction
