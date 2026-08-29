@@ -1,0 +1,57 @@
+===== N129_EQUAL10 =====
+*FERTILIZERS (INORGANIC)
+@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+ 1 20127 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20167 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20175 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20184 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20191 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20198 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20205 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20212 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20223 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20237 FE005 AP001   5.0  12.88   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+
+===== N129_WANG2018 =====
+*FERTILIZERS (INORGANIC)
+@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+ 1 20125 FE005 AP001   5.0  25.76   0.0   0.0   0.0   0.0   -99 20pct pre-sowing base
+ 1 20127 FE005 AP001   5.0  10.30   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20167 FE005 AP001   5.0   6.87   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20175 FE005 AP001   5.0   6.87   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20184 FE005 AP001   5.0   6.87   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20191 FE005 AP001   5.0  15.46   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20198 FE005 AP001   5.0  15.46   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20205 FE005 AP001   5.0  15.46   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20212 FE005 AP001   5.0   7.73   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20223 FE005 AP001   5.0   7.73   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20237 FE005 AP001   5.0  10.30   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+
+===== N193_EQUAL10 =====
+*FERTILIZERS (INORGANIC)
+@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+ 1 20127 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20167 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20175 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20184 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20191 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20198 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20205 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20212 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20223 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+ 1 20237 FE005 AP001   5.0  19.32   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic
+
+===== N193_WANG2018 =====
+*FERTILIZERS (INORGANIC)
+@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME
+ 1 20125 FE005 AP001   5.0  38.64   0.0   0.0   0.0   0.0   -99 20pct pre-sowing base
+ 1 20127 FE005 AP001   5.0  15.46   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20167 FE005 AP001   5.0  10.30   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20175 FE005 AP001   5.0  10.30   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20184 FE005 AP001   5.0  10.30   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20191 FE005 AP001   5.0  23.18   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20198 FE005 AP001   5.0  23.18   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20205 FE005 AP001   5.0  23.18   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20212 FE005 AP001   5.0  11.59   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20223 FE005 AP001   5.0  11.59   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
+ 1 20237 FE005 AP001   5.0  15.46   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic
