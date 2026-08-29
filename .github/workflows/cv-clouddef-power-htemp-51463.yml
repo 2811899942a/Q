@@ -39,5 +39,10 @@ jobs:
                   research/dssat_dtr/data/processed_51463/cv_clouddef_power_by_dtr.csv \
                   research/dssat_dtr/data/processed_51463/cv_clouddef_power_by_hour.csv \
                   research/dssat_dtr/data/processed_51463/cv_clouddef_power_by_kt_strata.csv
-          git diff --cached --quiet || git commit -m 'Add CV nonlinear radiative-deficit HTEMP results'
-          git push origin HEAD:research/dssat-dtr-matrix
+          if git diff --cached --quiet; then
+            echo 'No result changes.'
+          else
+            git commit -m 'Add CV nonlinear radiative-deficit HTEMP results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
