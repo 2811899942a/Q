@@ -1,0 +1,112 @@
+name: Shihezi Weather PDF Vector Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-weather-pdf-vector-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Audit PDF text spans, drawings and embedded images
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf
+          OUT='research/dssat_dtr/data/shihezi_real_case/weather_figure_vector_audit'
+          TMP='/tmp/wvec'
+          mkdir -p "$OUT" "$TMP"
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752' -o "$TMP/guo.pdf"
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132' -o "$TMP/meng.pdf"
+          python - <<'PY'
+          from pathlib import Path
+          import fitz, json, collections, math
+          out=Path('research/dssat_dtr/data/shihezi_real_case/weather_figure_vector_audit')
+          specs=[('guo',Path('/tmp/wvec/guo.pdf'),19),('meng',Path('/tmp/wvec/meng.pdf'),21)]
+          summary=[]
+          for name,pdf_path,pageno1 in specs:
+              doc=fitz.open(pdf_path)
+              page=doc[pageno1-1]
+              data={'source':name,'page_1based':pageno1,'page_rect':list(page.rect),'rotation':page.rotation}
+              # Text spans with exact PDF coordinates, valuable for axis calibration.
+              spans=[]
+              td=page.get_text('dict')
+              for b in td.get('blocks',[]):
+                  if 'lines' not in b: continue
+                  for line in b['lines']:
+                      for s in line['spans']:
+                          spans.append({'text':s['text'],'bbox':list(s['bbox']),'size':s['size'],'font':s['font'],'color':s['color']})
+              data['text_spans']=spans
+              # Embedded image geometry and metadata.
+              ims=[]
+              for im in page.get_images(full=True):
+                  xref=im[0]
+                  rects=page.get_image_rects(xref)
+                  meta={'xref':xref,'width':im[2],'height':im[3],'bpc':im[4],'colorspace':im[5],'name':im[7],
+                        'rects':[list(r) for r in rects]}
+                  try:
+                      ex=doc.extract_image(xref)
+                      meta.update({'ext':ex.get('ext'),'bytes':len(ex.get('image',b''))})
+                  except Exception as e: meta['extract_error']=str(e)
+                  ims.append(meta)
+              data['images']=ims
+              # Vector drawings: retain geometry and color, but serialize points/rects.
+              drawings=[]
+              color_counts=collections.Counter()
+              for d in page.get_drawings():
+                  rec={k:d.get(k) for k in ['type','fill','color','width','opacity','fill_opacity','closePath','even_odd']}
+                  rec['rect']=list(d['rect']) if d.get('rect') is not None else None
+                  items=[]
+                  for it in d.get('items',[]):
+                      vals=[]
+                      for v in it:
+                          if isinstance(v,fitz.Point): vals.append([v.x,v.y])
+                          elif isinstance(v,fitz.Rect): vals.append(list(v))
+                          else: vals.append(v)
+                      items.append(vals)
+                  rec['items']=items
+                  drawings.append(rec)
+                  color_counts[str((d.get('type'),d.get('color'),d.get('fill')))] += 1
+              data['drawing_count']=len(drawings)
+              data['drawing_signature_counts']=dict(color_counts.most_common())
+              # Full drawings can be large. Store separately.
+              (out/f'{name}_page{pageno1}_drawings.json').write_text(json.dumps(drawings,ensure_ascii=False,indent=2),encoding='utf-8')
+              (out/f'{name}_page{pageno1}_audit.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
+              summary.append({'source':name,'page':pageno1,'span_count':len(spans),'image_count':len(ims),'images':ims,
+                              'drawing_count':len(drawings),'drawing_signatures':dict(color_counts.most_common(20))})
+          (out/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Shihezi weather figure PDF-vector audit','',
+              'This audit avoids OCR. It inspects the PDF page object model to determine whether the temperature curves / precipitation bars are vector primitives or embedded raster images, and records exact text-span coordinates for axis calibration.','']
+          for x in summary:
+              md += [f"## {x['source']} page {x['page']}",
+                     f"- text spans: {x['span_count']}",
+                     f"- embedded images: {x['image_count']}",
+                     f"- vector drawing objects: {x['drawing_count']}",
+                     f"- image metadata: `{json.dumps(x['images'],ensure_ascii=False)}`",
+                     f"- top drawing signatures: `{json.dumps(x['drawing_signatures'],ensure_ascii=False)}`",'']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit vector audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/weather_figure_vector_audit
+          if ! git diff --cached --quiet; then
+            git commit -m 'Audit Shihezi weather figure vector geometry'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
