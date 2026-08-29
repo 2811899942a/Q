@@ -1,0 +1,11 @@
+﻿scope,response,n_days,pearson_r,spearman_rho,ols_slope_per_1c_dtr,mean_response
+All,morning_bias,7027,-0.2284,-0.166,-0.1145,-1.1979
+All,afternoon_bias,7029,0.2479,-0.0361,0.192,2.2718
+All,night_bias,7036,-0.1971,-0.2254,-0.0893,-0.235
+All,daily_rmse,7036,0.4166,0.2514,0.2017,2.1534
+All,sample_peak_timing_error,7036,-0.0373,-0.1337,-0.0392,0.2547
+May-Sep,morning_bias,2865,-0.2599,-0.2992,-0.1254,-0.6154
+May-Sep,afternoon_bias,2864,0.2402,-0.065,0.2508,1.9188
+May-Sep,night_bias,2867,-0.195,-0.2581,-0.1037,-0.2072
+May-Sep,daily_rmse,2867,0.3524,0.2155,0.2238,1.9626
+May-Sep,sample_peak_timing_error,2867,-0.0599,-0.0299,-0.062,-0.0317

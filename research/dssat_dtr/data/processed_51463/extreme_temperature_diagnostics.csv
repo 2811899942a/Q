@@ -1,0 +1,7 @@
+﻿class,n_days,mean_tmax_c,mean_tmin_c,mean_dtr_c,mean_daily_rmse_c,morning_bias_c,afternoon_bias_c,afternoon_minus_morning_bias_c,mean_abs_peak_checkpoint_error_h
+non_extreme_10_90,2291,27.412,16.513,10.899,1.885,-0.5448,1.8259,2.3706,1.1728
+hot_top10_tmax,288,35.241,21.86,13.381,2.1117,-1.0213,2.2324,3.2536,0.8125
+hot_top5_tmax,153,36.278,22.508,13.77,2.3171,-1.0003,2.5888,3.5891,0.9412
+cold_bottom10_tmin,288,18.177,7.034,11.143,2.431,-0.771,2.3444,3.1154,1.7083
+cold_bottom5_tmin,149,16.124,5.446,10.679,2.2197,-0.6587,2.067,2.7257,1.8121
+high_dtr_ge15,210,30.862,14.358,16.504,4.4757,-1.257,5.1515,6.4084,2.2714

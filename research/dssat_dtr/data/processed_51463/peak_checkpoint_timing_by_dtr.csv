@@ -1,0 +1,8 @@
+﻿scope,dtr_bin,n_days,median_signed_peak_error_h,mean_signed_peak_error_h,mean_abs_peak_error_h,pct_model_peak_later,pct_model_peak_earlier
+May-Sep_n>=6_checkpoints,<8,291,0.0,0.0172,1.8728,24.74,19.59
+May-Sep_n>=6_checkpoints,8-<10,611,0.0,0.1718,1.2717,20.95,12.77
+May-Sep_n>=6_checkpoints,10-<12,915,0.0,-0.0525,1.0098,13.66,9.84
+May-Sep_n>=6_checkpoints,12-<15,835,0.0,-0.0431,0.8192,11.5,7.31
+May-Sep_n>=6_checkpoints,15-<18,183,0.0,-0.3443,1.8525,16.94,13.66
+May-Sep_n>=6_checkpoints,18-<20,18,0.0,-2.0,4.6667,38.89,27.78
+May-Sep_n>=6_checkpoints,>=20,9,0.0,-2.6667,6.0,44.44,44.44
