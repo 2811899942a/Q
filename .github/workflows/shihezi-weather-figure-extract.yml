@@ -1,0 +1,86 @@
+name: Shihezi Weather Figure Extract
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-weather-figure-extract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Locate and render weather figures
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          OUT='research/dssat_dtr/data/shihezi_real_case/weather_figure_digitization'
+          TMP='/tmp/wfig'
+          mkdir -p "$OUT" "$TMP"
+          GUO='https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752'
+          MENG='https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132'
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' "$GUO" -o "$TMP/guo.pdf"
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' "$MENG" -o "$TMP/meng.pdf"
+          file "$TMP/guo.pdf" | grep -qi PDF
+          file "$TMP/meng.pdf" | grep -qi PDF
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess,re,json
+          tmp=Path('/tmp/wfig')
+          out=Path('research/dssat_dtr/data/shihezi_real_case/weather_figure_digitization')
+          specs=[('guo',tmp/'guo.pdf',['图 2-2','Fig.2-2','Precipitation and temperature in Shihezi area']),
+                 ('meng',tmp/'meng.pdf',['图 2-3','Fig.2-3','Rainfall and temperature in maize growth period'])]
+          report=[]
+          for name,pdf,needles in specs:
+              info=subprocess.run(['pdfinfo',str(pdf)],capture_output=True,text=True,check=True).stdout
+              pages=int(re.search(r'^Pages:\s+(\d+)',info,re.M).group(1))
+              matches=[]
+              for pg in range(1,pages+1):
+                  txt=tmp/f'{name}_{pg}.txt'
+                  subprocess.run(['pdftotext','-f',str(pg),'-l',str(pg),'-layout',str(pdf),str(txt)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                  s=txt.read_text(errors='replace')
+                  if any(n.lower() in s.lower() for n in needles):
+                      matches.append(pg)
+              if not matches:
+                  raise RuntimeError(f'No weather figure caption page found for {name}')
+              report.append({'source':name,'pages_total':pages,'caption_pages':matches})
+              # Render caption page and one page before/after for robust visual inspection.
+              render=sorted(set(q for pg in matches for q in (pg-1,pg,pg+1) if 1<=q<=pages))
+              for pg in render:
+                  base=out/f'{name}_weather_page_{pg:02d}'
+                  subprocess.run(['pdftoppm','-f',str(pg),'-l',str(pg),'-r','220','-png','-singlefile',str(pdf),str(base)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                  # Also save text for axis/caption cross-check.
+                  (out/f'{name}_weather_page_{pg:02d}.txt').write_text((tmp/f'{name}_{pg}.txt').read_text(errors='replace'),encoding='utf-8')
+          (out/'page_map.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Shihezi weather-figure extraction','',
+              'Purpose: recover the published 2019-2020 daily temperature/precipitation series before rebuilding the Guo CERES-Maize weather files. The source PDFs are public university attachments; only the figure pages/crops needed for reproducible data digitization are retained.','']
+          for r in report:
+              md.append(f"- {r['source']}: total PDF pages {r['pages_total']}; weather-caption page(s) {r['caption_pages']}.")
+          md += ['','Next: visually identify plot-area geometry and digitize TMAX/TMIN/rain. NASA POWER should be retained only for SRAD if the published figure does not contain radiation.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+          ls -lh "$OUT"
+
+      - name: Commit figure pages
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/weather_figure_digitization
+          if ! git diff --cached --quiet; then
+            git commit -m 'Extract published Shihezi weather figures for digitization'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
