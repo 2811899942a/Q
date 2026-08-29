@@ -1,0 +1,137 @@
+name: Validate DSSAT v4.8.5 M12 source implementation
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/source_mods/patch_dssat485_hmet_m12.py'
+      - '.github/workflows/dssat485-m12-source-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  source-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+
+      - name: Install compiler
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+
+      - name: Fetch exact DSSAT v4.8.5.0 source and data
+        run: |
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-os.git /tmp/m12-os
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git /tmp/m12-data
+          git -C /tmp/m12-os rev-parse HEAD > /tmp/os_sha.txt
+          git -C /tmp/m12-data rev-parse HEAD > /tmp/data_sha.txt
+          sha256sum /tmp/m12-os/Weather/HMET.for | awk '{print $1}' > /tmp/hmet_m0_sha.txt
+
+      - name: Patch HMET with frozen physical-bounded M12
+        run: |
+          python research/dssat_dtr/source_mods/patch_dssat485_hmet_m12.py /tmp/m12-os/Weather/HMET.for
+          sha256sum /tmp/m12-os/Weather/HMET.for | awk '{print $1}' > /tmp/hmet_m12_sha.txt
+          grep -n 'Urumqi M12' /tmp/m12-os/Weather/HMET.for
+          grep -n 'AMTRD' /tmp/m12-os/Weather/HMET.for | head -20
+
+      - name: Compile M12 DSSAT
+        run: |
+          cmake -S /tmp/m12-os -B /tmp/m12-build \
+            -DCMAKE_BUILD_TYPE=RELEASE \
+            -DCMAKE_INSTALL_PREFIX=/tmp/m12-run
+          cmake --build /tmp/m12-build --parallel 2
+          cmake --install /tmp/m12-build
+          cp -a /tmp/m12-data/. /tmp/m12-run/
+          test -x /tmp/m12-run/dscsm048
+          sudo rm -rf /DSSAT48
+          sudo ln -s /tmp/m12-run /DSSAT48
+          test -f /DSSAT48/DSSATPRO.L48
+
+      - name: Run official maize regression example with M12
+        run: |
+          cd /tmp/m12-run/Maize
+          rm -f Summary.OUT PlantGro.OUT Evaluate.OUT WARNING.OUT ERROR.OUT
+          set +e
+          ../dscsm048 A UFGA8201.MZX > /tmp/m12_stdout.txt 2>&1
+          STATUS=$?
+          set -e
+          cat /tmp/m12_stdout.txt
+          echo "M12_EXIT_STATUS=${STATUS}"
+          test ${STATUS} -eq 0
+          test -s Summary.OUT
+          test -s PlantGro.OUT
+          cp Summary.OUT /tmp/Summary_M12.OUT
+          cp PlantGro.OUT /tmp/PlantGro_M12.OUT
+
+      - name: Check outputs for numerical failures
+        run: |
+          ! grep -Eiq '(^|[^A-Za-z])(NaN|Infinity|Inf)([^A-Za-z]|$)' /tmp/Summary_M12.OUT
+          ! grep -Eiq '(^|[^A-Za-z])(NaN|Infinity|Inf)([^A-Za-z]|$)' /tmp/PlantGro_M12.OUT
+          test ! -s /tmp/m12-run/Maize/ERROR.OUT || { cat /tmp/m12-run/Maize/ERROR.OUT; exit 1; }
+
+      - name: Write source-level validation report
+        run: |
+          mkdir -p research/dssat_dtr/source_validation
+          OS_SHA=$(cat /tmp/os_sha.txt)
+          DATA_SHA=$(cat /tmp/data_sha.txt)
+          H0=$(cat /tmp/hmet_m0_sha.txt)
+          H1=$(cat /tmp/hmet_m12_sha.txt)
+          EXE_SHA=$(sha256sum /tmp/m12-run/dscsm048 | awk '{print $1}')
+          SUM_SHA=$(sha256sum /tmp/Summary_M12.OUT | awk '{print $1}')
+          PG_SHA=$(sha256sum /tmp/PlantGro_M12.OUT | awk '{print $1}')
+          cat > research/dssat_dtr/source_validation/README_DSSAT485_M12_SOURCE.md <<EOF
+          # DSSAT v4.8.5.0 M12 source-level regression
+
+          Status: **PASS**
+
+          Upstream:
+          - source: `DSSAT/dssat-csm-os@v4.8.5.0`
+          - source commit: `${OS_SHA}`
+          - data: `DSSAT/dssat-csm-data@v4.8.5.0`
+          - data commit: `${DATA_SHA}`
+
+          Source modification:
+          - file changed: `Weather/HMET.for` only
+          - official HMET SHA256: `${H0}`
+          - M12 HMET SHA256: `${H1}`
+          - patcher: `research/dssat_dtr/source_mods/patch_dssat485_hmet_m12.py`
+          - DTR trigger: `14.8 C`
+          - radiation driver: DSSAT-native `AMTRD = SRAD/S0D`
+          - pre-peak beta: `1.6017096`
+          - post-peak beta: `0.3384001`
+          - physical bound: `TMIN <= TAIRHR <= TMAX`
+          - missing/invalid SRAD fallback: correction disabled, official HTEMP retained
+
+          Build/regression:
+          - GNU Fortran + CMake RELEASE build: PASS
+          - executable SHA256: `${EXE_SHA}`
+          - official maize example `UFGA8201.MZX`: PASS
+          - `Summary.OUT`: generated, SHA256 `${SUM_SHA}`
+          - `PlantGro.OUT`: generated, SHA256 `${PG_SHA}`
+          - NaN/Inf scan: PASS
+          - `ERROR.OUT`: absent/empty
+
+          Statistical precursor:
+          - raw DSSAT-native AMTRD M12 high-DTR independent RMSE improvement: 12.87%
+          - physical-bounded M12 improvement: 13.04%
+
+          This establishes that the frozen Urumqi M12 correction can be compiled and executed inside the official DSSAT v4.8.5.0 codebase without breaking the official maize smoke test.
+          EOF
+
+      - name: Commit source validation report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/source_validation/README_DSSAT485_M12_SOURCE.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record DSSAT 4.8.5 M12 source regression'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
