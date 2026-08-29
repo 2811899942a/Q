@@ -1,0 +1,52 @@
+name: Diagnose Urumqi 51463 DTR breakpoint
+
+on:
+  push:
+    branches:
+      - research/dssat-dtr-matrix
+    paths:
+      - 'research/dssat_dtr/scripts/detect_dtr_breakpoint_51463.py'
+      - '.github/workflows/dtr-breakpoint-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  breakpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Detect local DTR breakpoint
+        run: python research/dssat_dtr/scripts/detect_dtr_breakpoint_51463.py
+
+      - name: Show results
+        run: |
+          cat research/dssat_dtr/data/processed_51463/README_DTR_BREAKPOINT.md
+          echo '--- stability ---'
+          cat research/dssat_dtr/data/processed_51463/dtr_breakpoint_stability.csv
+          echo '--- all fits ---'
+          cat research/dssat_dtr/data/processed_51463/dtr_breakpoint_results.csv
+
+      - name: Commit breakpoint outputs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_51463/README_DTR_BREAKPOINT.md \
+                  research/dssat_dtr/data/processed_51463/dtr_breakpoint_results.csv \
+                  research/dssat_dtr/data/processed_51463/dtr_breakpoint_stability.csv
+          if git diff --cached --quiet; then
+            echo 'No breakpoint changes to commit.'
+          else
+            git commit -m 'Diagnose Urumqi DTR breakpoint from residual asymmetry'
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
