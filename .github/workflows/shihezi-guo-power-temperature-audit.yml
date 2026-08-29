@@ -1,0 +1,140 @@
+name: Shihezi Guo vs POWER Temperature Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-guo-power-temperature-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Compare daily temperature forcings
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv, json, math, statistics
+
+          base=Path('research/dssat_dtr/data/shihezi_real_case')
+          guo=base/'guo_weather_daily_v1'/'daily_weather.csv'
+          power=base/'power_daily'/'shihezi_power_2019_2020_wth_inputs.csv'
+          out=base/'guo_vs_power_temperature_audit'
+          out.mkdir(parents=True,exist_ok=True)
+
+          def load(path):
+              return list(csv.DictReader(path.open(encoding='utf-8-sig')))
+          G=load(guo); P=load(power)
+          pmap={r['date']:r for r in P}
+
+          def num(x):
+              try:
+                  v=float(x)
+                  return v if math.isfinite(v) else None
+              except Exception:
+                  return None
+
+          def stats(pairs):
+              if not pairs:
+                  return {'n':0}
+              dif=[a-b for a,b in pairs]
+              mae=sum(abs(x) for x in dif)/len(dif)
+              rmse=math.sqrt(sum(x*x for x in dif)/len(dif))
+              bias=sum(dif)/len(dif)
+              a=[x for x,_ in pairs]; b=[y for _,y in pairs]
+              if len(a)>1:
+                  ma=sum(a)/len(a); mb=sum(b)/len(b)
+                  va=sum((x-ma)**2 for x in a); vb=sum((x-mb)**2 for x in b)
+                  cov=sum((x-ma)*(y-mb) for x,y in zip(a,b))
+                  r=cov/math.sqrt(va*vb) if va>0 and vb>0 else None
+              else: r=None
+              return {'n':len(pairs),'bias_C':bias,'MAE_C':mae,'RMSE_C':rmse,'r':r,
+                      'mean_Guo_C':sum(a)/len(a),'mean_POWER_C':sum(b)/len(b)}
+
+          rows=[]; metrics=[]
+          for year in (2019,2020):
+              gg=[r for r in G if int(r['year'])==year and r['date'] in pmap]
+              tmax=[]; tmin_all=[]; tmin_black=[]; tmean_all=[]; dtr_black=[]
+              guo_hot=power_hot=0; guo_dtr15=power_dtr15=0
+              for r in gg:
+                  p=pmap[r['date']]
+                  gx=num(r['TMAX_C']); gn=num(r['TMIN_C'])
+                  px=num(p['TMAX_C']); pn=num(p['TMIN_C'])
+                  src=r.get('TMIN_source','')
+                  if gx is not None and px is not None:
+                      tmax.append((gx,px))
+                      guo_hot += gx>=35
+                      power_hot += px>=35
+                  if gn is not None and pn is not None:
+                      tmin_all.append((gn,pn))
+                      if gx is not None and px is not None:
+                          tmean_all.append(((gx+gn)/2,(px+pn)/2))
+                  if src=='black_curve' and all(v is not None for v in (gx,gn,px,pn)):
+                      tmin_black.append((gn,pn))
+                      gd=gx-gn; pd=px-pn
+                      dtr_black.append((gd,pd))
+                      guo_dtr15 += gd>=15
+                      power_dtr15 += pd>=15
+                  rows.append({'year':year,'date':r['date'],'TMIN_source':src,
+                               'Guo_TMAX':gx,'POWER_TMAX':px,'Guo_TMIN':gn,'POWER_TMIN':pn,
+                               'Guo_TMEAN':(gx+gn)/2 if gx is not None and gn is not None else '',
+                               'POWER_TMEAN':(px+pn)/2 if px is not None and pn is not None else '',
+                               'Guo_DTR':gx-gn if gx is not None and gn is not None else '',
+                               'POWER_DTR':px-pn if px is not None and pn is not None else ''})
+              for var,pairs in [('TMAX',tmax),('TMIN_ALL',tmin_all),('TMIN_BLACK_ONLY',tmin_black),
+                                ('TMEAN_ALL',tmean_all),('DTR_BLACK_ONLY',dtr_black)]:
+                  s=stats(pairs); s.update({'year':year,'variable':var}); metrics.append(s)
+              metrics.append({'year':year,'variable':'EVENT_COUNTS','n':len(tmax),
+                              'Guo_TMAX_ge35':guo_hot,'POWER_TMAX_ge35':power_hot,
+                              'Guo_DTR_ge15_black_days':guo_dtr15,'POWER_DTR_ge15_same_black_days':power_dtr15})
+
+          fields=sorted({k for r in metrics for k in r})
+          with (out/'metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=fields); w.writeheader(); w.writerows(metrics)
+          with (out/'daily_aligned.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          (out/'metrics.json').write_text(json.dumps(metrics,indent=2),encoding='utf-8')
+
+          def get(y,v): return next(r for r in metrics if r['year']==y and r['variable']==v)
+          md=['# Guo Fig.2-2 digitized temperature vs V4 NASA POWER forcing','',
+              'Purpose: determine whether the provisional POWER Tmax/Tmin forcing has a systematic temperature mismatch relative to the same-trial Guo Fig.2-2 curves. Guo Tmax is direct curve extraction; Tmin includes direct black-curve days plus flagged fallback days. Black-only metrics are reported separately.','',
+              '|Year|Variable|n|Guo mean C|POWER mean C|Guo-POWER bias C|MAE C|RMSE C|r|',
+              '|---:|---|---:|---:|---:|---:|---:|---:|---:|']
+          for y in (2019,2020):
+              for v in ('TMAX','TMIN_ALL','TMIN_BLACK_ONLY','TMEAN_ALL','DTR_BLACK_ONLY'):
+                  s=get(y,v)
+                  md.append(f"|{y}|{v}|{s['n']}|{s.get('mean_Guo_C',float('nan')):.3f}|{s.get('mean_POWER_C',float('nan')):.3f}|{s.get('bias_C',float('nan')):+.3f}|{s.get('MAE_C',float('nan')):.3f}|{s.get('RMSE_C',float('nan')):.3f}|{s.get('r',float('nan')):.3f}|")
+          md += ['', '## Extreme-temperature count comparison','']
+          for y in (2019,2020):
+              e=get(y,'EVENT_COUNTS')
+              md.append(f"- {y}: Tmax>=35 C days, Guo={e['Guo_TMAX_ge35']} vs POWER={e['POWER_TMAX_ge35']}; on direct-black Tmin days, DTR>=15 C, Guo={e['Guo_DTR_ge15_black_days']} vs POWER={e['POWER_DTR_ge15_same_black_days']}.")
+          md += ['', '## Interpretation rule','',
+                 'Use this audit to decide whether a Guo-curve temperature substitution diagnostic is warranted. The digitized Fig.2-2 series is an approximate same-trial source, so any crop simulation using it remains a source-reconstruction diagnostic. Rain bars are not used in this temperature comparison because the digitized rain-event total undercaptures the independently reported growing-season precipitation magnitude.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_GUO_POWER_TEMPERATURE_AUDIT.md')
+          cp.write_text('# Guo-vs-POWER temperature audit checkpoint\n\n'+'\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit temperature audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo_vs_power_temperature_audit research/dssat_dtr/checkpoints/CHECKPOINT_20260829_GUO_POWER_TEMPERATURE_AUDIT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Audit Guo Fig2-2 temperatures against Shihezi POWER forcing'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
