@@ -1,0 +1,103 @@
+*INFO DETAIL FILE
+
+******************************************************************************
+
+*DSSAT Cropping System Model Ver. 4.8.5.000 -HEAD  AUG 29, 2026 12:29:25
+
+*RUN   1        : GUO2025 XINYU66 REAL               SHIH2002    1
+
+ EXPERIMENT     : SHIH2002 MZ GUO2025 SHIHEZI 2020 W2
+ DATA PATH      :
+ TREATMENT  1   : GUO2025 XINYU66 REAL
+  
+
+ MAKEFW  YEAR DOY =    0   0
+ Y4KDOY - Weather file                                                         
+ Not able to find 7-digits first weather date                                  
+ Set simulation to 5-digits first weather date                                 
+
+ CSM     YEAR DOY = 2020 125
+ RNMODE = A                                                                    
+ PATHEX =                                                                      
+ FILEX  = SHIH2002.MZX                                                         
+ FILEB  =                                                                      
+ FILEIO = DSSAT48.INP                                                          
+ MODEL  = MZCER048                                                             
+ TRTNUM =     1                                                                
+
+ SOILDYN  YEAR DOY = 2020 125
+ The soil file has missing or invalid data.                                    
+ Default values have been used for these variables:                            
+   CEC, ADCOEF, SAEA                                                           
+ These defaults may or may not be important to your results.                   
+
+ RETC  YEAR DOY = 2020 125
+ Soil RETC parameters:                                                         
+  LYR DS  SWCN   WCR    Hb Lambd  Alpha     m     n Texture                    
+   1   5-99.00 0.023   1.0 0.203  0.019 0.227 1.293 SiltClayLoam               
+   2  15-99.00 0.023   1.0 0.203  0.019 0.227 1.293 SiltClayLoam               
+   3  20-99.00 0.023   1.0 0.203  0.019 0.227 1.293 SiltClayLoam               
+   4  30-99.00 0.026   2.6 0.202  0.014 0.205 1.258 SiltClayLoam               
+   5  40-99.00 0.026   2.6 0.202  0.014 0.205 1.258 SiltClayLoam               
+   6  50-99.00 0.027   2.6 0.206  0.014 0.207 1.262 SiltyClay                  
+   7  60-99.00 0.027   2.6 0.206  0.014 0.207 1.262 SiltyClay                  
+   8  70-99.00 0.022   2.3 0.195  0.015 0.201 1.251 SiltClayLoam               
+   9  80-99.00 0.022   2.3 0.195  0.015 0.201 1.251 SiltClayLoam               
+  10 100-99.00 0.040   4.7 0.289  0.010 0.263 1.357 ClayLoam                   
+
+ SETPM     YEAR DOY = 2020 125
+ Simulating flat surface with no plastic mulch.                                                                               
+
+ SOILDYN  YEAR DOY = 2020 125
+ Soil ID: SHIH000100                                                           
+ GUO MEASURED 0-100 CM PROFILE                                                 
+  -99                                                                          
+   SALB SWCON    CN  DMOD  SLPF SMPX                                           
+   0.15  0.50  60.0  1.00  1.00 IB001                                          
+ Soil layer distribution method: 2                                             
+      DS DLAYR    LL   DUL   SAT  Root    BD    OC  CLAY  SILT  SAND           
+ LYR  cm    cm  frac  frac  frac  Grow g/cm3     %     %     %     %    pH     
+   1   5     5 0.122 0.237 0.457 1.000  1.51  0.09  32.8  51.9  15.3   7.0     
+   2  15    10 0.122 0.237 0.457 1.000  1.51  0.09  32.8  51.9  15.3   7.0     
+   3  20     5 0.122 0.237 0.457 1.000  1.51  0.09  32.8  51.9  15.3   7.0     
+   4  30    10 0.136 0.264 0.425 0.850  1.54  0.08  31.5  54.1  14.4   7.0     
+   5  40    10 0.136 0.264 0.425 0.850  1.54  0.08  31.5  54.1  14.4   7.0     
+   6  50    10 0.120 0.231 0.371 0.700  1.59  0.07  43.3  44.5  12.2   7.0     
+   7  60    10 0.120 0.231 0.371 0.700  1.59  0.07  43.3  44.5  12.2   7.0     
+   8  70    10 0.113 0.214 0.346 0.550  1.63  0.08  30.2  60.7   9.1   7.0     
+   9  80    10 0.113 0.214 0.346 0.550  1.63  0.08  30.2  60.7   9.1   7.0     
+  10 100    20 0.105 0.236 0.385 0.400  1.61  0.06  29.1  49.8  21.1   7.0     
+
+ SOILDYN  YEAR DOY = 2020 125
+ Additional soil properties                                                    
+                Convert                                                        
+    Cation Adsrp  ppm /  SLCF                                                  
+   L  Exch  Coef  kg/ha     %                                                  
+   1  15.5   0.0   1.32   0.0                                                  
+   2  15.5   0.0   0.66   0.0                                                  
+   3  15.5   0.0   1.32   0.0                                                  
+   4  15.5   0.0   0.65   0.0                                                  
+   5  15.5   0.0   0.65   0.0                                                  
+   6  15.5   0.0   0.63   0.0                                                  
+   7  15.5   0.0   0.63   0.0                                                  
+   8  15.5   0.0   0.61   0.0                                                  
+   9  15.5   0.0   0.61   0.0                                                  
+  10  15.5   0.0   0.31   0.0                                                  
+
+ IPWTH   YEAR DOY = 2020 125
+ ///tmp/run_M0/Weather/SHIH2001.WTH                                            
+ Found daily weather data headers for:                                         
+   SRAD           Col   7 -  11                                                
+   TMAX           Col  13 -  17                                                
+   TMIN           Col  19 -  23                                                
+   RAIN           Col  25 -  29                                                
+
+ CO2VAL  YEAR DOY = 2020 125
+  781 CO2 data points read from file.                                          
+ ///tmp/run_M0/StandardData/CO2048.WDA                                         
+
+ READA   YEAR DOY = 2020 232
+  Error in FILEA-Measured data not used                                        
+
+ ENDRUN  YEAR DOY = 2020 232
+ Normal end of run        1                                                    

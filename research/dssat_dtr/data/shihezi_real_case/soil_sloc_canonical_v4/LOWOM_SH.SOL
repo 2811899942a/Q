@@ -1,0 +1,13 @@
+*Soils: Shihezi University Modern Water-saving Irrigation Key Experimental Station
+
+*SHIH000100  SHIHEZI     -99     100 Guo measured 0-100 cm profile
+@SITE        COUNTRY          LAT     LONG SCS FAMILY
+ Shihezi    China           44.324   85.996 -99
+@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
+    -9  0.15   6.0  0.50  60.0  1.00  1.00 IB001 IB001 IB001
+@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC
+    20   -99 0.122 0.237 0.457 1.000   -99  1.51 0.086 32.75 51.93   0.0   -99   -99   -99   -99   -99
+    40   -99 0.136 0.264 0.425 0.850   -99  1.54 0.082 31.52 54.11   0.0   -99   -99   -99   -99   -99
+    60   -99 0.120 0.231 0.371 0.700   -99  1.59 0.073 43.28 44.53   0.0   -99   -99   -99   -99   -99
+    80   -99 0.113 0.214 0.346 0.550   -99  1.63 0.076 30.21 60.74   0.0   -99   -99   -99   -99   -99
+   100   -99 0.105 0.236 0.385 0.400   -99  1.61 0.059 29.13 49.76   0.0   -99   -99   -99   -99   -99
