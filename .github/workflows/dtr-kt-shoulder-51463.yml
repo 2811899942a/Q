@@ -1,0 +1,41 @@
+name: Fit Urumqi 51463 DTR Kt shoulder HTEMP
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/fit_dtr_kt_shoulder_51463.py'
+      - '.github/workflows/dtr-kt-shoulder-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fit-dtr-kt-shoulder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fit DTR Kt shoulder model
+        run: python research/dssat_dtr/scripts/fit_dtr_kt_shoulder_51463.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_DTR_KT_SHOULDER.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_DTR_KT_SHOULDER.md \
+                  research/dssat_dtr/data/processed_51463/dtr_kt_shoulder_parameters.csv \
+                  research/dssat_dtr/data/processed_51463/dtr_kt_shoulder_validation.csv \
+                  research/dssat_dtr/data/processed_51463/dtr_kt_shoulder_by_dtr.csv \
+                  research/dssat_dtr/data/processed_51463/dtr_kt_shoulder_by_hour.csv \
+                  research/dssat_dtr/data/processed_51463/dtr_kt_shoulder_by_kt_strata.csv
+          git diff --cached --quiet || git commit -m 'Add DTR Kt shoulder HTEMP results'
+          git push origin HEAD:research/dssat-dtr-matrix
