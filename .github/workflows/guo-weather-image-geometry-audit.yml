@@ -1,0 +1,130 @@
+name: Guo Weather Image Geometry Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo-weather-image-geometry-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Extract embedded figure and characterize panels
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf opencv-python-headless numpy pillow
+          OUT='research/dssat_dtr/data/shihezi_real_case/guo_weather_image_audit'
+          mkdir -p "$OUT" /tmp/gimg
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752' -o /tmp/gimg/guo.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import pymupdf as fitz, cv2, numpy as np, json, collections, math
+          out=Path('research/dssat_dtr/data/shihezi_real_case/guo_weather_image_audit')
+          doc=fitz.open('/tmp/gimg/guo.pdf'); page=doc[18]
+          ims=page.get_images(full=True)
+          if not ims: raise SystemExit('No embedded image on Guo p19')
+          # Use largest RGB image on the page.
+          cand=[]
+          for im in ims:
+              ex=doc.extract_image(im[0]); cand.append((len(ex['image']),im[0],ex))
+          _,xref,ex=max(cand)
+          img_bytes=ex['image']; (out/'guo_fig2_2_original.jpg').write_bytes(img_bytes)
+          arr=np.frombuffer(img_bytes,np.uint8); img=cv2.imdecode(arr,cv2.IMREAD_COLOR)
+          h,w=img.shape[:2]
+          hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+          gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+          # Global color characterization.
+          sat=hsv[:,:,1]; val=hsv[:,:,2]; hue=hsv[:,:,0]
+          colorful=(sat>=50)&(val>=50)
+          hue_counts=np.bincount(hue[colorful].ravel(),minlength=180) if colorful.any() else np.zeros(180,int)
+          top_hues=[(int(i),int(hue_counts[i])) for i in np.argsort(hue_counts)[::-1][:20] if hue_counts[i]>0]
+          # Quantized RGB/BGR palette excluding near-white background.
+          rgb=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+          mask=np.any(rgb<235,axis=2)
+          q=(rgb//32)*32
+          cc=collections.Counter(map(tuple,q[mask].reshape(-1,3).tolist()))
+          top_palette=[(list(k),v) for k,v in cc.most_common(30)]
+          # Detect vertical split by column ink / color density. Search central 30% for whitest sustained gap.
+          ink=(gray<235).mean(axis=0); colcol=colorful.mean(axis=0)
+          lo=int(w*.35); hi=int(w*.65)
+          score=ink[lo:hi]+2*colcol[lo:hi]
+          # smooth 31px moving average, lower is blanker
+          k=31; sm=np.convolve(score,np.ones(k)/k,mode='same')
+          split=lo+int(np.argmin(sm[k:-k]))+k
+          # Also use an expected half split to guard if central legend/text prevents blank gap.
+          panel_bounds=[(0,split),(split,w)]
+          panels=[]
+          for pi,(x0,x1) in enumerate(panel_bounds,1):
+              pgray=gray[:,x0:x1]; phsv=hsv[:,x0:x1]; psat=phsv[:,:,1]; pval=phsv[:,:,2]
+              # black-ish pixel density by rows/cols; axes are long black lines.
+              black=pgray<80
+              rd=black.mean(axis=1); cd=black.mean(axis=0)
+              top_rows=[(int(i),float(rd[i])) for i in np.argsort(rd)[::-1][:20]]
+              top_cols=[(int(i+x0),float(cd[i])) for i in np.argsort(cd)[::-1][:20]]
+              cful=(psat>=50)&(pval>=50)
+              hc=np.bincount(phsv[:,:,0][cful].ravel(),minlength=180) if cful.any() else np.zeros(180,int)
+              th=[(int(i),int(hc[i])) for i in np.argsort(hc)[::-1][:15] if hc[i]>0]
+              # Bounding boxes for broad hue families with enough pixels.
+              hue_components=[]
+              for center,count in th[:8]:
+                  # circular hue distance <=3
+                  dist=np.minimum((phsv[:,:,0]-center)%180,(center-phsv[:,:,0])%180)
+                  m=(dist<=3)&(psat>=50)&(pval>=50)
+                  ys,xs=np.where(m)
+                  if len(xs)>=50:
+                      hue_components.append({'hue':center,'count':int(len(xs)),'bbox_panel':[int(xs.min()),int(ys.min()),int(xs.max()),int(ys.max())],
+                                             'bbox_global':[int(xs.min()+x0),int(ys.min()),int(xs.max()+x0),int(ys.max())]})
+              panels.append({'panel':pi,'x_global':[x0,x1],'top_black_rows':top_rows,'top_black_cols_global':top_cols,
+                             'top_hues':th,'hue_components':hue_components})
+          # Create a small diagnostic ASCII occupancy map: 120x40 cells, chars by dominant content.
+          H,W=40,120
+          chars=[]
+          for gy in range(H):
+              row=''
+              ya=gy*h//H; yb=(gy+1)*h//H
+              for gx in range(W):
+                  xa=gx*w//W; xb=(gx+1)*w//W
+                  g=gray[ya:yb,xa:xb]; s=sat[ya:yb,xa:xb]
+                  if (s>=50).mean()>0.08: ch='C'
+                  elif (g<80).mean()>0.10: ch='#'
+                  elif (g<180).mean()>0.12: ch='+'
+                  else: ch=' '
+                  row+=ch
+              chars.append(row.rstrip())
+          audit={'shape':[h,w,3],'xref':xref,'bytes':len(img_bytes),'split_x':split,'top_hues':top_hues,'top_quantized_rgb':top_palette,
+                 'panels':panels,'ascii_map':chars}
+          (out/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Guo Fig.2-2 original-image audit','',f'- extracted xref: {xref}',f'- image: {w} x {h}, {len(img_bytes)} bytes',
+              f'- automatic panel split x: {split} / {w}',f'- top colorful hue bins (OpenCV 0-179): `{top_hues}`',
+              f'- top quantized RGB colors excluding near-white: `{top_palette}`','']
+          for p in panels:
+              md += [f"## Panel {p['panel']}",f"- global x: {p['x_global']}",f"- strongest black rows: `{p['top_black_rows'][:12]}`",
+                     f"- strongest black columns: `{p['top_black_cols_global'][:12]}`",f"- top hue bins: `{p['top_hues']}`",
+                     f"- hue component boxes: `{json.dumps(p['hue_components'],ensure_ascii=False)}`",'']
+          md += ['## Coarse occupancy map','```']+chars+['```']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit image audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo_weather_image_audit
+          if ! git diff --cached --quiet; then
+            git commit -m 'Audit original Guo weather figure image geometry'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
