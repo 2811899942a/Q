@@ -13,15 +13,14 @@ Frozen research constants:
 
 M15 behavior:
 - DTR <= DTRC or CLOUDS <= 0: exact official HTEMP output is retained.
-- Before modeled Tmax: exact official HTEMP is retained.
+- Before modeled Tmax: exact official HTEMP output is retained.
 - After Tmax to sunset: official normalized cooling progress is rescaled to a
   corrected sunset anchor TS1 = max(TMIN, TS0 - ALPHA*(DTR-DTRC)*CLOUDS).
 - Night: official B=2.2 exponential form is retained but re-anchored to TS1 and
   TMIN, preserving the original decay structure.
 
-DSSAT v4.8.5.0 HMET.for contains legacy single-byte characters (for example the
-degree symbol). Latin-1 is therefore used as a lossless one-byte text mapping so
-that untouched upstream bytes are preserved exactly outside the deliberate patch.
+DSSAT v4.8.5.0 HMET.for contains legacy single-byte characters. Latin-1 is used
+as a lossless byte-to-text mapping so untouched source bytes remain unchanged.
 """
 from __future__ import annotations
 import argparse
@@ -45,8 +44,10 @@ C       this routine returns immediately outside the calibrated regime.
      &    TAIRHR(H))                                      !In/Output
 """
 
+# Exact frozen v4.8.5.0 marker. The upstream line intentionally has no period
+# after the date; keeping this exact check prevents patching a different source.
 MARKER = """C=======================================================================
-C  HRAD, Subroutine, N.B. Pickering, 03/19/91.
+C  HRAD, Subroutine, N.B. Pickering, 03/19/91
 """
 
 SUBROUTINE = r"""
@@ -155,7 +156,6 @@ def main() -> None:
     text = text.replace(MARKER, SUBROUTINE + MARKER)
     path.write_text(text, encoding=SOURCE_ENCODING)
 
-    # Post-write structural assertions.
     out = path.read_text(encoding=SOURCE_ENCODING)
     assert out.count("CALL HTEMP_DTRCLOUD(") == 1
     assert out.count("SUBROUTINE HTEMP_DTRCLOUD(") == 1
