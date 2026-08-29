@@ -1,3 +1,4 @@
+# Frozen-parameter final statistical validation for the current M10 prototype.
 name: Validate Urumqi 51463 M10 robustness
 
 on:
