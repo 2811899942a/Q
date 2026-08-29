@@ -11,8 +11,10 @@ fertilizer and initial-condition details cannot confound the temperature-source 
 The five sowing dates are the exact public Anningqu A-E dates reported by Tang et al. (2024).
 
 DSSAT experiment IDs must retain a two-digit numeric year in positions 5-6 because
-InputModule/ipexp.for reads EXPER(5:6) with I2.  Therefore scenarios use the native
+InputModule/ipexp.for reads EXPER(5:6) with I2. Therefore scenarios use the native
 8-character convention ANQHYYNN (NN=01..05 for public sowing levels A..E).
+Treatment rows are generated with the exact v4.8.5 IPEXP fixed-width format rather
+than hand-spaced text, because factor-level columns are positional Fortran fields.
 """
 from pathlib import Path
 from datetime import date, timedelta
@@ -34,6 +36,15 @@ def section_replace(txt, start, end, body):
     if not m: raise RuntimeError(f'section not found: {start}')
     return txt[:m.start()] + body.rstrip() + '\n\n' + txt[m.end():]
 
+def treatment_row():
+    # IPEXP v4.8.5 FORMAT 55:
+    #   I3,I1,2(1X,I1),1X,A25,14I3
+    # Header exposes 13 factor levels: CU FL SA IC MP MI MF MR MC MT ME MH SM.
+    levels = [1,1,0,1,1,0,0,0,0,0,0,0,1]
+    prefix = f'{1:3d}{1:1d} {0:1d} {0:1d} '
+    title = f'{"TEMP PROPAGATION":25s}'
+    return prefix + title + ''.join(f'{v:3d}' for v in levels)
+
 for year in (2021,2022):
     for idx,(code,mon,day) in enumerate(sow, start=1):
         pd=date(year,mon,day); sd=pd-timedelta(days=1); hd=date(year,12,10)
@@ -42,9 +53,11 @@ for year in (2021,2022):
         x=template
         x=re.sub(r'^\*EXP\.DETAILS:.*$', f'*EXP.DETAILS: {name}MZ ANNINGQU M0-M15 PROPAGATION {year} DATE {code}', x, count=1, flags=re.M)
 
-        treat='''*TREATMENTS                        -------------FACTOR LEVELS------------
-@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM
- 1 1 0 0 TEMP PROPAGATION            1  1  0  1  1  0  0  0  0  0  0  0  1'''
+        treat='\n'.join([
+            '*TREATMENTS                        -------------FACTOR LEVELS------------',
+            '@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM',
+            treatment_row(),
+        ])
         x=section_replace(x,'*TREATMENTS','*CULTIVARS',treat)
 
         cultivars='''*CULTIVARS
