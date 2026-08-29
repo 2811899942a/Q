@@ -7,7 +7,7 @@
 - beta_pre = **2.3436 C per C-DTR-excess per 0.1-Kt-deficit**
 - beta_post = **0.4970 C per C-DTR-excess per 0.1-Kt-deficit**
 
-For Kt>=Kt0 the radiation gate is exactly zero, so high-clearness high-DTR days receive no shoulder cooling.
+For Kt>=Kt0 the radiation gate is exactly zero, so high-clearness high-DTR days receive no shoulder cooling. Kt0 is treated as a cross-validated taper scale, not a universal physical threshold.
 
 ## Independent validation 2017-2024
 | Scope | Official RMSE | M10 RMSE | Improvement | Official Bias | M10 Bias | Official R2 | M10 R2 |
