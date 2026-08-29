@@ -1,3 +1,5 @@
+*Soils: Anningqu, Urumqi, China
+
 *ANQH000060  ANNINGQU GRAY DESERT SOIL - MEASURED 0-60 CM
 @SITE        COUNTRY          LAT     LONG SCS FAMILY
  Anningqu    China          43.950   87.490 Gray desert soil; public same-station profile
