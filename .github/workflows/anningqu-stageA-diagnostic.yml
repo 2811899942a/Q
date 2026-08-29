@@ -1,0 +1,75 @@
+name: Diagnose Anningqu Stage A first scenario
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/anningqu-stageA-diagnostic.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Install build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+      - name: Build frozen DSSAT v4.8.5 M0
+        run: |
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/m0-os
+          git -C /tmp/m0-os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/base-data
+          git -C /tmp/base-data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          cmake -S /tmp/m0-os -B /tmp/m0-build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/m0-run >/dev/null
+          cmake --build /tmp/m0-build --parallel 2 >/dev/null
+          cmake --install /tmp/m0-build >/dev/null
+          cp -a /tmp/base-data/. /tmp/m0-run/
+      - name: Build first Anningqu scenario
+        run: |
+          cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2101.WTH /tmp/m0-run/Weather/ANQH2101.WTH
+          cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2201.WTH /tmp/m0-run/Weather/ANQH2201.WTH
+          cp research/dssat_dtr/anningqu/AN.SOL /tmp/m0-run/Soil/AN.SOL
+          python research/dssat_dtr/anningqu/build_stageA_propagation_experiments.py /tmp/m0-run/Maize/UFGA8201.MZX /tmp/m0-run/Maize
+          echo '=== generated experiment key sections ==='
+          sed -n '1,150p' /tmp/m0-run/Maize/AN21A001.MZX
+          echo '=== weather ==='
+          head -8 /tmp/m0-run/Weather/ANQH2101.WTH
+          echo '=== soil ids ==='
+          grep '^\*ANQH' /tmp/m0-run/Soil/AN.SOL
+      - name: Run official control and Anningqu first scenario with diagnostics
+        shell: bash
+        run: |
+          sudo rm -rf /DSSAT48 && sudo ln -s /tmp/m0-run /DSSAT48
+          cd /tmp/m0-run/Maize
+          echo '=== official control UFGA8201 ==='
+          rm -f Summary.OUT PlantGro.OUT ERROR.OUT WARNING.OUT
+          set +e
+          ../dscsm048 A UFGA8201.MZX > /tmp/official.stdout 2>&1
+          rc0=$?
+          set -e
+          echo "official_rc=$rc0"
+          cat /tmp/official.stdout || true
+          test -f ERROR.OUT && { echo '--- official ERROR.OUT ---'; cat ERROR.OUT; } || true
+          test -f WARNING.OUT && { echo '--- official WARNING.OUT ---'; cat WARNING.OUT; } || true
+          ls -l Summary.OUT PlantGro.OUT 2>/dev/null || true
+
+          echo '=== Anningqu AN21A001 ==='
+          rm -f Summary.OUT PlantGro.OUT ERROR.OUT WARNING.OUT
+          set +e
+          ../dscsm048 A AN21A001.MZX > /tmp/an.stdout 2>&1
+          rca=$?
+          set -e
+          echo "anningqu_rc=$rca"
+          cat /tmp/an.stdout || true
+          test -f ERROR.OUT && { echo '--- Anningqu ERROR.OUT ---'; cat ERROR.OUT; } || true
+          test -f WARNING.OUT && { echo '--- Anningqu WARNING.OUT ---'; cat WARNING.OUT; } || true
+          echo '--- output files ---'
+          ls -l Summary.OUT PlantGro.OUT Evaluate.OUT 2>/dev/null || true
+          echo '--- maize dir tail ---'
+          ls -la | tail -40
+          if [ "$rca" -ne 0 ] || [ ! -s Summary.OUT ] || [ ! -s PlantGro.OUT ]; then exit 1; fi
