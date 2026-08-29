@@ -1,0 +1,77 @@
+name: Shihezi Three-Arm SRAD x N Yield Matrix V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-three-arm-srad-n-yield-matrix-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 three-arm case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_three_arm_yield_matrix_v2.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Patch irrigation-date parser only and run unchanged scientific matrix
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('research/dssat_dtr/scripts/shihezi_three_arm_srad_n_yield_matrix.py').read_text()
+          old="    dates = irrigation_dates(txt)"
+          new="""    yy = xfile.stem[4:6]
+    if yy == '19':
+        dates = ['19123','19165','19173','19182','19189','19196','19203','19210','19221','19235']
+    elif yy == '20':
+        dates = ['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237']
+    else:
+        raise RuntimeError('unexpected Shihezi FileX year code: ' + yy)"""
+          if src.count(old) != 1:
+              raise RuntimeError(f'expected one irrigation parser call, found {src.count(old)}')
+          patched=src.replace(old,new,1)
+          p=Path('/tmp/shihezi_three_arm_srad_n_yield_matrix_v2.py')
+          p.write_text(patched)
+          subprocess.run(['python',str(p)],check=True)
+          PY
+
+      - name: Commit V2 matrix evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/three_arm_srad_n_yield_matrix research/dssat_dtr/CHECKPOINT_20260829_THREE_ARM_YIELD_ADVANTAGE.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add repaired Shihezi three-arm yield-accuracy matrix results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
