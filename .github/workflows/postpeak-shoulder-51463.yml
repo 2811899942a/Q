@@ -1,0 +1,29 @@
+name: Validate Urumqi post-peak shoulder
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/test_postpeak_shoulder_51463.py'
+      - '.github/workflows/postpeak-shoulder-51463.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/scripts/test_postpeak_shoulder_51463.py
+      - run: |
+          cat research/dssat_dtr/data/processed_51463/README_POSTPEAK_SHOULDER.md
+          cat research/dssat_dtr/data/processed_51463/postpeak_shoulder_by_hour.csv
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_51463
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Validate Urumqi post-peak shoulder'; git push origin HEAD:research/dssat-dtr-matrix; fi
