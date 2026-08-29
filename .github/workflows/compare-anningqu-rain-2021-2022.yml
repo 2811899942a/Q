@@ -1,0 +1,31 @@
+name: Compare Anningqu rainfall sources 2021-2022
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/anningqu/compare_anningqu_rain_sources_2021_2022.py'
+      - '.github/workflows/compare-anningqu-rain-2021-2022.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compare-rain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/anningqu/compare_anningqu_rain_sources_2021_2022.py
+      - run: cat research/dssat_dtr/data/anningqu/README_ANINGQU_RAIN_SOURCES.md
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/anningqu/README_ANINGQU_RAIN_SOURCES.md research/dssat_dtr/data/anningqu/anningqu_rain_source_comparison.csv
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Add Anningqu rainfall source comparison'; git pull --rebase origin research/dssat-dtr-matrix; git push origin HEAD:research/dssat-dtr-matrix; fi
