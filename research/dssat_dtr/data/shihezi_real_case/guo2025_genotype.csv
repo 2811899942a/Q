@@ -1,0 +1,7 @@
+cultivar,parameter,initial_value,calibrated_value,calibration_range,source
+Xinyu66,P1,300.0,104.7,5-450,Guo2025_Table2-4
+Xinyu66,P2,0.600,1.824,0-2.0,Guo2025_Table2-4
+Xinyu66,P5,850.0,957.2,580-999,Guo2025_Table2-4
+Xinyu66,G2,850,671,248-990,Guo2025_Table2-4
+Xinyu66,G3,8.80,15.82,5-16.5,Guo2025_Table2-4
+Xinyu66,PHINT,45.00,42.97,30-75,Guo2025_Table2-4
