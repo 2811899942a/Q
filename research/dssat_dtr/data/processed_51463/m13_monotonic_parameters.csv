@@ -1,2 +1,2 @@
 ﻿dtr_threshold_c,k_pre,k_post,n_cal_pre,n_cal_post,cal_rmse_pre,cal_rmse_post,pre_hit_upper_bound,post_hit_upper_bound
-14.8,10.0,10.0,95,93,8.026153840598663,6.347507351798476,True,True
+14.8,20.0,16.46,95,93,7.963379915499657,6.337360522864372,True,False
