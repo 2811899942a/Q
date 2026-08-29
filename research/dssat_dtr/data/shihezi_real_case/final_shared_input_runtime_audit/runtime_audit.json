@@ -1,0 +1,122 @@
+[
+  {
+    "arm": "M0",
+    "case": "SHIH1902",
+    "returncode": 0,
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ],
+    "consolidated_has_cultivar": true,
+    "consolidated_has_soil": true,
+    "NITRO_disabled": false
+  },
+  {
+    "arm": "M0",
+    "case": "SHIH2002",
+    "returncode": 0,
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ],
+    "consolidated_has_cultivar": true,
+    "consolidated_has_soil": true,
+    "NITRO_disabled": false
+  },
+  {
+    "arm": "H0TT",
+    "case": "SHIH1902",
+    "returncode": 0,
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ],
+    "consolidated_has_cultivar": true,
+    "consolidated_has_soil": true,
+    "NITRO_disabled": false
+  },
+  {
+    "arm": "H0TT",
+    "case": "SHIH2002",
+    "returncode": 0,
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ],
+    "consolidated_has_cultivar": true,
+    "consolidated_has_soil": true,
+    "NITRO_disabled": false
+  },
+  {
+    "arm": "M15TT",
+    "case": "SHIH1902",
+    "returncode": 0,
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ],
+    "consolidated_has_cultivar": true,
+    "consolidated_has_soil": true,
+    "NITRO_disabled": false
+  },
+  {
+    "arm": "M15TT",
+    "case": "SHIH2002",
+    "returncode": 0,
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ],
+    "consolidated_has_cultivar": true,
+    "consolidated_has_soil": true,
+    "NITRO_disabled": false
+  }
+]

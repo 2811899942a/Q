@@ -1,0 +1,62 @@
+[
+  {
+    "path": "Soil/SH.SOL",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 994
+  },
+  {
+    "path": "Weather/SHIH1901.WTH",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 5733
+  },
+  {
+    "path": "Weather/SHIH2001.WTH",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 5733
+  },
+  {
+    "path": "Genotype/MZCER048.CUL",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 15990
+  },
+  {
+    "path": "Maize/SHIH1901.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH1902.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH1903.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH1904.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH2001.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH2002.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH2003.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  },
+  {
+    "path": "Maize/SHIH2004.MZX",
+    "identical_M0_H0TT_M15TT": true,
+    "bytes": 3250
+  }
+]
