@@ -1,0 +1,136 @@
+name: Shihezi Soil SLOC Read Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-soil-sloc-read-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild proven V4 base
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4.sh'); p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Compare LOWOM and HIGHOM as read by DSSAT
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,re,subprocess,json,difflib
+          from datetime import date
+
+          base=Path('/tmp/run_M0')
+          root=Path('/tmp/sloc_audit'); root.mkdir()
+          fert_dates=[date(2020,5,6),date(2020,6,15),date(2020,6,23),date(2020,7,2),date(2020,7,9),date(2020,7,16),date(2020,7,23),date(2020,7,30),date(2020,8,10),date(2020,8,24)]
+          def yydoy(d): return f'{d.year%100:02d}{d.timetuple().tm_yday:03d}'
+          def repl(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError(start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+          def set_sloc(sol,vals):
+              lines=sol.read_text(encoding='latin-1').splitlines(); out=[]; active=False; k=0
+              for line in lines:
+                  if line.startswith('@  SLB'):
+                      active=True; out.append(line); continue
+                  if active and line.strip() and not line.startswith(('@','*')) and k<5:
+                      t=line.split()
+                      if len(t)>=17:
+                          t[8]=f'{vals[k]:.4f}'; line=' '.join(t); k+=1
+                  out.append(line)
+              if k!=5: raise RuntimeError(k)
+              sol.write_text('\n'.join(out)+'\n',encoding='latin-1')
+          def setup_x(xfile):
+              txt=xfile.read_text(encoding='latin-1')
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'; new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError('MF tail')
+              txt=txt.replace(old,new,1)
+              each=128.8/10
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              for d in fert_dates: rows.append(f' 1 {yydoy(d)} FE005 AP001   5.0 {each:5.2f}   0.0   0.0   0.0   0.0   -99 SLOC audit')
+              txt=repl(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',' 1 MA              R     R     R     N     M')
+              # Enable N output so detailed N files are generated.
+              txt=txt.replace(' 1 OU              N     Y     Y     1     Y     N     Y     N     N     N     Y     N     Y     A',
+                              ' 1 OU              N     Y     Y     1     Y     N     Y     Y     N     N     Y     N     Y     A')
+              xfile.write_text(txt,encoding='latin-1')
+          def summary(path):
+              ls=path.read_text(errors='replace').splitlines(); hi=next(i for i,l in enumerate(ls) if l.startswith('@') and 'HWAM' in l)
+              h=ls[hi]; d=next(l for l in ls[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); z=dict(zip(names[idx:],vals[-len(names[idx:]):])); return {k:z.get(k) for k in ['HWAM','NI#M','NICM','NUCM','NLCM','NMINC']}
+
+          vals={'LOWOM':[0.0861,0.0818,0.0733,0.0758,0.0593], 'HIGHOM':[0.8614,0.8179,0.7332,0.7581,0.5928]}
+          result={}
+          out=Path('research/dssat_dtr/data/shihezi_real_case/soil_sloc_read_audit'); out.mkdir(parents=True,exist_ok=True)
+          for name,v in vals.items():
+              r=root/name; shutil.copytree(base,r); set_sloc(r/'Soil'/'SH.SOL',v); setup_x(r/'Maize'/'SHIH2002.MZX')
+              (out/f'{name}_SH.SOL').write_text((r/'Soil'/'SH.SOL').read_text(encoding='latin-1'),encoding='utf-8')
+              subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True); subprocess.run(['sudo','ln','-s',str(r),'/DSSAT48'],check=True)
+              wd=r/'Maize'
+              for p in wd.glob('*.OUT'): p.unlink()
+              cp=subprocess.run([str(r/'dscsm048'),'A','SHIH2002.MZX'],cwd=wd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              if cp.returncode!=0: raise RuntimeError(name+' failed\n'+cp.stdout)
+              s=summary(wd/'Summary.OUT')
+              files={p.name:p.stat().st_size for p in wd.glob('*.OUT')}
+              result[name]={'summary':s,'out_files':files}
+              # Preserve consolidated input and nitrogen-like outputs if available.
+              for cand in [r/'DSSAT48.INP',wd/'DSSAT48.INP']:
+                  if cand.exists(): shutil.copy2(cand,out/f'{name}_DSSAT48.INP')
+              for p in wd.glob('*.OUT'):
+                  if 'N' in p.name.upper() or p.name in {'Summary.OUT'}:
+                      shutil.copy2(p,out/f'{name}_{p.name}')
+          # Compare generated soil records and any DSSAT48.INP text.
+          result['soil_files_different']=(out/'LOWOM_SH.SOL').read_text() != (out/'HIGHOM_SH.SOL').read_text()
+          lo=out/'LOWOM_DSSAT48.INP'; hi=out/'HIGHOM_DSSAT48.INP'
+          if lo.exists() and hi.exists():
+              a=lo.read_text(errors='replace').splitlines(); b=hi.read_text(errors='replace').splitlines()
+              diff='\n'.join(difflib.unified_diff(a,b,fromfile='LOWOM_DSSAT48.INP',tofile='HIGHOM_DSSAT48.INP',n=3))
+              (out/'DSSAT48_INP_DIFF.txt').write_text(diff,encoding='utf-8'); result['dssat48_inp_diff_chars']=len(diff)
+          (out/'audit_summary.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
+          md=['# Shihezi SLOC model-read audit','',f"Generated soil files differ: **{result['soil_files_different']}**",'']
+          for name in ['LOWOM','HIGHOM']: md.append(f"- {name}: `{result[name]['summary']}`, output files={result[name]['out_files']}")
+          if 'dssat48_inp_diff_chars' in result: md.append(f"- DSSAT48.INP diff length: {result['dssat48_inp_diff_chars']} characters.")
+          md += ['', 'Interpretation: if LOWOM/HIGHOM are demonstrably different in the model-read input/detailed N state but outputs remain identical, close OM as a meaningful current reconstruction lever. If consolidated input is identical or SLOC absent, the custom soil path/format is not propagating and must be corrected once.']
+          (out/'README_SLOC_READ_AUDIT.md').write_text('\n'.join(md)+'\n',encoding='utf-8'); print('\n'.join(md))
+          PY
+
+      - name: Commit SLOC audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/soil_sloc_read_audit
+          if ! git diff --cached --quiet; then
+            git commit -m 'Audit Shihezi SLOC propagation into DSSAT'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
