@@ -1,0 +1,249 @@
+name: Shihezi M0 OC SRAD N Matrix
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-oc-srad-n-matrix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 M0 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_oc_srad_n.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run audited three-factor M0 source-gap matrix
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv, hashlib, json, math, re, shutil, subprocess
+
+          root=Path('/tmp/run_M0')
+          maize=root/'Maize'; weather=root/'Weather'; soil=root/'Soil'/'SH.SOL'
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_oc_srad_n_matrix')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+          subprocess.run(['sudo','ln','-s',str(root),'/DSSAT48'],check=True)
+
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          wths={2019:weather/'SHIH1901.WTH',2020:weather/'SHIH2001.WTH'}
+          xfiles={(y,j):maize/f'SHIH{y%100:02d}{j:02d}.MZX' for y in (2019,2020) for j in range(1,5)}
+          wth_orig={y:p.read_bytes() for y,p in wths.items()}
+          x_orig={k:p.read_bytes() for k,p in xfiles.items()}
+          soil_orig=soil.read_bytes()
+
+          srad_factor={2019:19.8/23.3,2020:19.8/24.2}
+          fert_dates={
+              2019:['19123','19165','19173','19182','19189','19196','19203','19210','19221','19235'],
+              2020:['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237'],
+          }
+          sloc={
+              'LOWOM':[0.0861,0.0818,0.0733,0.0758,0.0593],
+              'HIGHOM':[0.8614,0.8179,0.7332,0.7581,0.5928],
+          }
+          hyd=[
+              (20,0.122,0.237,0.457,1.00,1.51,32.75,51.93),
+              (40,0.136,0.264,0.425,0.85,1.54,31.52,54.11),
+              (60,0.120,0.231,0.371,0.70,1.59,43.28,44.53),
+              (80,0.113,0.214,0.346,0.55,1.63,30.21,60.74),
+              (100,0.105,0.236,0.385,0.40,1.61,29.13,49.76),
+          ]
+          scenarios=[]
+          for oc in ('LOWOM','HIGHOM'):
+              for sr in (False,True):
+                  for n in (128.8,193.2):
+                      scenarios.append((f'{oc}_{"SRAD19P8" if sr else "BASESRAD"}_N{int(round(n))}',oc,sr,n))
+
+          def restore():
+              soil.write_bytes(soil_orig)
+              for y,p in wths.items(): p.write_bytes(wth_orig[y])
+              for k,p in xfiles.items(): p.write_bytes(x_orig[k])
+
+          def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+          base_wth_sha={y:sha(p) for y,p in wths.items()}
+
+          def build_soil(vals):
+              lines=[
+                  '*Soils: Shihezi University Modern Water-saving Irrigation Key Experimental Station','',
+                  '*SHIH000100  SHIHEZI     -99     100 Guo measured 0-100 cm profile',
+                  '@SITE        COUNTRY          LAT     LONG SCS FAMILY',
+                  f" {'Shihezi':<11}{'China':<14}{44.324:8.3f}{85.996:9.3f} -99",
+                  '@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE',
+                  '    -9  0.15   6.0  0.50  60.0  1.00  1.00 IB001 IB001 IB001',
+                  '@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC',
+              ]
+              for (dep,ll,dul,sat,rgf,bd,clay,silt),oc in zip(hyd,vals):
+                  lines.append(
+                      f"{dep:6d}{'-99':>6}{ll:6.3f}{dul:6.3f}{sat:6.3f}{rgf:6.3f}"
+                      f"{'-99':>6}{bd:6.2f}{oc:6.3f}{clay:6.2f}{silt:6.2f}{0.0:6.1f}"
+                      f"{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}"
+                  )
+              return '\n'.join(lines)+'\n'
+
+          def edit_srad(y):
+              p=wths[y]; new=[]; n=0
+              for raw in p.read_text(encoding='latin-1').splitlines():
+                  z=raw.split()
+                  if len(z)>=5 and z[0].isdigit() and len(z[0])==5:
+                      dt,sr,tx,tn,rn=z[:5]
+                      raw=f'{dt:>5s}{float(sr)*srad_factor[y]:6.1f}{float(tx):6.1f}{float(tn):6.1f}{float(rn):6.1f}'
+                      n+=1
+                  new.append(raw)
+              if n==0: raise RuntimeError(f'{y}: no weather rows edited')
+              p.write_text('\n'.join(new)+'\n',encoding='latin-1')
+              if sha(p)==base_wth_sha[y]: raise RuntimeError(f'{y}: SRAD hash unchanged')
+
+          def replace_section(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError(f'missing {start}')
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+
+          def set_n(xfile,y,total):
+              txt=xfile.read_text(encoding='latin-1')
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'; new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError(f'{xfile.name}: MF=0 factor row missing')
+              txt=txt.replace(old,new,1)
+              ds=fert_dates[y]; each=total/len(ds)
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              for d in ds:
+                  rows.append(f' 1 {d} FE005 AP001   5.0 {each:6.2f}   0.0   0.0   0.0   0.0   -99 OC-SRAD-N diagnostic')
+              txt=replace_section(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',' 1 MA              R     R     R     N     M')
+              xfile.write_text(txt,encoding='latin-1')
+
+          def parse_summary(p):
+              ls=p.read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(ls) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=ls[hi]; d=next(l for l in ls[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); tail=names[idx:]
+              return dict(zip(tail,vals[-len(tail):]))
+
+          def parse_info_oc(p):
+              vals=[]; active=False
+              for line in p.read_text(errors='replace').splitlines():
+                  if 'LYR  cm    cm  frac  frac  frac  Grow g/cm3     %' in line:
+                      active=True; continue
+                  if active:
+                      if not line.strip():
+                          if vals: break
+                          continue
+                      z=line.split()
+                      if z and z[0].isdigit() and len(z)>=9:
+                          vals.append(float(z[8]))
+              return vals
+
+          rows=[]; audits=[]
+          try:
+              for sc,oclab,use_srad,total_n in scenarios:
+                  restore()
+                  soil.write_text(build_soil(sloc[oclab]),encoding='latin-1')
+                  if use_srad:
+                      for y in (2019,2020): edit_srad(y)
+                  for (y,j),p in xfiles.items(): set_n(p,y,total_n)
+
+                  for y,yy in ((2019,'19'),(2020,'20')):
+                      if use_srad and sha(wths[y])==base_wth_sha[y]: raise RuntimeError(f'{sc} {y}: SRAD not active')
+                      for j,tr in enumerate(('W1','W2','W3','W4'),1):
+                          for fn in ('Summary.OUT','PlantGro.OUT','INFO.OUT','ERROR.OUT','WARNING.OUT'):
+                              p=maize/fn
+                              if p.exists(): p.unlink()
+                          for p in root.rglob('DSSAT48.INP'):
+                              p.unlink()
+                          x=f'SHIH{yy}{j:02d}'
+                          cp=subprocess.run(['../dscsm048','A',f'{x}.MZX'],cwd=maize,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                          if cp.returncode!=0 or not (maize/'Summary.OUT').exists(): raise RuntimeError(f'{sc} {x} failed\n{cp.stdout[-2000:]}')
+                          z=parse_summary(maize/'Summary.OUT'); pred=float(z['HWAM']); ob=obs[y,tr]
+                          oc_read=parse_info_oc(maize/'INFO.OUT')
+                          if len(oc_read)<5: raise RuntimeError(f'{sc} {x}: INFO OC unavailable')
+                          target=0.09 if oclab=='LOWOM' else 0.86
+                          if abs(oc_read[0]-target)>0.03: raise RuntimeError(f'{sc} {x}: model-read OC {oc_read[0]} mismatches {oclab}')
+                          sr=float(z['SRADA']); nicm=float(z['NICM']) if z.get('NICM') not in (None,'','-99') else None
+                          if use_srad and abs(sr-19.8)>0.25: raise RuntimeError(f'{sc} {x}: SRADA={sr}')
+                          if nicm is None: raise RuntimeError(f'{sc} {x}: NICM unavailable')
+                          rows.append({'scenario':sc,'OC':oclab,'SRAD_mode':'19.8' if use_srad else 'BASE','nominal_N':total_n,
+                                       'year':y,'treatment':tr,'obs':ob,'HWAM':pred,'error':pred-ob,'ARE_pct':abs(pred-ob)/ob*100,
+                                       'SRADA':sr,'PRCP':float(z['PRCP']),'NICM':nicm,'NUCM':z.get('NUCM',''),'NMINC':z.get('NMINC',''),
+                                       'model_read_top_OC_pct':oc_read[0]})
+                          audits.append({'scenario':sc,'case':x,'model_read_OC_pct':oc_read})
+          finally:
+              restore()
+
+          metrics=[]
+          for sc,oclab,use_srad,total_n in scenarios:
+              for y in (2019,2020):
+                  q=[r for r in rows if r['scenario']==sc and r['year']==y]
+                  if len(q)!=4: raise RuntimeError(f'{sc} {y}: {len(q)} rows')
+                  es=[r['error'] for r in q]; oo=[r['obs'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/4); mo=sum(oo)/4
+                  metrics.append({'scenario':sc,'OC':oclab,'SRAD_mode':'19.8' if use_srad else 'BASE','nominal_N':total_n,'year':y,
+                                  'RMSE_kg_ha':rmse,'RRMSE_pct':100*rmse/mo,'MAE_kg_ha':sum(abs(e) for e in es)/4,
+                                  'Bias_kg_ha':sum(es)/4,'mean_HWAM':sum(r['HWAM'] for r in q)/4,
+                                  'mean_SRADA':sum(r['SRADA'] for r in q)/4,'mean_NICM':sum(r['NICM'] for r in q)/4})
+
+          for name,data in [('treatment_rows.csv',rows),('metrics.csv',metrics)]:
+              with (out/name).open('w',newline='',encoding='utf-8-sig') as f:
+                  w=csv.DictWriter(f,fieldnames=list(data[0])); w.writeheader(); w.writerows(data)
+          (out/'model_read_oc_audit.json').write_text(json.dumps(audits,indent=2),encoding='utf-8')
+
+          md=['# Shihezi M0 OC x SRAD x N source-gap matrix','',
+              'All scenarios are common-input diagnostics. M15 and Xinyu66 are untouched. LOWOM and HIGHOM are the two source-interpretation brackets; SRAD19P8 follows the thesis-scale radiation description; N129/N193 are previously audited finite-N brackets.','',
+              '|Scenario|Year|RRMSE %|Mean HWAM kg/ha|Bias kg/ha|SRADA|NICM|',
+              '|---|---:|---:|---:|---:|---:|---:|']
+          for m in metrics:
+              md.append(f"|{m['scenario']}|{m['year']}|{m['RRMSE_pct']:.3f}|{m['mean_HWAM']:.1f}|{m['Bias_kg_ha']:+.1f}|{m['mean_SRADA']:.2f}|{m['mean_NICM']:.1f}|")
+          best19=min((m for m in metrics if m['year']==2019),key=lambda x:x['RRMSE_pct'])
+          best20=min((m for m in metrics if m['year']==2020),key=lambda x:x['RRMSE_pct'])
+          md += ['',f"Lowest diagnostic 2019 RRMSE: **{best19['scenario']} = {best19['RRMSE_pct']:.3f}%**.",
+                 f"Lowest diagnostic 2020 RRMSE: **{best20['scenario']} = {best20['RRMSE_pct']:.3f}%**.",'',
+                 'These minima are used to assess whether the identified source gaps can explain baseline reproduction. They do not authorize choosing HIGHOM or an N bracket by validation fit. Formal three-arm validation still requires the exact same-trial common inputs or a defensible source-supported reconstruction.']
+          (out/'README_M0_OC_SRAD_N_MATRIX.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_M0_OC_SRAD_N_MATRIX.md')
+          cp.write_text('# M0 OC x SRAD x N matrix checkpoint\n\n'+'\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit source-gap matrix
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_oc_srad_n_matrix research/dssat_dtr/checkpoints/CHECKPOINT_20260829_M0_OC_SRAD_N_MATRIX.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi M0 OC SRAD N source-gap matrix results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
