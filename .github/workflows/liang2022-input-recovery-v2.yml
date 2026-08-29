@@ -1,0 +1,82 @@
+name: Liang 2022 DSSAT Input Recovery V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/liang2022-input-recovery-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Download journal PDF temporarily and extract model-input context
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/liang research/dssat_dtr/data/shihezi_real_case/liang2022_input_recovery
+          ABS='https://www.ggpsxb.com/jgpxxb/ch/reader/view_abstract.aspx?file_no=20220106&flag=1'
+          PDF='https://www.ggpsxb.com/jgpxxb/ch/reader/create_pdf.aspx?file_no=20220106&flag=1&quarter_id=1&year_id=2022'
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36'
+          curl -L -sS -A "$UA" -c /tmp/liang/cookie.txt "$ABS" -o /tmp/liang/abstract.html
+          echo "ABSTRACT_BYTES=$(wc -c < /tmp/liang/abstract.html)"
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('/tmp/liang/abstract.html').read_text(errors='replace')
+          print('PDF_LINKS=',re.findall(r'[^"\']*create_pdf[^"\']*',s)[:5])
+          PY
+          code=$(curl -L -sS -A "$UA" -b /tmp/liang/cookie.txt -e "$ABS" -w '%{http_code}' -o /tmp/liang/article.bin "$PDF")
+          echo "PDF_HTTP=$code BYTES=$(wc -c < /tmp/liang/article.bin) TYPE=$(file -b /tmp/liang/article.bin)"
+          if ! file /tmp/liang/article.bin | grep -qi PDF; then
+            head -c 1000 /tmp/liang/article.bin || true
+            exit 3
+          fi
+          mv /tmp/liang/article.bin /tmp/liang/article.pdf
+          pdftotext -layout /tmp/liang/article.pdf /tmp/liang/article.txt
+          python - <<'PY'
+          from pathlib import Path
+          text=Path('/tmp/liang/article.txt').read_text(errors='replace')
+          lines=text.splitlines()
+          kws=['施肥','肥料','氮肥','尿素','磷肥','钾肥','氮素','初始含水','初始土壤','初始水分','土壤水分','气象','气象站','国家气象','NASA','51356','石河子站','播种','株距','行距','灌水','产量','DSSAT','CERES','GLUE','P1','P2','P5','G2','G3','PHINT']
+          hits=[]
+          for i,line in enumerate(lines):
+              if any(k.lower() in line.lower() for k in kws):
+                  block='\n'.join(lines[max(0,i-2):min(len(lines),i+3)]).strip()
+                  if block and block not in hits: hits.append(block)
+          out=Path('research/dssat_dtr/data/shihezi_real_case/liang2022_input_recovery')
+          (out/'input_keyword_context.txt').write_text('\n\n---\n\n'.join(hits),encoding='utf-8')
+          summary=['# Liang et al. 2022 DSSAT input-recovery audit','',
+                   'Article: 梁永辉等, 基于CERES-Maize模型的新疆滴灌玉米灌溉制度优化, 灌溉排水学报 2022, 41(1):41-48, DOI 10.13522/j.cnki.ggps.2021337.','',
+                   f'- Temporary PDF retrieval succeeded; extracted text lines: {len(lines)}.',
+                   '- Only input-relevant context is committed; the full PDF is not stored.','',
+                   '## Keyword presence']
+          for k in kws:
+              summary.append(f'- {k}: {sum(1 for line in lines if k.lower() in line.lower())}')
+          (out/'README.md').write_text('\n'.join(summary)+'\n',encoding='utf-8')
+          print('\n'.join(summary))
+          print('\n===== FILTERED CONTEXT =====')
+          print(('\n\n---\n\n'.join(hits))[:50000])
+          PY
+
+      - name: Commit recovery notes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/liang2022_input_recovery
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Liang 2022 DSSAT input recovery notes'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
