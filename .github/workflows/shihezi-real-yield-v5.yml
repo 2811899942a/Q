@@ -1,0 +1,94 @@
+name: Shihezi Real Yield V5
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-real-yield-v5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Execute source-corrected V5 real-yield pipeline
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          def yaml_block(lines,name):
+              marker='      - name: '+name
+              i=next(i for i,x in enumerate(lines) if x==marker)
+              if lines[i+1].strip()!='run: |':
+                  raise RuntimeError('expected run block for '+name)
+              out=[]; j=i+2
+              while j < len(lines) and not lines[j].startswith('      - '):
+                  line=lines[j]
+                  if line.startswith('          '): line=line[10:]
+                  elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+                  else: line=''
+                  out.append(line); j+=1
+              return '\n'.join(out)+'\n'
+
+          v1=Path('.github/workflows/shihezi-real-yield-v1.yml').read_text().splitlines()
+          wanted=['Build frozen DSSAT arms','Build Guo 2025 Shihezi inputs','Run all real-case arms']
+          bad_treat='  1 1 0 0 GUO2025 XINYU66 REAL       1  1  0  1  1  1  0  0  0  0  0  0  1'
+          levels=[1,1,0,1,1,1,0,0,0,0,0,0,1]
+          good_treat=f'{1:3d}{1:1d} {0:1d} {0:1d} '+f'{"GUO2025 XINYU66 REAL":25s}'+''.join(f'{v:3d}' for v in levels)
+          old_cul='newline=f"XY0066 {\'Xinyu 66\':<16} {\'IB0001\':<6} {104.7:6.1f}{1.824:6.3f}{957.2:6.1f}{671:6.0f}{15.82:6.2f}{42.97:6.2f}"'
+          new_cul='newline=f"{\'XY0066\':6s} {\'Xinyu 66\':16s}     . {\'IB0001\':6s} {104.7:5.1f} {1.824:5.3f} {957.2:5.1f} {671.0:5.1f} {15.82:5.2f} {42.97:5.2f}"'
+          old_xy=' 1          44.3244        85.9964       412'
+          new_xy=' 1          85.9964        44.3244       412'
+          old_pop='8.89  8.89     S'
+          new_pop='8.25  8.25     S'
+
+          for k,name in enumerate(wanted,1):
+              s=yaml_block(v1,name).replace('SHR','SHIH').replace(bad_treat,good_treat)
+              if name=='Build Guo 2025 Shihezi inputs':
+                  if old_cul not in s: raise RuntimeError('old cultivar formatter not found')
+                  s=s.replace(old_cul,new_cul)
+                  if old_xy not in s: raise RuntimeError('old field coordinates not found')
+                  s=s.replace(old_xy,new_xy)
+                  if old_pop not in s: raise RuntimeError('old planting density not found')
+                  s=s.replace(old_pop,new_pop)
+                  s=s.replace('PPOP=8.89 plants/m2 derived from Guo 25-cm plant spacing and mean 45-cm row spacing; no arm-specific fitting.',
+                              'PPOP=8.25 plants/m2 from the exact 2019-2020 Xinyu66 field design: 82,500 plants/ha and 20-cm plant spacing; common to all arms.')
+                  anchor="print('CUL=',cul,'ROW=',newline)"
+                  s=s.replace(anchor, anchor+"\nassert len(newline)==72, (len(newline),repr(newline))\nassert newline[24:29]=='    .' and newline[30:36]=='IB0001', repr(newline)")
+              p=Path(f'/tmp/real_yield_v5_step{k}.sh'); p.write_text(s)
+              print(f'===== V5 STEP {k}: {name} =====')
+              subprocess.run(['bash',str(p)],check=True)
+
+          # Reuse the already-audited V4 Summary.OUT suffix parser and scoring logic unchanged.
+          v4=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          score=yaml_block(v4,'Robustly parse Summary OUT and score real yield')
+          score=score.replace('real_yield_v4','real_yield_v5').replace('validation V4','validation V5')
+          score=score.replace('three-arm validation V4','three-arm validation V5')
+          score=score.replace('Reconstruction caveat:',
+              'V5 common-arm corrections: exact 2019-2020 field density is 82,500 plants/ha (8.25 plants/m2) and FIELDS coordinates are longitude 85.9964, latitude 44.3244; elevation remains 412 m. Reconstruction caveat:')
+          p=Path('/tmp/real_yield_v5_score.sh'); p.write_text(score)
+          print('===== V5 STEP 4: robust scoring =====')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Commit V5 real-yield result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/real_yield_v5
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi Xinyu66 real-yield V5 validation'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
