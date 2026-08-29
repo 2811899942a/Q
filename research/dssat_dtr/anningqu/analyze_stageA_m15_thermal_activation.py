@@ -39,10 +39,12 @@ def readw(year):
  p=DATA/f'ANQH{year%100:02d}01.WTH'
  with p.open(encoding='utf-8-sig') as f:
   for line in f:
-   if not line.strip() or line[0] in '*@!':continue
    q=line.split()
-   if len(q)<5:continue
-   code=q[0]; yy=int(code[:2]);doy=int(code[2:]);d=date(year,1,1)+timedelta(days=doy-1)
+   # DSSAT data rows begin with a five-digit YYDDD code.  Metadata rows
+   # (including the indented station row beginning with ANQH) are ignored.
+   if len(q)<5 or len(q[0])!=5 or not q[0].isdigit():
+    continue
+   code=q[0]; doy=int(code[2:]); d=date(year,1,1)+timedelta(days=doy-1)
    rows.append((d,float(q[1]),float(q[2]),float(q[3])))
  return rows
 
