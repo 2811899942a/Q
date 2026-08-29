@@ -1,0 +1,173 @@
+name: Shihezi Real Yield V4
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-real-yield-v4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Build and run frozen three-arm real-yield cases
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          src=Path('.github/workflows/shihezi-real-yield-v1.yml').read_text().splitlines()
+          wanted=['Build frozen DSSAT arms','Build Guo 2025 Shihezi inputs','Run all real-case arms']
+          def block(name):
+              marker='      - name: '+name
+              i=next(i for i,x in enumerate(src) if x==marker)
+              out=[]; j=i+2
+              while j < len(src) and not src[j].startswith('      - '):
+                  line=src[j]
+                  if line.startswith('          '): line=line[10:]
+                  elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+                  else: line=''
+                  out.append(line); j+=1
+              return '\n'.join(out)+'\n'
+
+          bad_treat='  1 1 0 0 GUO2025 XINYU66 REAL       1  1  0  1  1  1  0  0  0  0  0  0  1'
+          levels=[1,1,0,1,1,1,0,0,0,0,0,0,1]
+          good_treat=f'{1:3d}{1:1d} {0:1d} {0:1d} '+f'{"GUO2025 XINYU66 REAL":25s}'+''.join(f'{v:3d}' for v in levels)
+          old_cul='newline=f"XY0066 {\'Xinyu 66\':<16} {\'IB0001\':<6} {104.7:6.1f}{1.824:6.3f}{957.2:6.1f}{671:6.0f}{15.82:6.2f}{42.97:6.2f}"'
+          new_cul='newline=f"{\'XY0066\':6s} {\'Xinyu 66\':16s}     . {\'IB0001\':6s} {104.7:5.1f} {1.824:5.3f} {957.2:5.1f} {671.0:5.1f} {15.82:5.2f} {42.97:5.2f}"'
+
+          for k,name in enumerate(wanted,1):
+              s=block(name).replace('SHR','SHIH').replace(bad_treat,good_treat)
+              if name=='Build Guo 2025 Shihezi inputs':
+                  if old_cul not in s: raise RuntimeError('old cultivar formatter not found')
+                  s=s.replace(old_cul,new_cul)
+                  anchor="print('CUL=',cul,'ROW=',newline)"
+                  s=s.replace(anchor, anchor+"\nassert len(newline)==72, (len(newline),repr(newline))\nassert newline[24:29]=='    .' and newline[30:36]=='IB0001', repr(newline)")
+              p=Path(f'/tmp/real_yield_v4_step{k}.sh'); p.write_text(s)
+              print(f'===== STEP {k}: {name} =====')
+              subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Robustly parse Summary OUT and score real yield
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv,math,json
+
+          out=Path('research/dssat_dtr/data/shihezi_real_case/real_yield_v4')
+          out.mkdir(parents=True,exist_ok=True)
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          published_rr={2019:6.52,2020:5.69}
+
+          audit=[]
+          def parse_hw(path):
+              lines=Path(path).read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=lines[hi]
+              d=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split()
+              vals=d.split()
+              idx=names.index('HWAM')
+              tail_names=names[idx:]
+              if len(vals) < len(tail_names):
+                  raise RuntimeError(f'not enough tokens: names={len(names)} vals={len(vals)} header={h!r} data={d!r}')
+              tail_vals=vals[-len(tail_names):]
+              z=dict(zip(tail_names,tail_vals))
+              try:
+                  hw=float(z['HWAM'])
+              except Exception as e:
+                  raise RuntimeError(f'HWAM suffix parse failed: {e}; names={names}; vals={vals}; mapped={z}; header={h!r}; data={d!r}')
+              audit.append({'path':str(path),'header':h,'data':d,'header_tokens':len(names),'data_tokens':len(vals),
+                            'tail_start':'HWAM','tail_tokens':len(tail_names),'HWAM_raw':z['HWAM'],
+                            'tail_map':z})
+              return hw,z
+
+          rows=[]
+          for arm in ['M0','H0TT','M15TT']:
+              for year,yy in [(2019,'19'),(2020,'20')]:
+                  for j,tr in enumerate(['W1','W2','W3','W4'],1):
+                      p=f'/tmp/results/{arm}/SHIH{yy}{j:02d}_Summary.OUT'
+                      pred,z=parse_hw(p)
+                      ob=obs[(year,tr)]
+                      rows.append({'arm':arm,'year':year,'treatment':tr,'observed_yield_kg_ha':ob,
+                                   'simulated_HWAM_kg_ha':pred,'error_kg_ha':pred-ob,
+                                   'ARE_pct':abs(pred-ob)/ob*100,'CWAM':z.get('CWAM','')})
+
+          with (out/'summary_parser_audit.json').open('w',encoding='utf-8') as f:
+              json.dump(audit,f,ensure_ascii=False,indent=2)
+          with (out/'shihezi_real_yield_three_arm.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+
+          stats=[]
+          for arm in ['M0','H0TT','M15TT']:
+              for yr in [2019,2020]:
+                  q=[r for r in rows if r['arm']==arm and r['year']==yr]
+                  es=[r['error_kg_ha'] for r in q]; oo=[r['observed_yield_kg_ha'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/len(es))
+                  mae=sum(abs(e) for e in es)/len(es)
+                  bias=sum(es)/len(es)
+                  rrmse=rmse/(sum(oo)/len(oo))*100
+                  stats.append({'arm':arm,'year':yr,'RMSE_kg_ha':rmse,'RRMSE_pct':rrmse,
+                                'MAE_kg_ha':mae,'Bias_kg_ha':bias,
+                                'published_M0_RRMSE_pct':published_rr[yr] if arm=='M0' else ''})
+          with (out/'shihezi_real_yield_metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(stats[0])); w.writeheader(); w.writerows(stats)
+
+          S={(x['arm'],x['year']):x for x in stats}
+          gate=abs(S['M0',2020]['RRMSE_pct']-published_rr[2020])<=3.0
+          imp_h=(S['M0',2020]['RRMSE_pct']-S['H0TT',2020]['RRMSE_pct'])/S['M0',2020]['RRMSE_pct']*100
+          imp_m=(S['M0',2020]['RRMSE_pct']-S['M15TT',2020]['RRMSE_pct'])/S['M0',2020]['RRMSE_pct']*100
+          local=(S['H0TT',2020]['RRMSE_pct']-S['M15TT',2020]['RRMSE_pct'])/S['H0TT',2020]['RRMSE_pct']*100
+          base={(r['year'],r['treatment']):r['simulated_HWAM_kg_ha'] for r in rows if r['arm']=='M0'}
+          maxshift=max(abs(r['simulated_HWAM_kg_ha']-base[(r['year'],r['treatment'])]) for r in rows if r['arm']!='M0')
+          robust=maxshift>=100
+
+          md=['# Shihezi real-yield three-arm validation V4','',
+              '**Scope:** Guo Shihezi Xinyu66 real-yield causal screen. 2019 is the published calibration year; 2020 is treated as the independent validation year. Cultivar coefficients are frozen and identical among arms.','',
+              '**Reconstruction caveat:** weather uses the existing provisional NASA POWER reconstruction because the exact original CMA+NASA WTH is unavailable in the current public package; nitrogen is disabled and initial soil water is set to DUL identically among arms. Observed yield targets are digitized from the published figure (~+/-100 kg/ha). Therefore the published M0 RRMSE reproduction gate is mandatory before any accuracy claim.','',
+              '|Arm|Year|RMSE kg/ha|RRMSE %|MAE kg/ha|Bias kg/ha|Published M0 RRMSE %|',
+              '|---|---:|---:|---:|---:|---:|---:|']
+          for x in stats:
+              md.append(f"|{x['arm']}|{x['year']}|{x['RMSE_kg_ha']:.1f}|{x['RRMSE_pct']:.3f}|{x['MAE_kg_ha']:.1f}|{x['Bias_kg_ha']:.1f}|{x['published_M0_RRMSE_pct']}|")
+          md += ['', '## 2020 independent-validation decision','',
+                 f"- M0 reproduction gate: **{'PASS' if gate else 'FAIL'}** (reconstructed {S['M0',2020]['RRMSE_pct']:.3f}% vs published 5.69%; tolerance +/-3 percentage points).",
+                 f"- H0TT relative RRMSE improvement vs M0: **{imp_h:+.3f}%**.",
+                 f"- M15TT relative RRMSE improvement vs M0: **{imp_m:+.3f}%**.",
+                 f"- Local M15 contribution relative to H0TT: **{local:+.3f}%**.",
+                 f"- Maximum arm-induced HWAM shift: **{maxshift:.1f} kg/ha**; >=100 kg/ha digitization-resolution threshold: **{'YES' if robust else 'NO'}**.",'']
+          if not gate:
+              md += ['**Scientific classification: INCONCLUSIVE FOR FINAL ACCURACY.** The reconstructed M0 does not reproduce the published independent-year baseline closely enough. Modified-arm directions can be used only as a causal screen, not as evidence of improved real-yield accuracy.']
+          elif imp_m>0 and robust:
+              md += ['**Scientific classification: PROVISIONAL REAL-YIELD IMPROVEMENT.** The independent-year M15TT RRMSE is lower than M0 and the yield response exceeds the approximate digitization resolution.']
+          elif imp_m>0:
+              md += ['**Scientific classification: NUMERICAL IMPROVEMENT BELOW OBSERVATION RESOLUTION.** The metric improves but the arm-induced yield shift is smaller than the approximate digitization uncertainty.']
+          else:
+              md += ['**Scientific classification: NO REAL-YIELD ACCURACY ADVANTAGE IN THIS RECONSTRUCTION.** Do not retune M15 against yield.']
+          (out/'README_REAL_YIELD_V4.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          print('PARSER_SAMPLE=',json.dumps(audit[0],ensure_ascii=False))
+          PY
+
+      - name: Commit V4 real-yield result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/real_yield_v4
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi Xinyu66 real-yield V4 validation'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
