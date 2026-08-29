@@ -1,6 +1,6 @@
 # DSSAT-DTR Xinjiang Research Handoff
 
-Last material checkpoint: 2026-08-29 20:05 CST
+Last material checkpoint: 2026-08-29 20:28 CST
 Branch: `research/dssat-dtr-matrix`
 Study: DSSAT v4.8.5 CERES-Maize hourly-temperature / extreme-day thermal-time improvement
 
@@ -188,36 +188,98 @@ Best finite-N diagnostic: N193_SPLIT, 16.909% RRMSE versus 60.771% in the unlimi
 
 Interpretation: nitrogen representation explains a large portion of the M0 discrepancy. N193_SPLIT remains a diagnostic bracket because exact 2019-2020 fertilizer management has not yet been recovered. The remaining 16.909% still misses the published 5.69% baseline substantially.
 
-## 10. Weather source-gap diagnostic V1 — withdrawn from attribution
+## 10. Weather source-gap diagnostics V1-V3
 
-An existing M0 weather diagnostic attempted to adjust source-supported magnitudes for precipitation and solar radiation. It returned identical HWAM and identical post-run `Summary.OUT` weather diagnostics for BASE, RAIN_MATCH, SRAD_19P8 and WEATHER_BOTH:
-- 2019 SRADA=23.30, PRCP=83.30
-- 2020 SRADA=24.20, PRCP=103.10
+### V1 — withdrawn from attribution
 
-Because requested weather changes did not appear in `Summary.OUT`, this result cannot be interpreted as crop insensitivity to rainfall or radiation. The WTH edits did not propagate into the actual DSSAT run path or were bypassed.
+RAIN_MATCH, SRAD_19P8 and WEATHER_BOTH returned identical HWAM and identical `Summary.OUT` SRADA/PRCP as BASE. Requested WTH changes did not demonstrably propagate into DSSAT.
 
-RAIN_MATCH / SRAD_19P8 / WEATHER_BOTH V1 are therefore withdrawn from scientific attribution.
+### V2 — engineering gate failure
 
-## 11. Immediate next action
+The workflow used an arbitrary >=300 WTH-row requirement, while the reconstructed WTH contains 184 valid daily records. It stopped before producing a weather response. This failure has no scientific interpretation.
 
-### Priority A — weather diagnostic V2 with hard audit
-1. create independent physical M0 scenario roots;
-2. link the scenario root to `/DSSAT48`;
-3. edit the exact active `/DSSAT48/Weather/SHIH1901.WTH` and `SHIH2001.WTH`;
-4. save file hashes plus directly parsed pre-run SRAD mean and RAIN total;
-5. run M0;
-6. require post-run `Summary.OUT` SRADA/PRCP to change consistently;
-7. fail the workflow if a requested weather scenario is identical to BASE after the input audit.
+Checkpoint: `CHECKPOINT_20260829_2016_WEATHER_V2_ROWCOUNT_FAILURE.md`.
 
-### Priority B — same-trial management recovery
-Continue Meng/Guo 2019-2020 source recovery for:
-- exact fertilizer products, total rates, dates and split fractions;
-- initial soil-water profile near planting;
-- exact national-station + NASA weather combination if available.
+### V3 — canonical source copy still failed post-run propagation
 
-Only source-supported common-arm inputs may enter a formal V6 reconstruction. Diagnostic values may continue to bracket sensitivity, but cannot be chosen by yield fit.
+Run `33251591460` rebuilt the V4 case successfully and audited independent copied WTH files, valid-row counts, hashes and the expected `/DSSAT48/Weather` path. DSSAT then failed the hard post-run gate:
 
-## 12. Hard scientific rules
+`POST-RUN FAIL: RAIN_MATCH PRCP unchanged for 2019`.
+
+The leading runtime-path hypothesis is that copied installed trees preserve the original CMake installation-prefix path (`/tmp/run_M0`) in DSSATPRO configuration. Thus a copied scenario can still read the canonical BASE weather path.
+
+No V3 weather sensitivity result is accepted.
+
+Checkpoint: `CHECKPOINT_20260829_2028_WEATHER_V3_RUNTIME_PATH_FAILURE.md`.
+
+### V4 correction now triggered
+
+Workflow: `.github/workflows/shihezi-m0-weather-gap-diagnostic-v4.yml`.
+
+V4 keeps one canonical `/tmp/run_M0` installation, audits DSSATPRO, edits `/tmp/run_M0/Weather/SHIH1901.WTH` and `SHIH2001.WTH` in place, verifies hashes immediately before every run, and requires `Summary.OUT` SRADA/PRCP to move in the requested direction. This removes copied-install path ambiguity.
+
+## 11. Public station-weather recovery
+
+A 51356 public-station probe was completed in run `33251318548`.
+
+- ISD station-history metadata returned a 51356/513560 match.
+- GSOD `51356099999` daily files for 2019 and 2020 returned HTTP 404.
+- GHCN-Daily `CHM00051356.dly` returned HTTP 404.
+
+No daily NOAA/GHCN series was recovered through those identifiers. This does not establish absence from every archive or historical identifier.
+
+Existing POWER May-August audit:
+- 2019: mean Tmax 31.485 C, Tmin 18.046 C, rain 93.41 mm, SRAD 22.949 MJ m-2 d-1.
+- 2020: mean Tmax 31.651 C, Tmin 18.288 C, rain 118.84 mm, SRAD 23.622 MJ m-2 d-1.
+
+Precipitation magnitude is already close to the thesis-scale values, especially in 2020. Solar radiation remains the clearer magnitude discrepancy.
+
+Checkpoint: `CHECKPOINT_20260829_2012_STATION_51356_PROBE.md`.
+
+## 12. Adjacent same-station fertilizer management source
+
+Wang et al. (2019), Water 11(3):472, DOI `10.3390/w11030472`, describes a 2018 maize experiment at the same Shihezi University water-saving experimental-station system.
+
+Recovered management:
+- P2O5 120 kg/ha base fertilizer;
+- K2O 90 kg/ha base fertilizer;
+- 20% of urea used as base fertilizer;
+- subsequent fertilizer applied with irrigation;
+- 10 irrigation/fertigation events.
+
+Stage fertigation shares:
+- seedling: 1 event / 10%;
+- jointing: 3 / 20%;
+- tasseling: 3 / 45%;
+- filling: 2 / 15%;
+- maturity: 1 / 10%.
+
+This provides a defensible adjacent-source timing shape. The full-season urea/N total remains unresolved from that source, so the schedule is diagnostic only.
+
+A same-total timing workflow is now running: `.github/workflows/shihezi-m0-fertilizer-timing-diagnostic.yml`. It compares equal 10-way splitting against 20% basal + same-station 2018 stage allocation at the already-tested nominal N totals 128.8 and 193.2 kg/ha. Total N is held fixed to isolate timing leverage.
+
+Checkpoint: `CHECKPOINT_20260829_2024_SAME_STATION_2018_FERTILIZER_SOURCE.md`.
+
+## 13. Soil organic-matter unit diagnostic
+
+Guo Table 2-1 reports top-layer OM values such as `1.485` with units typed g/kg, while a later same-station Xinyu66 experiment reports topsoil OM around 14.12 g/kg. A diagnostic hypothesis treats the Guo values as percent OM (e.g. 1.485% = 14.85 g/kg) and converts to DSSAT SLOC by OM/1.724.
+
+The first workflow failed during V4-base reconstruction and produced no science. Failure checkpoint: `CHECKPOINT_20260829_2020_SOIL_OM_DIAGNOSTIC_FAILURE.md`.
+
+Corrected workflow `.github/workflows/shihezi-m0-soil-om-diagnostic-v2.yml`, run `33251645551`, is currently running. It audits active SLOC, MF=1 and NICM before interpreting any yield response.
+
+This remains a source-interpretation diagnostic; it cannot enter the formal reconstruction solely because it lowers yield error.
+
+## 14. Immediate queue
+
+1. Finish weather V4 with canonical in-place WTH propagation audit.
+2. Finish soil-OM V2 and read numeric RRMSE changes.
+3. Finish same-station fertilizer-timing diagnostic and isolate timing effect at fixed total N.
+4. Use the three diagnostics to rank the remaining M0 source gaps.
+5. Continue recovering exact 2019-2020 fertilizer schedule, initial soil water and weather construction.
+6. Only after a source-supported M0 approaches the published 2020 ~5.69% RRMSE, rerun the final M0/H0TT/M15TT three-arm comparison and quantify the true crop-output improvement.
+
+## 15. Hard scientific rules
 
 - Do not retune M15 (`DTRc=14.8 C`, `alpha=7.8094`).
 - Do not retune Xinyu66 coefficients against validation yield.
