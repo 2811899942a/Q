@@ -10,6 +10,7 @@ on:
       - 'research/dssat_dtr/scripts/benchmark_dssat_htemp_51463.py'
       - 'research/dssat_dtr/scripts/calibrate_pl_xj_51463.py'
       - 'research/dssat_dtr/scripts/analyze_dtr_asymmetry_51463.py'
+      - 'research/dssat_dtr/scripts/detect_dtr_breakpoint_51463.py'
       - '.github/workflows/build-urumqi-51463-data.yml'
   workflow_dispatch:
 
@@ -51,17 +52,16 @@ jobs:
       - name: Diagnose DTR-driven residual asymmetry and temperature extremes
         run: python research/dssat_dtr/scripts/analyze_dtr_asymmetry_51463.py
 
+      - name: Detect local DTR breakpoint
+        run: python research/dssat_dtr/scripts/detect_dtr_breakpoint_51463.py
+
       - name: Show scientific summaries
         run: |
-          cat research/dssat_dtr/data/processed_51463/README_HTEMP_BASELINE.md
-          echo '--- PL-XJ independent validation ---'
-          cat research/dssat_dtr/data/processed_51463/README_PL_XJ_CALIBRATION.md
-          echo '--- DTR asymmetry mechanism diagnosis ---'
           cat research/dssat_dtr/data/processed_51463/README_DTR_ASYMMETRY.md
-          echo '--- DTR asymmetry bins ---'
-          cat research/dssat_dtr/data/processed_51463/dtr_asymmetry_by_bin.csv
-          echo '--- extreme temperature diagnostics ---'
-          cat research/dssat_dtr/data/processed_51463/extreme_temperature_diagnostics.csv
+          echo '--- breakpoint diagnosis ---'
+          cat research/dssat_dtr/data/processed_51463/README_DTR_BREAKPOINT.md
+          echo '--- breakpoint stability ---'
+          cat research/dssat_dtr/data/processed_51463/dtr_breakpoint_stability.csv
 
       - name: Commit processed data
         run: |
@@ -71,6 +71,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No processed-data changes to commit.'
           else
-            git commit -m 'Diagnose Urumqi DTR asymmetry and temperature extremes'
+            git commit -m 'Estimate Urumqi DTR residual breakpoint'
             git push origin HEAD:research/dssat-dtr-matrix
           fi
