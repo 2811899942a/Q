@@ -1,0 +1,179 @@
+name: Shihezi M0 Fertilizer Timing Diagnostic
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-fertilizer-timing-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-timing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_fert_timing.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run same-total timing brackets
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from datetime import date
+          import csv,json,math,re,shutil,subprocess
+
+          base=Path('/tmp/run_M0')
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_fertilizer_timing_diagnostic')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          obs={'W1':9275,'W2':11100,'W3':12030,'W4':11595}
+          # Totals are frozen diagnostic brackets already used in corrected nitrogen V2.
+          totals=[128.8,193.2]
+          # Reconstructed ten irrigation/fertigation dates already used by N-V2.
+          top_dates=[date(2020,5,6),date(2020,6,15),date(2020,6,23),date(2020,7,2),date(2020,7,9),date(2020,7,16),date(2020,7,23),date(2020,7,30),date(2020,8,10),date(2020,8,24)]
+          # Same-station Wang et al. (Water 2019, doi:10.3390/w11030472) Table 1 stage structure:
+          # 1 seedling / 3 jointing / 3 tasseling / 2 filling / 1 maturity,
+          # with stage shares 10/20/45/15/10 percent of the fertigation component.
+          top_fracs=[0.10,0.20/3,0.20/3,0.20/3,0.45/3,0.45/3,0.45/3,0.15/2,0.15/2,0.10]
+          if abs(sum(top_fracs)-1.0)>1e-12: raise RuntimeError(sum(top_fracs))
+
+          def yydoy(d): return f'{d.year%100:02d}{d.timetuple().tm_yday:03d}'
+          def replace_section(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError('missing '+start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+          def set_fert(xfile,total_n,mode):
+              txt=xfile.read_text(encoding='latin-1')
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'
+              new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError('MF=0 treatment factor tail missing')
+              txt=txt.replace(old,new,1)
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              if mode=='EQUAL10':
+                  each=total_n/10.0
+                  for d in top_dates:
+                      rows.append(f' 1 {yydoy(d)} FE005 AP001   5.0 {each:6.2f}   0.0   0.0   0.0   0.0   -99 Equal10 diagnostic')
+              elif mode=='WANG2018':
+                  # Wang 2018 same-station method states 20% urea as base fertilizer.
+                  base_n=0.20*total_n
+                  top_n=0.80*total_n
+                  rows.append(f' 1 {yydoy(date(2020,5,4))} FE005 AP001   5.0 {base_n:6.2f}   0.0   0.0   0.0   0.0   -99 20pct pre-sowing base')
+                  for d,frac in zip(top_dates,top_fracs):
+                      n=top_n*frac
+                      rows.append(f' 1 {yydoy(d)} FE005 AP001   5.0 {n:6.2f}   0.0   0.0   0.0   0.0   -99 Wang2018 timing diagnostic')
+              else: raise ValueError(mode)
+              txt=replace_section(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',' 1 MA              R     R     R     N     M')
+              xfile.write_text(txt,encoding='latin-1')
+              return '\n'.join(rows)+'\n'
+          def parse(path):
+              lines=path.read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=lines[hi]; d=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); tail=names[idx:]
+              return dict(zip(tail,vals[-len(tail):])),h,d
+
+          rows=[]; audits=[]; fert_sections=[]
+          root=Path('/tmp/fert_timing_diag')
+          if root.exists(): shutil.rmtree(root)
+          root.mkdir()
+          for total in totals:
+              for mode in ('EQUAL10','WANG2018'):
+                  scen=f'N{int(round(total))}_{mode}'
+                  r=root/scen; shutil.copytree(base,r)
+                  for j in range(1,5):
+                      sec=set_fert(r/'Maize'/f'SHIH20{j:02d}.MZX',total,mode)
+                      if j==1: fert_sections.append(f'===== {scen} =====\n{sec}')
+                  subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+                  subprocess.run(['sudo','ln','-s',str(r),'/DSSAT48'],check=True)
+                  for j,tr in enumerate(('W1','W2','W3','W4'),1):
+                      wd=r/'Maize'; x=f'SHIH20{j:02d}'
+                      for fn in ('Summary.OUT','PlantGro.OUT','ERROR.OUT','WARNING.OUT'):
+                          p=wd/fn
+                          if p.exists(): p.unlink()
+                      cp=subprocess.run([str(r/'dscsm048'),'A',f'{x}.MZX'],cwd=wd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                      if cp.returncode!=0 or not (wd/'Summary.OUT').exists(): raise RuntimeError(f'{scen} {x} failed\n{cp.stdout[-2000:]}')
+                      z,h,d=parse(wd/'Summary.OUT'); pred=float(z['HWAM']); ob=obs[tr]
+                      rows.append({'scenario':scen,'total_N_nominal':total,'mode':mode,'treatment':tr,'obs':ob,'HWAM':pred,'error':pred-ob,'ARE_pct':abs(pred-ob)/ob*100})
+                      audits.append({'scenario':scen,'treatment':tr,'NI#M':z.get('NI#M'),'NICM':z.get('NICM'),'NUCM':z.get('NUCM'),'HWAM':z.get('HWAM'),'raw_header':h,'raw_data':d})
+
+          metrics=[]
+          for total in totals:
+              for mode in ('EQUAL10','WANG2018'):
+                  scen=f'N{int(round(total))}_{mode}'; q=[r for r in rows if r['scenario']==scen]
+                  es=[r['error'] for r in q]; oo=[r['obs'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/len(es)); mo=sum(oo)/len(oo)
+                  metrics.append({'scenario':scen,'total_N_nominal':total,'mode':mode,'RMSE_kg_ha':rmse,'RRMSE_pct':rmse/mo*100,'MAE_kg_ha':sum(abs(e) for e in es)/len(es),'Bias_kg_ha':sum(es)/len(es),'mean_HWAM':sum(r['HWAM'] for r in q)/len(q)})
+
+          # Hard applied-N audit.
+          for m in metrics:
+              vals=[]
+              for a in audits:
+                  if a['scenario']==m['scenario'] and a.get('NICM') not in (None,'','-99'):
+                      vals.append(float(a['NICM']))
+              if not vals: raise RuntimeError(f"NICM missing for {m['scenario']}")
+              m['NICM_mean']=sum(vals)/len(vals)
+
+          for name,data in [('treatment_rows.csv',rows),('metrics.csv',metrics)]:
+              with (out/name).open('w',newline='',encoding='utf-8-sig') as f:
+                  w=csv.DictWriter(f,fieldnames=list(data[0])); w.writeheader(); w.writerows(data)
+          (out/'summary_audit.json').write_text(json.dumps(audits,indent=2),encoding='utf-8')
+          (out/'fertilizer_sections.txt').write_text('\n'.join(fert_sections),encoding='utf-8')
+
+          M={m['scenario']:m for m in metrics}
+          md=['# Shihezi M0 same-station fertilizer timing diagnostic','',
+              'Diagnostic only. Total N is held at previously tested brackets; only temporal allocation changes. WANG2018 uses a same-station 2018 source: 20% urea pre-sowing plus the remaining 80% distributed across the 10 fertigation events using the published stage shares 10/20/45/15/10%.','',
+              '|Scenario|RRMSE %|RMSE kg/ha|Bias kg/ha|Mean HWAM|Mean NICM|','|---|---:|---:|---:|---:|---:|']
+          for m in metrics:
+              md.append(f"|{m['scenario']}|{m['RRMSE_pct']:.3f}|{m['RMSE_kg_ha']:.1f}|{m['Bias_kg_ha']:+.1f}|{m['mean_HWAM']:.1f}|{m['NICM_mean']:.1f}|")
+          md += ['', '## Timing effect at fixed total N','']
+          for total in totals:
+              a=M[f'N{int(round(total))}_EQUAL10']; b=M[f'N{int(round(total))}_WANG2018']
+              md.append(f"- N={total:.1f} kg/ha nominal: WANG2018 timing changes RRMSE by {b['RRMSE_pct']-a['RRMSE_pct']:+.3f} percentage points and mean HWAM by {b['mean_HWAM']-a['mean_HWAM']:+.1f} kg/ha relative to equal-10 timing.")
+          md += ['', 'This timing pattern is adjacent same-station evidence, not confirmed as the exact 2019-2020 Meng/Guo schedule. It cannot be promoted to the formal reconstruction by yield performance alone.']
+          (out/'README_M0_FERTILIZER_TIMING_DIAGNOSTIC.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_FERTILIZER_TIMING_DIAGNOSTIC.md')
+          cp.write_text('# Fertilizer timing diagnostic checkpoint\n\n'+'\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit timing results and checkpoint
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_fertilizer_timing_diagnostic research/dssat_dtr/checkpoints/CHECKPOINT_20260829_FERTILIZER_TIMING_DIAGNOSTIC.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add same-station fertilizer timing diagnostic results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
