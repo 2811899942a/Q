@@ -1,0 +1,222 @@
+[
+  {
+    "scenario": "UNLIMITED",
+    "treatment": "W1",
+    "HWAM": 17591.0,
+    "CWAM": null,
+    "NIAM": "-99",
+    "NUCM": "0",
+    "NLCM": "-99",
+    "IRCM": "439",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "UNLIMITED",
+    "treatment": "W2",
+    "HWAM": 17607.0,
+    "CWAM": null,
+    "NIAM": "-99",
+    "NUCM": "0",
+    "NLCM": "-99",
+    "IRCM": "472",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "UNLIMITED",
+    "treatment": "W3",
+    "HWAM": 17607.0,
+    "CWAM": null,
+    "NIAM": "-99",
+    "NUCM": "0",
+    "NLCM": "-99",
+    "IRCM": "506",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "UNLIMITED",
+    "treatment": "W4",
+    "HWAM": 17607.0,
+    "CWAM": null,
+    "NIAM": "-99",
+    "NUCM": "0",
+    "NLCM": "-99",
+    "IRCM": "540",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N64_SPLIT",
+    "treatment": "W1",
+    "HWAM": 4498.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "98",
+    "NLCM": "6",
+    "IRCM": "439",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N64_SPLIT",
+    "treatment": "W2",
+    "HWAM": 4668.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "99",
+    "NLCM": "7",
+    "IRCM": "472",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N64_SPLIT",
+    "treatment": "W3",
+    "HWAM": 4794.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "100",
+    "NLCM": "8",
+    "IRCM": "506",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N64_SPLIT",
+    "treatment": "W4",
+    "HWAM": 4960.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "101",
+    "NLCM": "8",
+    "IRCM": "540",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_SPLIT",
+    "treatment": "W1",
+    "HWAM": 4498.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "98",
+    "NLCM": "6",
+    "IRCM": "439",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_SPLIT",
+    "treatment": "W2",
+    "HWAM": 4668.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "99",
+    "NLCM": "7",
+    "IRCM": "472",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_SPLIT",
+    "treatment": "W3",
+    "HWAM": 4794.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "100",
+    "NLCM": "8",
+    "IRCM": "506",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_SPLIT",
+    "treatment": "W4",
+    "HWAM": 4960.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "101",
+    "NLCM": "8",
+    "IRCM": "540",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N193_SPLIT",
+    "treatment": "W1",
+    "HWAM": 4498.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "98",
+    "NLCM": "6",
+    "IRCM": "439",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N193_SPLIT",
+    "treatment": "W2",
+    "HWAM": 4668.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "99",
+    "NLCM": "7",
+    "IRCM": "472",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N193_SPLIT",
+    "treatment": "W3",
+    "HWAM": 4794.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "100",
+    "NLCM": "8",
+    "IRCM": "506",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N193_SPLIT",
+    "treatment": "W4",
+    "HWAM": 4960.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "101",
+    "NLCM": "8",
+    "IRCM": "540",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_BASAL",
+    "treatment": "W1",
+    "HWAM": 4498.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "98",
+    "NLCM": "6",
+    "IRCM": "439",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_BASAL",
+    "treatment": "W2",
+    "HWAM": 4668.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "99",
+    "NLCM": "7",
+    "IRCM": "472",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_BASAL",
+    "treatment": "W3",
+    "HWAM": 4794.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "100",
+    "NLCM": "8",
+    "IRCM": "506",
+    "PRCM": "105"
+  },
+  {
+    "scenario": "N129_BASAL",
+    "treatment": "W4",
+    "HWAM": 4960.0,
+    "CWAM": null,
+    "NIAM": "10",
+    "NUCM": "101",
+    "NLCM": "8",
+    "IRCM": "540",
+    "PRCM": "105"
+  }
+]
