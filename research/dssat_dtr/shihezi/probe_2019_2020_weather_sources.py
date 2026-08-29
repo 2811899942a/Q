@@ -16,6 +16,8 @@ OUT = Path('research/dssat_dtr/data/shihezi_real_case/weather_probe')
 RAW = OUT / 'raw'
 OUT.mkdir(parents=True, exist_ok=True)
 RAW.mkdir(parents=True, exist_ok=True)
+for p in RAW.glob('ogimet_51356_*.html'):
+    p.unlink()
 
 UA = 'Mozilla/5.0 DSSAT-Xinjiang-research/1.0'
 
@@ -90,7 +92,7 @@ for year in YEARS:
         f'https://bulk.meteostat.net/v2/hourly/{year}/51356.csv.gz?download=1',
     ]
     succeeded = False
-    for idx, url in enumerate(candidates):
+    for url in candidates:
         status, ctype, data, final = fetch(url)
         detail = f'bytes={len(data)}; content_type={ctype}'
         good = False
@@ -108,6 +110,25 @@ for year in YEARS:
         if succeeded:
             break
 
+# 4b) Meteostat bulk daily uses station-level file rather than year folders.
+url = 'https://bulk.meteostat.net/v2/daily/51356.csv.gz'
+status, ctype, data, final = fetch(url)
+detail = f'bytes={len(data)}; content_type={ctype}'
+good = False
+if status == 200 and len(data) > 100:
+    try:
+        dec = gzip.decompress(data)
+        text = dec.decode('utf-8', 'replace')
+        n2019 = text.count('2019-')
+        n2020 = text.count('2020-')
+        good = n2019 > 100 and n2020 > 100
+        detail += f'; decompressed_bytes={len(dec)}; n2019={n2019}; n2020={n2020}; first={dec[:120]!r}'
+        if good:
+            save_bytes('meteostat_daily_51356.csv', dec)
+    except Exception as e:
+        detail += f'; gzip_error={e}'
+add('Meteostat bulk daily 51356', '2019-2020', url, status, detail, good, 'station_daily')
+
 # 5) Meteostat station metadata bulk: confirm whether 51356 is catalogued and inspect nearby stations.
 url = 'https://bulk.meteostat.net/v2/stations/lite.json.gz'
 status, ctype, data, final = fetch(url)
@@ -121,7 +142,6 @@ if status == 200 and len(data) > 100:
         nearby = []
         items = obj if isinstance(obj, list) else obj.values()
         for it in items:
-            sid = str(it.get('id', it.get('wmo', '')))
             if '51356' in json.dumps(it, ensure_ascii=False):
                 matches.append(it)
             try:
@@ -138,20 +158,23 @@ if status == 200 and len(data) > 100:
         detail += f'; parse_error={e}'
 add('Meteostat station metadata', 'all', url, status, detail, good, 'station_metadata')
 
-# 6) Ogimet SYNOP probe for several representative month-end windows.
+# 6) Ogimet SYNOP probe. A page which says NO DATA FOUND is explicitly unusable.
 for year in YEARS:
     for month, day in [(6,30), (7,31), (8,31)]:
         url = (f'https://www.ogimet.com/cgi-bin/gsynres?ind=51356&lang=en&decoded=yes'
                f'&ndays=5&ano={year}&mes={month:02d}&day={day:02d}&hora=23')
         status, ctype, data, final = fetch(url)
         text = data.decode('latin-1', 'replace') if status == 200 else ''
+        no_data = 'NO DATA FOUND' in text.upper()
         station_mentions = text.count('51356')
         date_mentions = text.count(str(year))
-        good = bool(status == 200 and len(text) > 2000 and (station_mentions > 1 or date_mentions > 5))
+        # Decoded data pages contain meteorological data rows; metadata-only/no-data pages do not count.
+        data_tokens = sum(text.upper().count(tok) for tok in ['TEMPERATURE', 'DEW POINT', 'PRESSURE', 'PRECIPITATION'])
+        good = bool(status == 200 and not no_data and len(text) > 2500 and date_mentions > 3 and data_tokens > 2)
         if good:
             save_bytes(f'ogimet_51356_{year}_{month:02d}.html', data)
         add('Ogimet SYNOP 51356', f'{year}-{month:02d}', url, status,
-            f'bytes={len(data)}; station_mentions={station_mentions}; year_mentions={date_mentions}; content_type={ctype}', good, 'station_synop')
+            f'bytes={len(data)}; no_data={no_data}; station_mentions={station_mentions}; year_mentions={date_mentions}; data_tokens={data_tokens}; content_type={ctype}', good, 'station_synop')
 
 # 7) NASA POWER hourly as explicit reanalysis/satellite-model fallback, not station observations.
 for year in YEARS:
@@ -174,12 +197,10 @@ for year in YEARS:
             detail += f'; parse_error={e}'
     add('NASA POWER hourly T2M', year, url, status, detail, good, 'reanalysis_fallback')
 
-# Summary CSV.
 with (OUT / 'weather_source_probe.csv').open('w', newline='', encoding='utf-8') as f:
     w = csv.DictWriter(f, fieldnames=['source','year','status','usable','kind','detail','url'])
     w.writeheader(); w.writerows(results)
 
-# Markdown report.
 lines = [
     '# Shihezi 2019-2020 weather-source probe', '',
     f'Experiment coordinate: {LAT:.6f} N, {LON:.6f} E (Guo 2025).',
@@ -200,7 +221,7 @@ if station_hourly:
 elif station_daily:
     lines.append('No usable real hourly station route was recovered in this probe, but real daily station data are available. Use these for the published-M0 WTH reconstruction while continuing the hourly search.')
 elif rean:
-    lines.append('Only a reanalysis fallback was recovered in this probe. It can support a sensitivity calculation but cannot be labelled as measured station-hourly validation.')
+    lines.append('Only a reanalysis fallback was recovered in this probe. It can support a sensitivity calculation but cannot be labelled as measured station-hourly validation. The formal station-data route should continue through CMA/National Meteorological Science Data Center.')
 else:
     lines.append('No source recovered usable data. Do not fabricate weather; continue with CMA/National Meteorological Science Data Center or another station archive.')
 
