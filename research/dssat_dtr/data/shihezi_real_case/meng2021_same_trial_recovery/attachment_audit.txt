@@ -1,0 +1,9 @@
+ATT=1 HTTP=200 BYTES=3845631 TYPE=PDF document, version 1.7, 72 page(s) URL=https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132
+ATT1_PAGES=72
+ATT1_LINES=3175
+ATT=2 HTTP=200 BYTES=5061 TYPE=JavaScript source, Unicode text, UTF-8 text, with CRLF line terminators URL=https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=48&flag=free
+ATT=3 HTTP=200 BYTES=45651504 TYPE=PE32 executable (GUI) Intel 80386, for MS Windows, 3 sections URL=https://lwtj.shzu.edu.cn/download/AdbeReader.exe
+ATT=4 HTTP=200 BYTES=812 TYPE=HTML document, ASCII text URL=http://www.firefox.com.cn/download/
+ATT=5 HTTP=200 BYTES=3845631 TYPE=PDF document, version 1.7, 72 page(s) URL=https://lwtj.shzu.edu.cn/openfile?dbid=72&lwsing=60931ddb25c7ab6ce77f44aadf98a132&objid=57_50_49_48_50
+ATT5_PAGES=72
+ATT5_LINES=3175
