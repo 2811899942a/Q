@@ -4,10 +4,16 @@
 The script extracts the real upstream HTEMP and patched HTEMP_DTRCLOUD subroutines
 from a patched DSSAT v4.8.5.0 tree, then appends a tiny driver. This prevents a
 separate hand-copied implementation from being mistaken for a source test.
+
+DSSAT v4.8.5.0 fixed-form sources contain legacy single-byte characters, so the
+source is read and emitted as Latin-1 to preserve those bytes without decoding
+loss or accidental source normalization.
 """
 from __future__ import annotations
 import argparse
 from pathlib import Path
+
+SOURCE_ENCODING = "latin-1"
 
 DRIVER = r"""
       PROGRAM TEST_M15
@@ -89,9 +95,9 @@ def main() -> None:
     ap.add_argument('source_root',type=Path)
     ap.add_argument('output',type=Path)
     args=ap.parse_args()
-    text=(args.source_root/'Weather'/'HMET.for').read_text(encoding='utf-8')
+    text=(args.source_root/'Weather'/'HMET.for').read_text(encoding=SOURCE_ENCODING)
     unit=extract(text,'HTEMP')+'\n'+extract(text,'HTEMP_DTRCLOUD')+'\n'+DRIVER
-    args.output.write_text(unit,encoding='utf-8')
+    args.output.write_text(unit,encoding=SOURCE_ENCODING)
     print(args.output)
 
 if __name__=='__main__':main()
