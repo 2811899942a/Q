@@ -1,0 +1,11 @@
+﻿response,model,features,coefficients,val_rmse,val_r2,highdtr_rmse,highdtr_r2
+daily_rmse,DTR,dtrplus,1.733433;1.612554,1.5808675836285941,0.24100771462430481,2.6092630062481525,-0.12924217380373992
+daily_rmse,DTR+SRAD+INT,dtrplus+srad_c+dtr_srad,1.753007;1.172631;-0.119981;-0.026830,1.2489546993381448,0.5262603376641706,1.9042040024042781,0.39857936785623116
+daily_rmse,DTR+KT,dtrplus+kt_c,1.747848;1.384942;-5.208915,1.2302169460429417,0.5403685012310693,1.975962457183619,0.35239714731008065
+daily_rmse,DTR+KT+INT,dtrplus+kt_c+dtr_kt,1.754533;1.162806;-5.131000;-0.831256,1.1909592820938053,0.5692352071350115,1.8252128988284158,0.4474412837120878
+daily_rmse,DTR+CLEAR+INT,dtrplus+clear_c+dtr_clear,1.755483;1.151330;-4.139316;-0.589031,1.178689358677271,0.5780654404995584,1.7842385621760817,0.47197167708878074
+afternoon_bias,DTR,dtrplus,nan;nan,nan,nan,nan,nan
+afternoon_bias,DTR+SRAD+INT,dtrplus+srad_c+dtr_srad,nan;nan;nan;nan,nan,nan,nan,nan
+afternoon_bias,DTR+KT,dtrplus+kt_c,nan;nan;nan,nan,nan,nan,nan
+afternoon_bias,DTR+KT+INT,dtrplus+kt_c+dtr_kt,nan;nan;nan;nan,nan,nan,nan,nan
+afternoon_bias,DTR+CLEAR+INT,dtrplus+clear_c+dtr_clear,nan;nan;nan;nan,nan,nan,nan,nan
