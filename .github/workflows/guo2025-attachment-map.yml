@@ -1,0 +1,96 @@
+name: Guo 2025 Attachment Map
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo2025-attachment-map.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Enumerate public thesis attachments
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/guomap research/dssat_dtr/data/shihezi_real_case/guo2025_attachment_map
+          INFO='https://lwtj.shzu.edu.cn/docinfo.action?id1=54ac85de22b301e36401fecb793873ec&id2=Osef11Pl4cA%253D'
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36'
+          curl -L -sS --retry 2 -A "$UA" "$INFO" -o /tmp/guomap/docinfo.html
+          python - <<'PY'
+          from pathlib import Path
+          import re,html,urllib.parse,json
+          s=Path('/tmp/guomap/docinfo.html').read_text(errors='replace')
+          print('DOCINFO_BYTES',len(s))
+          print('HEAD',s[:1000].replace('\n',' '))
+          # Collect every openfile/download-like URL from markup and JS.
+          cand=[]
+          for pat in [r'(?:href|src)=["\']([^"\']+)["\']', r'["\']([^"\']*(?:openfile|downfile|download)[^"\']*)["\']']:
+              for x in re.findall(pat,s,re.I):
+                  x=html.unescape(x).strip()
+                  if 'openfile' in x.lower() or 'download' in x.lower() or 'downfile' in x.lower():
+                      if x not in cand: cand.append(x)
+          base='https://lwtj.shzu.edu.cn/'
+          urls=[urllib.parse.urljoin(base,x) for x in cand]
+          # Also preserve nearby text/markup around each unique objid.
+          contexts=[]
+          for m in re.finditer(r'openfile[^"\'<> ]+',s,re.I):
+              contexts.append(re.sub(r'\s+',' ',s[max(0,m.start()-300):min(len(s),m.end()+300)]))
+          Path('/tmp/guomap/urls.txt').write_text('\n'.join(urls)+'\n',encoding='utf-8')
+          Path('/tmp/guomap/contexts.txt').write_text('\n---\n'.join(contexts),encoding='utf-8')
+          print('URLS',json.dumps(urls,ensure_ascii=False,indent=2))
+          print('CONTEXTS',('\n---\n'.join(contexts))[:20000])
+          PY
+          : > /tmp/guomap/audit.txt
+          n=0
+          while IFS= read -r U; do
+            [ -z "$U" ] && continue
+            n=$((n+1))
+            code=$(curl -L -sS --retry 2 -A "$UA" -w '%{http_code}' -o "/tmp/guomap/a${n}.bin" "$U")
+            bytes=$(wc -c < "/tmp/guomap/a${n}.bin")
+            typ=$(file -b "/tmp/guomap/a${n}.bin")
+            echo "ATTACHMENT=$n HTTP=$code BYTES=$bytes TYPE=$typ URL=$U" | tee -a /tmp/guomap/audit.txt
+            if file "/tmp/guomap/a${n}.bin" | grep -qi PDF; then
+              pdfinfo "/tmp/guomap/a${n}.bin" 2>/dev/null | grep -E '^(Pages|Title|File size):' | sed "s/^/ATT${n}_/" | tee -a /tmp/guomap/audit.txt || true
+              pdftotext -layout "/tmp/guomap/a${n}.bin" "/tmp/guomap/a${n}.txt" || true
+              echo "ATT${n}_TEXT_LINES=$(wc -l < /tmp/guomap/a${n}.txt)" | tee -a /tmp/guomap/audit.txt
+              grep -n -E '第[[:space:]]*2[[:space:]]*章|2\.1|试验材料|试验设计|施肥|尿素|初始.*水|气象站|国家气象|NASA|新玉66|株距|行距' "/tmp/guomap/a${n}.txt" | head -120 | sed "s/^/ATT${n}_HIT /" | tee -a /tmp/guomap/audit.txt || true
+            fi
+          done < /tmp/guomap/urls.txt
+          cp /tmp/guomap/audit.txt research/dssat_dtr/data/shihezi_real_case/guo2025_attachment_map/attachment_audit.txt
+          cp /tmp/guomap/contexts.txt research/dssat_dtr/data/shihezi_real_case/guo2025_attachment_map/docinfo_openfile_context.txt
+          python - <<'PY'
+          from pathlib import Path
+          out=Path('research/dssat_dtr/data/shihezi_real_case/guo2025_attachment_map')
+          audit=Path('/tmp/guomap/audit.txt').read_text(errors='replace')
+          ctx=Path('/tmp/guomap/contexts.txt').read_text(errors='replace')
+          md=['# Guo 2025 public attachment map','',
+              'The Shihezi University thesis record was inspected for all public openfile/download links. Full PDF binaries are not committed.','',
+              '## Attachment audit','```',audit.rstrip(),'```','','## Link markup context','```',ctx[:30000].rstrip(),'```']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit attachment map
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo2025_attachment_map
+          if ! git diff --cached --quiet; then
+            git commit -m 'Map public Guo 2025 thesis attachments'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
