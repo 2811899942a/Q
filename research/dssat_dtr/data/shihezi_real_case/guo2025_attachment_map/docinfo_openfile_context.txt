@@ -1,0 +1,3 @@
+ <div style="height:100px;"></div> <div class="context"> <div class="nav_meun"> <!-- 只有论文开放才能查看全文 --> <!-- 允许查看全文或下载 --> <div class="look btn"> <a href="openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752" target="_blank">查看全文</a> </div> <!-- 允许免费浏览 --> <div class="read btn"> <a href="openfile?dbid=72&objid=57_57_49_50_53&flag=free" target="_blank">免费浏览</a> 
+---
+ <a href="openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752" target="_blank">查看全文</a> </div> <!-- 允许免费浏览 --> <div class="read btn"> <a href="openfile?dbid=72&objid=57_57_49_50_53&flag=free" target="_blank">免费浏览</a> </div> <div class="return_top btn" style="display:none;"> <a href="#">返回顶部</a> </div> </div> <div class="thesis_context"><!------院系-----> 
