@@ -1,0 +1,33 @@
+name: Shihezi 2019-2020 Weather Source Probe
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-weather-source-probe.yml'
+      - 'research/dssat_dtr/shihezi/probe_2019_2020_weather_sources.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Probe real station and fallback weather sources
+        run: python research/dssat_dtr/shihezi/probe_2019_2020_weather_sources.py
+      - name: Commit probe report and recovered public source files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/weather_probe
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi 2019-2020 weather source probe results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
