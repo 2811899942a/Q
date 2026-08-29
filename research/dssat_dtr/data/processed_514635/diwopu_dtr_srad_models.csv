@@ -1,0 +1,13 @@
+﻿response,model,features,coefficients,val_rmse,val_mae,val_r2,val_highdtr_rmse,val_highdtr_mae,val_highdtr_r2
+rmse,DTR,dtrplus,1.43015;0.37274,0.9305,0.6124,0.0747,1.1901,0.7667,0.1588
+rmse,DTR+SRAD,dtrplus+srad_c,1.40948;0.47135;-0.06484,0.8357,0.5666,0.2538,1.0687,0.6675,0.3216
+rmse,DTR+CLEAR,dtrplus+clear_c,1.40577;0.48901;-2.24119,0.8113,0.5306,0.2967,1.0595,0.6487,0.3333
+rmse,DTR+SRAD+INT,dtrplus+srad_c+dtr_srad,1.41377;0.56833;-0.06041;-0.03424,0.8144,0.5542,0.2913,0.9588,0.604,0.454
+rmse,DTR+CLEAR+INT,dtrplus+clear_c+dtr_clear,1.41425;0.79021;-2.02366;-2.91919,0.7813,0.5124,0.3477,0.9025,0.5374,0.5162
+rmse,FULL,dtrplus+srad_c+clear_c+dtr_srad+dtr_clear,1.41413;0.79628;-0.01060;-1.74580;-0.00628;-2.78220,0.7798,0.5138,0.3502,0.8959,0.536,0.5233
+aft_rmse,DTR,dtrplus,1.23803;0.30815,1.2127,0.7036,0.033,1.5839,0.8775,0.0584
+aft_rmse,DTR+SRAD,dtrplus+srad_c,1.21869;0.40038;-0.06065,1.1308,0.693,0.1592,1.4999,0.8501,0.1556
+aft_rmse,DTR+CLEAR,dtrplus+clear_c,1.21407;0.42243;-2.20277,1.1034,0.6629,0.1993,1.4724,0.8096,0.1863
+aft_rmse,DTR+SRAD+INT,dtrplus+srad_c+dtr_srad,1.22206;0.47638;-0.05717;-0.02684,1.1146,0.6853,0.1831,1.4166,0.8151,0.2468
+aft_rmse,DTR+CLEAR+INT,dtrplus+clear_c+dtr_clear,1.22363;0.76212;-1.95744;-3.29217,1.0669,0.6482,0.2515,1.2785,0.7247,0.3865
+aft_rmse,FULL,dtrplus+srad_c+clear_c+dtr_srad+dtr_clear,1.22306;0.75712;-0.00450;-1.84207;0.01087;-3.54508,1.0681,0.6492,0.2499,1.2855,0.727,0.3798

@@ -1,0 +1,4 @@
+﻿stratum,srad_lo,srad_hi,n_days,mean_dtr,mean_srad,mean_rmse,mean_aft_rmse,mean_aft_bias
+LowSRAD,,23.027,46,14.217,19.179,2.8987,2.8956,1.8487
+MidSRAD,23.027,27.447,67,14.134,25.436,1.6858,1.3767,-0.1643
+HighSRAD,27.447,,84,14.167,29.688,1.4346,1.2536,-0.6448
