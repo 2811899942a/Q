@@ -1,0 +1,2 @@
+﻿dtr_threshold_c,crossover_solar_hour,cross_left_bin,cross_left_median_bias,cross_right_bin,cross_right_median_bias,k_pre,k_post,n_pre,n_post,pre_hit_upper_bound,post_hit_upper_bound
+14.8,10.454855482223351,8,-0.8391,11,0.7283,20.0,16.455000000000002,189,93,True,False
