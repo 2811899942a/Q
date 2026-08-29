@@ -1,0 +1,31 @@
+name: Diagnose dense Diwopu sunset anchor
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/diagnose_dense_sunset_anchor_514635.py'
+      - '.github/workflows/dense-sunset-anchor-514635.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-sunset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/scripts/diagnose_dense_sunset_anchor_514635.py
+      - run: cat research/dssat_dtr/data/processed_514635/README_DENSE_SUNSET_ANCHOR.md
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_514635/README_DENSE_SUNSET_ANCHOR.md research/dssat_dtr/data/processed_514635/dense_sunset_anchor_daily.csv research/dssat_dtr/data/processed_514635/dense_sunset_anchor_summary.csv
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Add dense sunset-anchor mechanism diagnosis'; git pull --rebase origin research/dssat-dtr-matrix; git push origin HEAD:research/dssat-dtr-matrix; fi
