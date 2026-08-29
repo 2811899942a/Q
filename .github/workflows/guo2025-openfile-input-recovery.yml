@@ -1,0 +1,98 @@
+name: Guo 2025 Openfile Input Recovery
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo2025-openfile-input-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Download public thesis attachment and extract input context
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/guo research/dssat_dtr/data/shihezi_real_case/guo2025_openfile_recovery
+          URL='https://lwtj.shzu.edu.cn/openfile?dbid=72&flag=free&objid=57_57_49_50_53'
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36'
+          code=$(curl -L -sS --retry 2 -A "$UA" -w '%{http_code}' -o /tmp/guo/openfile.bin "$URL")
+          echo "HTTP=$code BYTES=$(wc -c < /tmp/guo/openfile.bin) TYPE=$(file -b /tmp/guo/openfile.bin)"
+          head -c 20 /tmp/guo/openfile.bin | od -An -tx1
+          if file /tmp/guo/openfile.bin | grep -qi PDF; then
+            cp /tmp/guo/openfile.bin /tmp/guo/thesis.pdf
+          else
+            # Public endpoint may return an HTML reader or redirect target. Extract PDF/openfile links and try them without attempting any access-control bypass.
+            cp /tmp/guo/openfile.bin /tmp/guo/openfile.html
+            python - <<'PY'
+          from pathlib import Path
+          import re,html
+          s=Path('/tmp/guo/openfile.html').read_text(errors='replace')
+          print('HTML_HEAD=',s[:1500].replace('\n',' '))
+          for x in re.findall(r'(?:href|src)=["\']([^"\']+)["\']',s,re.I):
+              x=html.unescape(x)
+              if 'pdf' in x.lower() or 'openfile' in x.lower() or 'download' in x.lower(): print('CANDIDATE',x)
+          PY
+            exit 3
+          fi
+          pdftotext -layout /tmp/guo/thesis.pdf /tmp/guo/thesis.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text=Path('/tmp/guo/thesis.txt').read_text(errors='replace')
+          lines=text.splitlines()
+          out=Path('research/dssat_dtr/data/shihezi_real_case/guo2025_openfile_recovery')
+          kws=['施肥','肥料','氮肥','尿素','磷肥','钾肥','基肥','追肥','N肥','初始含水','初始水分','初始土壤','土壤含水率','土壤含水','土壤水分','气象站','气象数据','国家气象','气象科学数据中心','NASA','51356','石河子站','自动气象','逐日','逐小时','日照','太阳辐射','降水','播种','株距','行距','密度','灌水','灌溉','新玉66','P1','P2','P5','G2','G3','PHINT','RRMSE','ARE']
+          hits=[]; hitlines=[]
+          for i,line in enumerate(lines):
+              found=[k for k in kws if k.lower() in line.lower()]
+              if found:
+                  block='\n'.join(lines[max(0,i-5):min(len(lines),i+6)]).strip()
+                  if block and block not in hits: hits.append(block)
+                  hitlines.append((i+1,found,line.strip()))
+          # Extract Chapter 2 broad context to ensure wording around management is not missed by exact keywords.
+          chapter=[]
+          starts=[i for i,l in enumerate(lines) if re.search(r'第\s*2\s*章',l)]
+          ends=[i for i,l in enumerate(lines) if re.search(r'第\s*3\s*章',l)]
+          if starts:
+              s=starts[0]; e=next((x for x in ends if x>s),min(len(lines),s+3000))
+              chapter=lines[s:e]
+          (out/'input_keyword_context.txt').write_text('\n\n---\n\n'.join(hits),encoding='utf-8')
+          (out/'chapter2_text.txt').write_text('\n'.join(chapter),encoding='utf-8')
+          counts={k:sum(1 for l in lines if k.lower() in l.lower()) for k in kws}
+          md=['# Guo 2025 public-openfile input recovery','',
+              'Source: Shihezi University public thesis attachment for 郭力澎 (2025), 基于作物生长模型的新疆干旱区滴灌玉米灌溉决策研究.','',
+              f'- Extracted thesis text lines: {len(lines)}.',
+              f'- Chapter-2 extracted lines: {len(chapter)}.',
+              '- Full PDF is not committed; only input-relevant extracted text is stored for reproducibility.','',
+              '## Keyword counts']
+          md += [f'- {k}: {v}' for k,v in counts.items()]
+          md += ['','## Input-relevant hits']
+          for n,found,line in hitlines[:300]: md.append(f'- L{n} [{"/".join(found)}] {line}')
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit extracted input context
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo2025_openfile_recovery
+          if ! git diff --cached --quiet; then
+            git commit -m 'Recover Guo 2025 DSSAT input details from public thesis'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
