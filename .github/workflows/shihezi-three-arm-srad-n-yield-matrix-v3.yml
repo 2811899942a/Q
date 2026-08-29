@@ -1,0 +1,60 @@
+name: Shihezi Three-Arm SRAD x N Yield Matrix V3
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-three-arm-srad-n-yield-matrix-v3.yml'
+      - 'research/dssat_dtr/scripts/run_shihezi_three_arm_srad_n_yield_matrix_v2.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 three-arm case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_three_arm_yield_matrix_v3.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run source-constrained three-arm matrix with audited dates
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/scripts/run_shihezi_three_arm_srad_n_yield_matrix_v2.py
+
+      - name: Commit matrix evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/three_arm_srad_n_yield_matrix research/dssat_dtr/CHECKPOINT_20260829_THREE_ARM_YIELD_ADVANTAGE.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add repaired Shihezi three-arm yield-accuracy matrix results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
