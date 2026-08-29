@@ -1,0 +1,36 @@
+    第 2 章 基于 CERES‐Maize 模型的滴灌玉米生长模型构建与验证                                          石河子大学硕士学位论文
+
+
+
+
+                            图 2-2 玉米生育期内石河子地区降水量及温度
+             Fig.2-2 Precipitation and temperature in Shihezi area during maize growth period
+注：图 A 为 2019 年玉米生育期内石河子地区降水量及温度；图 B 为 2020 年玉米生育期内石河子地
+区降水量及温度.
+Note: Fig. A shows the precipitation and temperature in Shihezi area during the maize growth period in
+2019. Fig. B shows the precipitation and temperature in Shihezi area during the maize growth period in
+2020.
+
+
+2.2 CERES-Maize 模型
+
+2.2.1 CERES-Maize 模型原理
+
+        CERES-Maize（Crop-Environment Resource Synthesis for Maize）模型是一种基于作
+物生长过程模拟的机理模型，最初由 DSSAT（Decision Support System for Agrotechnology
+Transfer）系统开发，用于模拟玉米在不同环境、管理和气候条件下的生长、发育和产
+量变化[64]。该模型核心原理为基于光合生理、碳水化合物分配、土壤-水分动态以及氮
+素循环等多个过程的综合模拟。作物生长的驱动因素主要包括温度、光照、降水、土壤
+水分状况以及氮素供应，其中，温度通过积温模型（Growing Degree Days, GDD）控制
+玉米的生长发育进程，积温的计算公式如下：
+                                           T     Tmin         
+                                   GDD    max         Tbase                                     (2-1)
+                                                2              
+
+        其中，Tmax 和 Tmin 分别为日最高温和最低温，Tbase 为玉米生长的基准温度（通常取
+10℃）。作物的光合作用和生物量积累基于光能利用率（Radiation Use Efficiency, RUE）
+进行计算，光合产物的积累公式如下：
+                                        ΔW  RUE  PAR  ε                                           (2-2)
+
+                                                      10
+
