@@ -9,6 +9,10 @@ Uses official DSSAT v4.8.5 UFGA8201 experiment as a syntactic template and fixed
 official cultivar IB0035. WATER and NITRO are disabled so uncertain irrigation,
 fertilizer and initial-condition details cannot confound the temperature-source test.
 The five sowing dates are the exact public Anningqu A-E dates reported by Tang et al. (2024).
+
+DSSAT experiment IDs must retain a two-digit numeric year in positions 5-6 because
+InputModule/ipexp.for reads EXPER(5:6) with I2.  Therefore scenarios use the native
+8-character convention ANQHYYNN (NN=01..05 for public sowing levels A..E).
 """
 from pathlib import Path
 from datetime import date, timedelta
@@ -31,10 +35,10 @@ def section_replace(txt, start, end, body):
     return txt[:m.start()] + body.rstrip() + '\n\n' + txt[m.end():]
 
 for year in (2021,2022):
-    for code,mon,day in sow:
+    for idx,(code,mon,day) in enumerate(sow, start=1):
         pd=date(year,mon,day); sd=pd-timedelta(days=1); hd=date(year,12,10)
         pdate= yydoy(pd); sdate= yydoy(sd); hdate= yydoy(hd)
-        name=f'AN{year%100:02d}{code}001'
+        name=f'ANQH{year%100:02d}{idx:02d}'
         x=template
         x=re.sub(r'^\*EXP\.DETAILS:.*$', f'*EXP.DETAILS: {name}MZ ANNINGQU M0-M15 PROPAGATION {year} DATE {code}', x, count=1, flags=re.M)
 
@@ -109,4 +113,4 @@ for year in (2021,2022):
 
         fn=outdir/f'{name}.MZX'
         fn.write_text(x,encoding='latin-1')
-        print(fn.name,pdate)
+        print(fn.name,pdate,code)
