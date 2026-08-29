@@ -1,0 +1,141 @@
+name: DSSAT 4.8.5 official maize baseline
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/dssat485/BASELINE_LOCK.md'
+      - '.github/workflows/dssat485-official-maize-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-run-m0:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DSSAT_OS_SHA: 0b91373806786b600d89ccfcfff78fa2f82cb26b
+      DSSAT_DATA_SHA: 79cb5db71bbca186add92a6a9695866a09c8b51d
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          path: project
+
+      - name: Checkout DSSAT v4.8.5.0 source at frozen commit
+        uses: actions/checkout@v4
+        with:
+          repository: DSSAT/dssat-csm-os
+          ref: ${{ env.DSSAT_OS_SHA }}
+          path: upstream-os
+
+      - name: Checkout DSSAT v4.8.5.0 data at frozen commit
+        uses: actions/checkout@v4
+        with:
+          repository: DSSAT/dssat-csm-data
+          ref: ${{ env.DSSAT_DATA_SHA }}
+          path: upstream-data
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran cmake
+          gfortran --version | head -1
+          cmake --version | head -1
+
+      - name: Configure and build untouched DSSAT 4.8.5.0
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PREFIX="$RUNNER_TEMP/dssat485"
+          cmake -S upstream-os -B upstream-os/build \
+            -DCMAKE_BUILD_TYPE=RELEASE \
+            -DCMAKE_INSTALL_PREFIX="$PREFIX"
+          cmake --build upstream-os/build --parallel 2
+          cmake --install upstream-os/build
+          test -x "$PREFIX/dscsm048"
+          test -f "$PREFIX/DSSATPRO.L48"
+
+      - name: Assemble official DSSAT 4.8.5.0 runtime data tree
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PREFIX="$RUNNER_TEMP/dssat485"
+          cp -a upstream-data/. "$PREFIX/"
+          rm -rf "$PREFIX/.git" "$PREFIX/.github" || true
+          test -f "$PREFIX/Maize/UFGA8201.MZX"
+          test -f "$PREFIX/Weather/UFGA8201.WTH"
+          test -d "$PREFIX/Genotype"
+          test -d "$PREFIX/Soil"
+
+      - name: Run official UFGA8201 maize installation test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PREFIX="$RUNNER_TEMP/dssat485"
+          cd "$PREFIX/Maize"
+          "$PREFIX/dscsm048" A UFGA8201.MZX > M0_RUN_STDOUT.txt 2>&1
+          cat M0_RUN_STDOUT.txt
+          test -s Summary.OUT
+          test -s PlantGro.OUT
+          test -s Overview.OUT
+
+      - name: Freeze M0 outputs and provenance
+        shell: bash
+        run: |
+          set -euxo pipefail
+          PREFIX="$RUNNER_TEMP/dssat485"
+          DEST="$GITHUB_WORKSPACE/project/research/dssat_dtr/data/dssat485_m0_official"
+          mkdir -p "$DEST"
+          cd "$PREFIX/Maize"
+          cp Summary.OUT PlantGro.OUT Overview.OUT M0_RUN_STDOUT.txt "$DEST/"
+          sha256sum ./*.OUT | sort > "$DEST/M0_OUT_SHA256.txt"
+          {
+            echo '# DSSAT v4.8.5.0 untouched M0 maize regression'
+            echo
+            echo '- Status: **END-TO-END PASS**'
+            echo "- Source commit: \`$DSSAT_OS_SHA\`"
+            echo "- Data commit: \`$DSSAT_DATA_SHA\`"
+            echo '- Source/model version: `4.8.5.0`'
+            echo '- Executable: `dscsm048`'
+            echo '- Official experiment: `Maize/UFGA8201.MZX`'
+            echo '- Official weather: `Weather/UFGA8201.WTH`'
+            echo '- Run mode: `A`'
+            echo
+            echo 'The upstream source was compiled from the frozen commit, installed into a clean Linux prefix, combined with the matching frozen data repository, and the official UFGA8201 maize installation test was executed. `Summary.OUT`, `PlantGro.OUT`, and `Overview.OUT` were required to exist and be non-empty.'
+            echo
+            echo '## Toolchain'
+            echo '```text'
+            gfortran --version | head -1
+            cmake --version | head -1
+            echo '```'
+            echo
+            echo '## Output snapshot'
+            echo 'The full text snapshots of `Summary.OUT`, `PlantGro.OUT`, and `Overview.OUT` are stored beside this file. SHA-256 hashes for every generated `.OUT` file are in `M0_OUT_SHA256.txt`.'
+          } > "$DEST/README_M0_OFFICIAL_485.md"
+
+      - name: Upload complete official output set
+        uses: actions/upload-artifact@v4
+        with:
+          name: dssat485-m0-ufga8201-outputs
+          path: ${{ runner.temp }}/dssat485/Maize/*.OUT
+          retention-days: 90
+
+      - name: Commit frozen M0 regression snapshot
+        shell: bash
+        working-directory: project
+        run: |
+          set -euxo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/dssat485_m0_official
+          if git diff --cached --quiet; then
+            echo 'No M0 snapshot changes.'
+          else
+            git commit -m 'Freeze DSSAT 4.8.5 official maize M0 outputs'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
