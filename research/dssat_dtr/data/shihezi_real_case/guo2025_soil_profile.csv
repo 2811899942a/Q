@@ -1,0 +1,6 @@
+depth_top_cm,depth_bottom_cm,clay_pct,silt_pct,sand_pct_derived,bulk_density_g_cm3,field_capacity_cm3_cm3,wilting_point_cm3_cm3,saturation_cm3_cm3,organic_matter_g_kg,source
+0,20,32.75,51.93,15.32,1.51,0.237,0.122,0.457,1.485,Guo2025_Table2-1
+20,40,31.52,54.11,14.37,1.54,0.264,0.136,0.425,1.410,Guo2025_Table2-1
+40,60,43.28,44.53,12.19,1.59,0.231,0.120,0.371,1.264,Guo2025_Table2-1
+60,80,30.21,60.74,9.05,1.63,0.214,0.113,0.346,1.307,Guo2025_Table2-1
+80,100,29.13,49.76,21.11,1.61,0.236,0.105,0.385,1.022,Guo2025_Table2-1
