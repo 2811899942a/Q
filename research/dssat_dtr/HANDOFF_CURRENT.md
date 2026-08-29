@@ -1,6 +1,6 @@
 # DSSAT-DTR Xinjiang Research Handoff
 
-Last material checkpoint: 2026-08-29 20:38 CST
+Last material checkpoint: 2026-08-29 20:33 CST
 Branch: `research/dssat-dtr-matrix`
 Study: DSSAT v4.8.5 CERES-Maize hourly-temperature / extreme-day thermal-time improvement
 
@@ -65,7 +65,7 @@ Final three-arm predictive comparison is blocked until a source-supported M0 rec
 
 No arm-specific calibration is allowed.
 
-## 4. Real-yield V4 — valid propagation, invalid baseline reproduction
+## 4. Real-yield V4 — valid propagation, baseline reproduction gap remains
 
 Workflow: `.github/workflows/shihezi-real-yield-v4.yml`
 Run: `33246786517` PASS.
@@ -91,7 +91,7 @@ Provisional 2020 contrasts:
 - M15TT is 4.703% worse than H0TT locally
 - maximum arm-induced HWAM shift = 934 kg/ha
 
-Interpretation: hourly-temperature/DTT modifications can materially propagate to crop yield. These percentages are not final predictive-accuracy claims because M0=60.771% misses the published 5.69% baseline badly.
+Interpretation: hourly-temperature/DTT modifications can materially propagate to crop yield. These percentages remain provisional while the common M0 reconstruction is being recovered.
 
 ## 5. Density sensitivity — small lever
 
@@ -103,7 +103,7 @@ At 8.25 plants/m2, 2020 RRMSE:
 
 Density changes M0 by only ~1.83 percentage points. Keep formal Guo-derived 8.89 plants/m2.
 
-## 6. Nitrogen root-cause diagnostic — largest proven lever so far
+## 6. Nitrogen root-cause diagnostic — very large lever
 
 First finite-N run was engineering-invalid because treatment `MF=0` left fertilizer unselected.
 
@@ -171,9 +171,7 @@ Canonical `/tmp/run_M0/Weather` files were edited in place and hashes audited im
 
 2019 similarly improves from 18.602% to 11.738% when SRADA is reduced to ~19.9.
 
-Conclusion: the radiation discrepancy is the second major proven source-gap lever; the modest rain magnitude discrepancy has negligible leverage in this highly irrigated case.
-
-Next diagnostic: combine source-scale SRAD with the already-audited finite-N brackets without choosing parameter values by yield fit.
+Conclusion: the radiation discrepancy is a major source-gap lever; the modest rain magnitude discrepancy has negligible leverage in this highly irrigated case.
 
 ## 9. Public station-weather recovery
 
@@ -190,50 +188,69 @@ POWER May-Aug audit:
 
 Rain magnitude is already close to thesis totals, especially in 2020. Radiation is the clearer forcing discrepancy.
 
-## 10. Soil organic-carbon audit — previous OM result invalid, runtime cause identified
+## 10. Soil organic-carbon audit — canonical V4 PASS and material response
 
-Guo Table 2-1 prints OM such as `1.485 g/kg`; later same-station Xinyu66 work reports topsoil OM ~14.12 g/kg. A diagnostic HIGHOM hypothesis tested `1.485% = 14.85 g/kg`, converted via OM/1.724.
+Guo Table 2-1 prints OM such as `1.485 g/kg`; later same-station Xinyu66 work reports topsoil OM ~14.12 g/kg. A diagnostic HIGHOM hypothesis tests `1.485% = 14.85 g/kg`, converted to organic C using OM/1.724.
 
-The first valid-execution LOWOM/HIGHOM comparison returned exactly identical outputs. Dedicated model-read audit then identified why:
+Earlier LOWOM/HIGHOM runs were masked by two engineering issues: copied DSSAT installations retained the canonical `/tmp/run_M0/Soil/` path, and the custom whitespace layout left model-read `SLOC=-99`.
 
-- text LOWOM/HIGHOM `SH.SOL` files differ;
-- `DSSAT48.INP` LOWOM/HIGHOM are byte-identical;
-- consolidated `SOILS` path remains `///tmp/run_M0/Soil/` when copied installations are run;
-- consolidated model-read layers show `SLOC=-99.0` despite numeric values in custom `SH.SOL`;
-- custom SITE longitude is also malformed in consolidated input (`485.990`), showing fixed-column misalignment.
+Canonical V4 fixed both issues:
+- workflow `.github/workflows/shihezi-soil-sloc-canonical-v4.yml`
+- run `33252514758` PASS
+- canonical `/tmp/run_M0/Soil/SH.SOL` edited in place
+- fixed-column DSSAT soil format
+- INFO.OUT model-read organic C audited before interpretation
 
-Therefore all previous OM response numbers are engineering-invalid for OM attribution.
+2020 W2 with the existing N129 bracket:
 
-One correction only:
-1. edit canonical `/tmp/run_M0/Soil/SH.SOL` in place;
-2. use official DSSAT fixed-width `.SOL` formatting;
-3. repair SITE lat/long alignment;
-4. require `DSSAT48.INP` to show distinct numeric LOWOM/HIGHOM SLOC;
-5. then compare nitrogen state/HWAM once.
+|Metric|LOWOM|HIGHOM|Change|
+|---|---:|---:|---:|
+|HWAM kg/ha|4659|6829|+2170|
+|NI#M|9|9|0|
+|NICM kg N/ha|117|117|0|
+|NUCM kg N/ha|94|123|+29|
+|NLCM kg N/ha|7|6|-1|
+|NMINC kg N/ha|5|49|+44|
 
-Checkpoint: `CHECKPOINT_20260829_2038_SLOC_RUNTIME_PATH_ROOTCAUSE.md`.
+Model-read gate:
+- LOWOM intended SLOC `[0.0861,0.0818,0.0733,0.0758,0.0593]`; INFO reads approximately 0.09/0.08/0.07/0.06% C after layer subdivision.
+- HIGHOM intended SLOC `[0.8614,0.8179,0.7332,0.7581,0.5928]`; INFO reads approximately 0.86/0.82/0.73/0.76/0.59% C.
 
-## 11. Remaining source gaps ranked
+Conclusion: organic carbon is a material finite-N crop-output lever once it reaches DSSAT correctly. HIGHOM remains a conditional source-interpretation hypothesis and cannot be promoted by yield fit alone.
 
-Current evidence ranks the M0 reproduction gaps:
+Checkpoint: `CHECKPOINT_20260829_2033_SLOC_CANONICAL_V4_PASS.md`.
 
-1. **N availability / fertilizer + initial mineral N** — very large effect (60.77 -> 16.91% in finite-N diagnostic).
-2. **Solar radiation forcing** — very large effect (60.77 -> 33.50% with SRADA ~19.8 under N-disabled diagnostic).
-3. **Initial soil-water profile** — unresolved; current initialization is essentially field capacity and needs source verification.
-4. **Soil organic carbon** — unresolved due fixed-column input bug; one corrected audit pending.
+## 11. SRAD x N factorial status
+
+V1 failed because its irrigation parser expected the YYDDD date in the first token while V4 irrigation rows use factor level + date.
+V2 failed before science because an indentation-specific wrapper anchor did not match the extracted script.
+
+Both failures are recorded and contain no scientific result.
+
+V3 is now triggered at `.github/workflows/shihezi-m0-srad-n-factorial-v3.yml`. It reuses the V1 scientific matrix and replaces only the single failed irrigation-date inference with the exact frozen V4 2019/2020 date lists. No crop/scientific parameter changes are introduced.
+
+## 12. Remaining source gaps ranked
+
+Current evidence ranks the M0 reconstruction gaps/levers:
+
+1. **N availability / fertilizer + initial mineral N** — very large effect.
+2. **Solar radiation forcing** — very large effect.
+3. **Soil organic carbon / original OM unit** — now proven material under finite N; exact source interpretation remains unresolved.
+4. **Initial soil-water profile** — unresolved; current initialization is essentially field capacity and needs source verification.
 5. **Plant density** — small effect.
 6. **Fertilizer timing shape at fixed N** — negligible effect.
 7. **Reported precipitation magnitude difference** — negligible effect for this highly irrigated case.
 
-## 12. Immediate execution queue
+## 13. Immediate execution queue
 
-1. Run a source-gap factorial M0 diagnostic combining audited `SRAD~19.8` with the already-tested finite-N brackets (N129/N193); include 2019 and 2020, preserve all common inputs.
-2. Correct canonical soil `.SOL` fixed-width formatting and finish one LOWOM/HIGHOM read audit.
-3. Continue source recovery from the same 2020 trial, especially Liang et al. 2022 `10.13522/j.cnki.ggps.2021337`, Meng 2021 thesis, and Guo references, targeting exact fertilizer amount, initial mineral N, initial soil water, and the observed/NASA weather construction.
-4. Once a source-supported M0 approaches published 2020 RRMSE ~5.69%, rerun M0/H0TT/M15TT under exactly the same recovered inputs.
-5. Final output must state crop-yield improvement quantitatively or state that no robust advantage exists.
+1. Finish SRAD x N factorial V3 for 2019/2020 W1-W4.
+2. Extend the now-valid fixed-column LOWOM/HIGHOM audit from W2 to W1-W4 and quantify RRMSE.
+3. Run a compact source-gap matrix combining correctly read soil OC with source-scale SRAD and finite-N brackets; retain all values as diagnostics unless exact same-trial support exists.
+4. Continue source recovery from the same 2019-2020 experiment for exact fertilizer total, initial mineral N, initial soil water, soil OM unit and observed/NASA weather construction.
+5. Once a source-supported M0 approaches the published 2020 RRMSE ~5.69%, rerun M0/H0TT/M15TT under identical recovered common inputs.
+6. Final output must quantify the crop-yield improvement or state that the improvement is not robust.
 
-## 13. Hard rules
+## 14. Hard rules
 
 - Never retune M15 (`DTRc=14.8`, `alpha=7.8094`) to fit yield.
 - Never retune Xinyu66 genotype to fit the 2020 validation yield.
