@@ -1,0 +1,65 @@
+# Guo Fig.2-2 original-image audit
+
+- extracted xref: 290
+- image: 3460 x 1072, 315023 bytes
+- automatic panel split x: 1711 / 3460
+- top colorful hue bins (OpenCV 0-179): `[(97, 41123), (98, 29653), (0, 20941), (96, 13711), (179, 12006), (1, 11061), (99, 6416), (178, 4891), (2, 3763), (95, 3369), (90, 2550), (94, 1643), (3, 1492), (177, 1355), (100, 1157), (93, 1104), (4, 765), (103, 709), (13, 624), (105, 581)]`
+- top quantized RGB colors excluding near-white: `[([0, 0, 0], 114318), ([0, 160, 224], 42966), ([0, 160, 192], 25283), ([224, 0, 0], 25027), ([224, 224, 224], 23501), ([192, 0, 0], 10408), ([32, 160, 192], 9068), ([192, 192, 192], 8842), ([192, 224, 224], 8468), ([32, 32, 32], 7986), ([160, 160, 160], 6943), ([96, 96, 96], 6327), ([64, 64, 64], 6112), ([128, 128, 128], 5167), ([224, 192, 192], 4602), ([224, 224, 192], 3721), ([160, 224, 224], 3415), ([224, 160, 160], 2843), ([224, 128, 128], 2562), ([128, 192, 224], 2413), ([192, 32, 32], 2403), ([224, 96, 96], 2209), ([96, 192, 224], 1767), ([64, 192, 224], 1760), ([64, 160, 192], 1706), ([32, 128, 192], 1660), ([224, 64, 64], 1549), ([0, 0, 32], 1508), ([128, 224, 224], 1443), ([192, 64, 64], 1076)]`
+
+## Panel 1
+- global x: [0, 1711]
+- strongest black rows: `[(839, 0.7317358270017533), (841, 0.7317358270017533), (840, 0.7317358270017533), (843, 0.7305669199298656), (842, 0.7305669199298656), (844, 0.7299824663939217), (838, 0.33196960841613093), (903, 0.2086499123319696), (860, 0.18994739918176504), (152, 0.18410286382232613), (902, 0.18410286382232613), (863, 0.17708942139099942)]`
+- strongest black columns: `[(1535, 0.7024253731343284), (1534, 0.6949626865671642), (1533, 0.6930970149253731), (1531, 0.6921641791044776), (1532, 0.6921641791044776), (1530, 0.6902985074626866), (1528, 0.6893656716417911), (1529, 0.6893656716417911), (312, 0.6772388059701493), (313, 0.6772388059701493), (311, 0.6772388059701493), (310, 0.6772388059701493)]`
+- top hue bins: `[(97, 17091), (98, 11980), (0, 10546), (96, 6696), (179, 6171), (1, 5592), (178, 2365), (99, 2077), (2, 1895), (90, 1577), (95, 1459), (3, 775), (94, 753), (177, 651), (100, 633)]`
+- hue component boxes: `[{"hue": 97, "count": 40986, "bbox_panel": [141, 98, 1691, 1023], "bbox_global": [141, 98, 1691, 1023]}, {"hue": 98, "count": 40499, "bbox_panel": [141, 98, 1691, 1022], "bbox_global": [141, 98, 1691, 1022]}, {"hue": 0, "count": 18809, "bbox_panel": [286, 145, 1691, 673], "bbox_global": [286, 145, 1691, 673]}, {"hue": 96, "count": 40830, "bbox_panel": [141, 104, 1691, 1023], "bbox_global": [141, 104, 1691, 1023]}, {"hue": 179, "count": 10573, "bbox_panel": [149, 94, 1695, 1018], "bbox_global": [149, 94, 1695, 1018]}, {"hue": 1, "count": 19204, "bbox_panel": [286, 145, 1691, 690], "bbox_global": [286, 145, 1691, 690]}, {"hue": 178, "count": 10839, "bbox_panel": [149, 94, 1695, 1018], "bbox_global": [149, 94, 1695, 1018]}, {"hue": 99, "count": 39363, "bbox_panel": [141, 98, 1695, 1022], "bbox_global": [141, 98, 1695, 1022]}]`
+
+## Panel 2
+- global x: [1711, 3460]
+- strongest black rows: `[(839, 0.7141223556317896), (836, 0.7141223556317896), (837, 0.7141223556317896), (838, 0.7141223556317896), (841, 0.7141223556317896), (840, 0.7141223556317896), (835, 0.4716981132075472), (136, 0.241852487135506), (135, 0.21269296740994853), (900, 0.2035448827901658), (137, 0.20182961692395654), (134, 0.18753573470554602)]`
+- strongest black columns: `[(3276, 0.6977611940298507), (3275, 0.6949626865671642), (3274, 0.6930970149253731), (3273, 0.691231343283582), (3272, 0.6902985074626866), (3271, 0.6893656716417911), (3270, 0.6875), (2053, 0.6772388059701493), (2054, 0.6772388059701493), (2052, 0.6772388059701493), (2058, 0.6427238805970149), (2055, 0.6324626865671642)]`
+- top hue bins: `[(97, 24032), (98, 17673), (0, 10395), (96, 7015), (179, 5835), (1, 5469), (99, 4339), (178, 2526), (95, 1910), (2, 1868), (90, 973), (94, 890), (3, 717), (177, 704), (93, 665)]`
+- hue component boxes: `[{"hue": 97, "count": 56624, "bbox_panel": [151, 96, 1707, 991], "bbox_global": [1862, 96, 3418, 991]}, {"hue": 98, "count": 56029, "bbox_panel": [151, 109, 1707, 991], "bbox_global": [1862, 109, 3418, 991]}, {"hue": 0, "count": 18456, "bbox_panel": [180, 133, 1558, 834], "bbox_global": [1891, 133, 3269, 834]}, {"hue": 96, "count": 56706, "bbox_panel": [151, 96, 1707, 991], "bbox_global": [1862, 96, 3418, 991]}, {"hue": 179, "count": 10273, "bbox_panel": [160, 96, 1710, 993], "bbox_global": [1871, 96, 3421, 993]}, {"hue": 1, "count": 18826, "bbox_panel": [180, 133, 1558, 834], "bbox_global": [1891, 133, 3269, 834]}, {"hue": 99, "count": 54470, "bbox_panel": [150, 109, 1707, 992], "bbox_global": [1861, 109, 3418, 992]}, {"hue": 178, "count": 10520, "bbox_panel": [160, 96, 1710, 993], "bbox_global": [1871, 96, 3421, 993]}]`
+
+## Coarse occupancy map
+```
+
+
+
+     C  #                                              #         CC  CC                                           C#
+     CC CCC                         C                #CC         CC  CC#      +C+#++C+      CCC#++C  CCCCCCC C#  #CC
+      C + #  CCCCCCCC CCC ### CCC+#+C  CCCCCC#CCC    #C          CC    #  CCCCCCCC CCC  ### CCCC CC+ CCCCCCC+C#  #
+          #       C    CC     # C  #C  CCCC # C+#    #                 #                                         #
+          #                                          #                 #                                         #
+          #                                          #                 #                                         #
+        CCC                           C    C C C     CCC             CC#                   C      C              #CC
+        CCC                    CC C  CC  CCCCCCC    CCCC             CC#                   C     CC      C     C #C#
+          #                    CCCCCCCCC CC  CCC    CC   CC            #          CC   C   C     CC CC   CC    C #   C#
+          #                 C C CCCCC  C C   CCC   C C   CC            #    C   CC C  CC  CCCC C CC CC CC CCCCCC #   C#
+     C    #      C   C C  CCCCC  CCC    CC   CCC CCC #   C#            #  CCC  CCC C  CCC CCCCCCC CCCCCCC  CCCCC #   C#
+     CCCCCC      CC  CCCC CCCCC   C     C    CCCCCCC CC  CC      CC  CC#  CCC  CCC CCCCCCCCCCCCCC CCCCC C  CCCCC CC  CC
+     C  CCC      CC C   C CCCC          C    C  CCC  #C  C#      C   CCCC CCCCCCC  CCC  CC CC C C CC CC    C   C CC  C
+      +   #  CC  CCCC   CC  C                   CC   #    C      +     CCC   CC C  CC   CC CC C      C     C   CCC  CCC
+     CCC  #  CCC CCCC   CC  C         #    ##        #  CCC      CC    CCC    C    CC   C  CC     #  C     C    C#  CCC
+     CCC  #C CCC CCCC   CC     #  #   ##  # ## #    ##  CCC      CC    CCC    C   #C       CC    ##  C  # #C     #  CCC
+     #C C CC CCC CC C    C     #######  ##   ###   ###    C      +C  C#CCC    C   #C       C     # ##C ####C   # #    C
+     CCCCCCCCC CC C   ## C ####  # ##   ##   ### ### CC #CC      CC  CC#CC   #C # #C   # ##C######   C##   C####C#C #CC
+     CC CCCCC  CC     ## C#####          #    # #### #   C      CC   # #   ##CC### C ## ## C#   #    C##   C####C#+  C
+     #    CC   CC    #  #C## ##                 ###  #   C             ## # # C### C #  ## C#   #    C     C    C#  CC#
+          #C   CC#C #   #C                           #  CCC            ## #   C    C#   ## C#        C     C    C#  CC
+          #C # C #C##    C                           #  C#C            ##     C    C#    # C#      CCC     C    C#  #C#
+        CCCC+##C #C#    CC                   C       #C              CC###    C    C       C       CCC     C    C#C
+        CCCCC #C #C#    CC       C      C    C       #C              CC###    CC   C   C   C      CCCCC    C    C#C
+          CCC  C #C     CC C    CC      C    C       #                 #C#   CCC   C   C C C  C   CCCCC C  C C CC#
+          CCC  CC#C C   CCCC C  CC      CC   C  C    #                 #C    CCC   C   C C C  C   CCCCC C  CCC CC#
+          CCC  CC CCC  CCCCCCCC CCCC  C CC   C  C C  #                 CC    CCC   CC CCCC CCCCCC CCCCC CCCCCCCCC#
+         CCCCCCCC CCC CCCCCCCCC CCCC  CCCCCCCC  CCCC CC               CCC    CCC   CC CCCC CCCCCC CCCCC CCCCCCCCC#C
+         CCCCCCCC#CCCCCCCCCCCCCCCCCCCCCCCCCCCC#CCCCC#CC              CCCC####CCC###CC#CCCC#CCCCCC#CCCCC#CCCCCCCCC#C
+        CCCCC  CCCCC  CCCCC  CCCCC  CCCCC  CCCCC  CCCCC              CCCCC  CCCCC CCCCCC CCCCCC CCCCCC CCCCCC CCCCCC
+        CCCCC  CCCCC  CCCCC  CCCCC  CCCCC  CCCCC  CCC#C              C#CCC  CCCCC  CCCCC CCCCCC CC CCC CCCCC  CCC#C
+
+                                                                                         CC CC
+                             CCCCC                                                       CC CC
+                             CCCCC                                                        +  C
+
+
+```
