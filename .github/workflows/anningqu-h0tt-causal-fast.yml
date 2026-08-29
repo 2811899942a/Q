@@ -1,0 +1,110 @@
+name: Anningqu H0TT Fast Causal Decomposition
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/anningqu-h0tt-causal-fast.yml'
+      - 'research/dssat_dtr/dssat485/apply_extreme_dtt_tgro_patch.py'
+      - 'research/dssat_dtr/data/anningqu/m15_extreme_dtt/anningqu_m15_extreme_dtt_three_arm.csv'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  h0tt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Build H0TT only
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/h0tt-os
+          git -C /tmp/h0tt-os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/h0tt-run-data
+          git -C /tmp/h0tt-run-data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          python research/dssat_dtr/dssat485/apply_extreme_dtt_tgro_patch.py /tmp/h0tt-os
+          cmake -S /tmp/h0tt-os -B /tmp/h0tt-build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/h0tt-run >/dev/null
+          cmake --build /tmp/h0tt-build --parallel 2 >/dev/null
+          cmake --install /tmp/h0tt-build >/dev/null
+          cp -a /tmp/h0tt-run-data/. /tmp/h0tt-run/
+      - name: Assemble and run 10 H0TT scenarios
+        run: |
+          set -euo pipefail
+          R=/tmp/h0tt-run
+          cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2101.WTH "$R/Weather/ANQH2101.WTH"
+          cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2201.WTH "$R/Weather/ANQH2201.WTH"
+          cp research/dssat_dtr/anningqu/AN.SOL "$R/Soil/AN.SOL"
+          python research/dssat_dtr/anningqu/build_stageA2_water6_experiments.py "$R/Maize/UFGA8201.MZX" "$R/Maize"
+          python research/dssat_dtr/anningqu/patch_stageA2_standard_water_path.py "$R/Maize"
+          sudo rm -rf /DSSAT48; sudo ln -s "$R" /DSSAT48
+          mkdir -p /tmp/h0results
+          cd "$R/Maize"
+          for X in ANQH2101 ANQH2102 ANQH2103 ANQH2104 ANQH2105 ANQH2201 ANQH2202 ANQH2203 ANQH2204 ANQH2205; do
+            rm -f Summary.OUT PlantGro.OUT ERROR.OUT WARNING.OUT
+            ../dscsm048 A "${X}.MZX" > "/tmp/h0results/${X}.stdout" 2>&1
+            test -s Summary.OUT || { cat "/tmp/h0results/${X}.stdout"; exit 1; }
+            cp Summary.OUT "/tmp/h0results/${X}_Summary.OUT"
+          done
+      - name: Decompose generic and local effects
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,re
+          src=Path('research/dssat_dtr/data/anningqu/m15_extreme_dtt/anningqu_m15_extreme_dtt_three_arm.csv')
+          old={r['scenario']:r for r in csv.DictReader(src.open(encoding='utf-8-sig'))}
+          scens=list(old)
+          keys=['PDAT','EDAT','ADAT','MDAT','CWAM','HWAM','HIAM','LAIX','ETCM','EPCM','ESCM','SWXM','CRST']
+          def parse(path):
+            ls=Path(path).read_text(errors='replace').splitlines(); i=next(i for i,l in enumerate(ls) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+            h=ls[i].split(); h=h[1:] if h[0]=='@' else ([h[0][1:]]+h[1:] if h[0].startswith('@') else h)
+            d=next(l for l in ls[i+1:] if l.strip() and not l.startswith(('@','!','*'))).split()
+            return dict(zip(h,d))
+          def num(x):
+            try:return float(x)
+            except:return None
+          rows=[]
+          for s in scens:
+            h=parse(f'/tmp/h0results/{s}_Summary.OUT'); r={'scenario':s,'year':old[s]['year'],'sowing':old[s]['sowing']}
+            for k in keys:
+              m0=old[s].get('M0_'+k,''); m15=old[s].get('M15TT_'+k,''); hv=h.get(k,'')
+              r['M0_'+k]=m0; r['H0TT_'+k]=hv; r['M15TT_'+k]=m15
+              a,b,c=num(m0),num(hv),num(m15)
+              r['D_GENERIC_'+k]='' if a is None or b is None else b-a
+              r['D_LOCAL_'+k]='' if b is None or c is None else c-b
+              r['D_TOTAL_'+k]='' if a is None or c is None else c-a
+            rows.append(r)
+          out=Path('research/dssat_dtr/data/anningqu/h0tt_fast_causal'); out.mkdir(parents=True,exist_ok=True)
+          with (out/'h0tt_fast_causal.csv').open('w',newline='',encoding='utf-8-sig') as f:
+            w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          md=['# H0TT fast causal decomposition','',
+              'H0TT is official DSSAT HMET hourly temperature coupled to the existing CERES extreme-day DTT branch. M0 and M15TT are taken from the completed three-arm real-DSSAT run.','',
+              'GENERIC=H0TT-M0; LOCAL=M15TT-H0TT; TOTAL=M15TT-M0.','',
+              '|Year|Sowing|M0 HWAM|H0TT HWAM|M15TT HWAM|Generic dHWAM|Local dHWAM|Total dHWAM|M0 MDAT|H0TT MDAT|M15TT MDAT|',
+              '|---:|:---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+          for r in rows:
+            md.append(f"|{r['year']}|{r['sowing']}|{r['M0_HWAM']}|{r['H0TT_HWAM']}|{r['M15TT_HWAM']}|{r['D_GENERIC_HWAM']}|{r['D_LOCAL_HWAM']}|{r['D_TOTAL_HWAM']}|{r['M0_MDAT']}|{r['H0TT_MDAT']}|{r['M15TT_MDAT']}|")
+          def nz(prefix,key): return sum(abs(float(r[prefix+key]))>1e-9 for r in rows if r[prefix+key] != '')
+          md += ['',f"- HWAM changed by generic hourly coupling: **{nz('D_GENERIC_','HWAM')}/10**.",
+                 f"- HWAM changed by local M15 correction after controlling hourly coupling: **{nz('D_LOCAL_','HWAM')}/10**.",
+                 f"- MDAT changed by generic hourly coupling: **{nz('D_GENERIC_','MDAT')}/10**.",
+                 f"- MDAT changed by local M15 correction: **{nz('D_LOCAL_','MDAT')}/10**."]
+          (out/'README_H0TT_FAST_CAUSAL.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+      - name: Commit fast causal result
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/anningqu/h0tt_fast_causal
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add fast H0TT causal decomposition results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
