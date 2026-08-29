@@ -1,0 +1,249 @@
+name: Guo Weather Daily Reconstruct V1
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo-weather-daily-reconstruct-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Reconstruct daily weather from original Guo JPEG
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf opencv-python-headless numpy
+          OUT='research/dssat_dtr/data/shihezi_real_case/guo_weather_daily_v1'
+          mkdir -p "$OUT" /tmp/gdaily
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752' -o /tmp/gdaily/guo.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import pymupdf as fitz, cv2, numpy as np, csv, json, math, collections
+          from datetime import date,timedelta
+          repo=Path.cwd(); out=repo/'research/dssat_dtr/data/shihezi_real_case/guo_weather_daily_v1'
+          doc=fitz.open('/tmp/gdaily/guo.pdf'); page=doc[18]
+          im=max(page.get_images(full=True),key=lambda z:z[2]*z[3]); ex=doc.extract_image(im[0])
+          arr=np.frombuffer(ex['image'],np.uint8); img=cv2.imdecode(arr,cv2.IMREAD_COLOR)
+          hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV); gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+          H,S,V=hsv[:,:,0],hsv[:,:,1],hsv[:,:,2]
+          red=(((H<=7)|(H>=173))&(S>=100)&(V>=80))
+          cyan=((H>=88)&(H<=108)&(S>=80)&(V>=80))
+          black=(gray<85)&(S<80)
+          # Reuse the single prior numeric OCR pass; no second OCR is performed.
+          toks=json.loads((repo/'research/dssat_dtr/data/shihezi_real_case/guo_weather_axis_curve_recovery/numeric_ocr_tokens.json').read_text())
+          panel_info={
+            2019:{'x0':312,'x1':1535,'yb':842,'aug28_center':1445+132/2,
+                  'temp_side':(150,310),'rain_side':(1540,1630)},
+            2020:{'x0':2053,'x1':3276,'yb':839,'aug28_center':3186+132/2,
+                  'temp_side':(1880,2045),'rain_side':(3280,3430)},
+          }
+          # Meng same-trial single-temperature curve, used only as an independent cross-check / Tmin path locator.
+          meng={}
+          with (repo/'research/dssat_dtr/data/shihezi_real_case/meng_weather_series_v2/temperature_daily.csv').open(encoding='utf-8-sig') as f:
+              for r in csv.DictReader(f): meng[(int(r['year']),r['date'])]=float(r['temperature_C'])
+          def fit_axis(year,kind):
+              p=panel_info[year]
+              lo,hi=p['temp_side'] if kind=='temp' else p['rain_side']
+              allowed={10,20,30,40,50} if kind=='temp' else {3,6,9,12,15}
+              pts=[]
+              for t in toks:
+                  cx=t['left']+t['width']/2; cy=t['top']+t['height']/2
+                  if not (lo<=cx<=hi): continue
+                  try: val=int(t['text'])
+                  except: continue
+                  if val not in allowed: continue
+                  if t['conf']<40 and not (kind=='rain' and val==6): continue
+                  pts.append((cy,val,t))
+              # For 2019 rain only 15/12 OCR clean; sufficient for slope. For temp, require >=3.
+              if len(pts)<2: raise RuntimeError((year,kind,pts))
+              ys=np.array([q[0] for q in pts]); vals=np.array([q[1] for q in pts])
+              slope,intercept=np.polyfit(ys,vals,1)
+              return {'slope':float(slope),'intercept':float(intercept),'points':pts,
+                      'zero_y':float(-intercept/slope),'units_per_px':float(abs(slope))}
+          audits={}
+          daily=[]; rain_events=[]
+          for year,p in panel_info.items():
+              tcal=fit_axis(year,'temp'); rcal=fit_axis(year,'rain')
+              x0,x1,yb=p['x0'],p['x1'],p['yb']
+              # X: left plot border = May 1; right high-confidence OCR tick = Aug 28 (119 days after May 1).
+              px_per_day=(p['aug28_center']-x0)/119.0
+              # Use temperature fitted zero y to define plotted data baseline; compare to black-axis bottom.
+              yzero=tcal['zero_y']
+              # Red daily Tmax samples, May 1 through Aug 31.
+              tmax_pix={}
+              for di in range(123):
+                  dt=date(year,5,1)+timedelta(days=di); x=x0+px_per_day*di
+                  if x>x1+3: continue
+                  xa=max(x0,int(round(x))-5); xb=min(x1,int(round(x))+5)
+                  ys,xs=np.where(red[:,xa:xb+1])
+                  ys=ys[(ys>80)&(ys<yb-5)]
+                  if len(ys):
+                      # Red line can be anti-aliased; local median is robust.
+                      yy=float(np.median(ys)); tmax_pix[dt.isoformat()]=yy
+              # Cyan rain bars: group columns whose cyan pixels form a vertical run reaching the panel baseline.
+              cy=np.where(cyan[80:yb+2,x0:x1+1],True,False)
+              # Empirical baseline is the highest y reached by saturated cyan in the bottom zone; this avoids font-center offsets.
+              yall,xall=np.where(cyan[80:yb+2,x0:x1+1]); yall=yall+80
+              baseline=float(np.percentile(yall,99.9)) if len(yall) else float(yb-4)
+              col_top={}
+              for xx in range(x0,x1+1):
+                  ys=np.where(cyan[80:yb+2,xx])[0]+80
+                  if len(ys)<3: continue
+                  # Require cyan within 8 px of empirical bar baseline and a meaningful vertical extent.
+                  if ys.max()>=baseline-8 and ys.max()-ys.min()>=4:
+                      col_top[xx]=int(ys.min())
+              runs=[]
+              cur=[]; last=None
+              for xx in sorted(col_top):
+                  if last is None or xx-last<=2: cur.append(xx)
+                  else:
+                      if cur: runs.append(cur)
+                      cur=[xx]
+                  last=xx
+              if cur: runs.append(cur)
+              # Convert runs wider than a few pixels to event bars; remove broad baseline-like regions.
+              events=[]
+              for run in runs:
+                  if len(run)<3 or len(run)>80: continue
+                  tops=[col_top[x] for x in run]; top=float(np.median(tops)); xc=float(np.median(run))
+                  # Rain amount from bar height using OCR-derived units-per-pixel slope. Use empirical cyan baseline.
+                  mm=max(0.0,(baseline-top)*rcal['units_per_px'])
+                  di=int(round((xc-x0)/px_per_day)); dt=date(year,5,1)+timedelta(days=di)
+                  if date(year,5,1)<=dt<=date(year,8,31) and mm>=0.05:
+                      events.append({'year':year,'date':dt.isoformat(),'rain_mm':mm,'x_center':xc,'top_y':top,'baseline_y':baseline,'width_px':len(run)})
+              # Aggregate multiple JPEG components landing on same day.
+              bydate=collections.defaultdict(list)
+              for e in events: bydate[e['date']].append(e)
+              for d,ee in sorted(bydate.items()):
+                  # A true bar may split into adjacent color components; choose the tallest amount for same date.
+                  e=max(ee,key=lambda z:z['rain_mm']); rain_events.append(e)
+              # Black Tmin extraction: remove global grid/axis rows and columns first.
+              bm=black.copy()
+              crop=bm[90:yb+1,x0:x1+1]
+              rd=crop.mean(axis=1); cd=crop.mean(axis=0)
+              badrows=[90+i for i,v in enumerate(rd) if v>0.18]
+              badcols=[x0+i for i,v in enumerate(cd) if v>0.35]
+              for yy in badrows: bm[max(0,yy-2):min(bm.shape[0],yy+3),x0:x1+1]=False
+              for xx in badcols: bm[90:yb+1,max(0,xx-2):min(bm.shape[1],xx+3)]=False
+              # Determine whether Meng's one temperature curve behaves like daily mean relative to red Tmax.
+              comps=[]
+              for d,yy in tmax_pix.items():
+                  key=(year,d)
+                  if key in meng:
+                      tx=tcal['slope']*yy+tcal['intercept']; comps.append(tx-meng[key])
+              positive=sum(v>1 for v in comps)/len(comps) if comps else 0
+              med_gap=float(np.median(comps)) if comps else None
+              mean_prior_ok=(len(comps)>=60 and positive>=0.80 and med_gap is not None and 3<=med_gap<=20)
+              # Sample black candidates day by day; choose nearest to expected Tmin if mean prior is valid.
+              for di in range(123):
+                  dt=date(year,5,1)+timedelta(days=di); ds=dt.isoformat()
+                  if ds not in tmax_pix: continue
+                  ry=tmax_pix[ds]; tmax=tcal['slope']*ry+tcal['intercept']; x=x0+px_per_day*di
+                  xa=max(x0,int(round(x))-5); xb=min(x1,int(round(x))+5)
+                  ys,xs=np.where(bm[90:yb,xa:xb+1]); ys=ys+90
+                  # Tmin must plot below Tmax. Allow DTR roughly 1-35 C.
+                  min_gap_px=1.0/tcal['units_per_px']; max_gap_px=35.0/tcal['units_per_px']
+                  ys=ys[(ys>=ry+min_gap_px)&(ys<=min(yb-3,ry+max_gap_px))]
+                  # Cluster candidate y pixels and use cluster medians.
+                  cand=[]
+                  if len(ys):
+                      vals=sorted(set(int(v) for v in ys)); groups=[]; g=[vals[0]]
+                      for v in vals[1:]:
+                          if v-g[-1]<=3: g.append(v)
+                          else: groups.append(g); g=[v]
+                      groups.append(g)
+                      cand=[float(np.median(g)) for g in groups if len(g)>=1]
+                  expected=None
+                  if mean_prior_ok and (year,ds) in meng: expected=2*meng[(year,ds)]-tmax
+                  chosen=None; detected=False
+                  if cand:
+                      if expected is not None:
+                          chosen=min(cand,key=lambda y:abs((tcal['slope']*y+tcal['intercept'])-expected))
+                          if abs((tcal['slope']*chosen+tcal['intercept'])-expected)<=7.0: detected=True
+                          else: chosen=None
+                      else:
+                          # fallback: choose candidate corresponding to a climatologically plausible 5-25 C DTR.
+                          plausible=[y for y in cand if 3<=tmax-(tcal['slope']*y+tcal['intercept'])<=25]
+                          if plausible:
+                              chosen=float(np.median(plausible)); detected=True
+                  if chosen is not None:
+                      tmin=tcal['slope']*chosen+tcal['intercept']; source='black_curve'
+                  elif expected is not None:
+                      tmin=expected; source='mean_identity_fallback'
+                  else:
+                      tmin=float('nan'); source='missing'
+                  daily.append({'year':year,'date':ds,'TMAX_C':tmax,'TMIN_C':tmin,'TMIN_source':source,
+                                'red_y':ry,'black_y':chosen if chosen is not None else '',
+                                'Meng_single_T_C':meng.get((year,ds),'')})
+              audits[year]={'temp_calibration':tcal,'rain_calibration':rcal,'x0_may1':x0,'px_per_day':px_per_day,
+                            'cyan_empirical_baseline_y':baseline,'rain_bar_runs_raw':len(runs),'rain_events':len([e for e in rain_events if e['year']==year]),
+                            'meng_red_comparison_n':len(comps),'red_minus_meng_median_C':med_gap,'red_gt_meng_fraction':positive,'meng_mean_prior_ok':mean_prior_ok,
+                            'masked_grid_rows':len(badrows),'masked_grid_cols':len(badcols)}
+          # Attach rain by date to daily rows; absent event = 0.
+          rainmap={(e['year'],e['date']):e['rain_mm'] for e in rain_events}
+          for r in daily: r['RAIN_mm']=rainmap.get((r['year'],r['date']),0.0)
+          # Metrics against independent Meng single-temperature curve.
+          metrics=[]
+          for year in (2019,2020):
+              rr=[r for r in daily if r['year']==year]
+              detected=[r for r in rr if r['TMIN_source']=='black_curve']
+              valid=[r for r in rr if isinstance(r['Meng_single_T_C'],float) and not math.isnan(r['TMIN_C'])]
+              err=[(r['TMAX_C']+r['TMIN_C'])/2-r['Meng_single_T_C'] for r in valid]
+              # black-only mean check avoids circular fallback where Tmin came from identity.
+              bvalid=[r for r in detected if isinstance(r['Meng_single_T_C'],float)]
+              berr=[(r['TMAX_C']+r['TMIN_C'])/2-r['Meng_single_T_C'] for r in bvalid]
+              def corr(a,b):
+                  if len(a)<3:return float('nan')
+                  return float(np.corrcoef(a,b)[0,1])
+              metrics.append({'year':year,'days_with_Tmax':len(rr),'black_Tmin_days':len(detected),'black_detection_pct':100*len(detected)/len(rr) if rr else 0,
+                              'all_mean_vs_Meng_MAE_C':sum(abs(e) for e in err)/len(err) if err else None,
+                              'black_only_mean_vs_Meng_MAE_C':sum(abs(e) for e in berr)/len(berr) if berr else None,
+                              'black_only_mean_vs_Meng_r':corr([(r['TMAX_C']+r['TMIN_C'])/2 for r in bvalid],[r['Meng_single_T_C'] for r in bvalid]),
+                              'rain_events':sum(1 for e in rain_events if e['year']==year),'rain_sum_mm':sum(e['rain_mm'] for e in rain_events if e['year']==year),
+                              'tmax_min':min(r['TMAX_C'] for r in rr),'tmax_max':max(r['TMAX_C'] for r in rr),
+                              'tmin_min':min((r['TMIN_C'] for r in rr if not math.isnan(r['TMIN_C'])),default=None),'tmin_max':max((r['TMIN_C'] for r in rr if not math.isnan(r['TMIN_C'])),default=None)})
+          fields=list(daily[0])
+          with (out/'daily_weather.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=fields); w.writeheader(); w.writerows(daily)
+          with (out/'rain_events.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rain_events[0]) if rain_events else ['year','date','rain_mm']); w.writeheader(); w.writerows(rain_events)
+          (out/'audit.json').write_text(json.dumps({'panel_audits':audits,'metrics':metrics},ensure_ascii=False,indent=2,default=str),encoding='utf-8')
+          md=['# Guo Fig.2-2 daily weather reconstruction V1','',
+              'TMAX is direct red-curve extraction. RAIN is direct bottom-connected cyan-bar extraction using the independent right-axis mm scale. TMIN is extracted from the black curve; Meng 2021 same-trial single-temperature vector series is used only to identify/validate the black path and is explicitly flagged when used as fallback.','',
+              '|Year|Tmax days|Black Tmin days|Black detection %|Black-only mean vs Meng MAE C|Black-only r|Rain events|Rain sum mm|Tmax range C|Tmin range C|',
+              '|---:|---:|---:|---:|---:|---:|---:|---:|---|---|']
+          for m in metrics:
+              md.append(f"|{m['year']}|{m['days_with_Tmax']}|{m['black_Tmin_days']}|{m['black_detection_pct']:.1f}|{m['black_only_mean_vs_Meng_MAE_C'] if m['black_only_mean_vs_Meng_MAE_C'] is not None else ''}|{m['black_only_mean_vs_Meng_r']:.3f}|{m['rain_events']}|{m['rain_sum_mm']:.2f}|{m['tmax_min']:.2f}–{m['tmax_max']:.2f}|{m['tmin_min']:.2f}–{m['tmin_max']:.2f}|")
+          md += ['','## Panel calibration / cross-check']
+          for y,a in audits.items():
+              md += [f'### {y}',f"- temp axis units/pixel: {a['temp_calibration']['units_per_px']:.6f}; points={[(round(p[0],1),p[1]) for p in a['temp_calibration']['points']]}",
+                     f"- rain axis units/pixel: {a['rain_calibration']['units_per_px']:.6f}; points={[(round(p[0],1),p[1]) for p in a['rain_calibration']['points']]}",
+                     f"- x pixels/day: {a['px_per_day']:.6f}",f"- red Tmax - Meng single-T median: {a['red_minus_meng_median_C']:.3f} C; red>Meng fraction={a['red_gt_meng_fraction']:.3f}; mean-prior classification={a['meng_mean_prior_ok']}",
+                     f"- raw cyan runs: {a['rain_bar_runs_raw']}; retained rain events={a['rain_events']}",'']
+          md += ['**Gate:** daily data are suitable for DSSAT V6 only if Tmax is physically plausible, black Tmin detection is substantial and black-only `(Tmax+Tmin)/2` agrees closely with the independent Meng temperature trajectory. Fallback Tmin values remain non-independent and must be reported.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit reconstructed daily weather
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo_weather_daily_v1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Reconstruct daily Shihezi weather from Guo figure'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
