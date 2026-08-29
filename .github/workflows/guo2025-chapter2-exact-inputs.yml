@@ -1,0 +1,92 @@
+name: Guo 2025 Chapter2 Exact Inputs
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo2025-chapter2-exact-inputs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Download full public thesis and extract Chapter 2 inputs
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/guo2 research/dssat_dtr/data/shihezi_real_case/guo2025_chapter2_exact_inputs
+          URL='https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752'
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' "$URL" -o /tmp/guo2/full.pdf
+          file /tmp/guo2/full.pdf | grep -qi PDF
+          pdftotext -layout /tmp/guo2/full.pdf /tmp/guo2/full.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re, json
+          text=Path('/tmp/guo2/full.txt').read_text(errors='replace')
+          lines=text.splitlines()
+          # Locate the actual Chapter 2 body, not the TOC entry.
+          starts=[i for i,l in enumerate(lines) if re.search(r'^\s*第\s*2\s*章\s+基于',l)]
+          ends=[i for i,l in enumerate(lines) if re.search(r'^\s*第\s*3\s*章\s+',l)]
+          start=starts[-1] if starts else 560
+          end=next((i for i in ends if i>start), min(len(lines), start+1000))
+          ch=lines[start:end]
+          out=Path('research/dssat_dtr/data/shihezi_real_case/guo2025_chapter2_exact_inputs')
+          out.mkdir(parents=True,exist_ok=True)
+          (out/'chapter2_full_text.txt').write_text('\n'.join(ch),encoding='utf-8')
+          kws=[
+            '施肥','肥料','氮肥','尿素','磷肥','磷酸','钾肥','硫酸钾','基肥','追肥','滴施','水肥','肥液','养分','氮素','N肥',
+            '初始含水','初始水分','初始土壤','初始条件','土壤含水率','土壤含水','土壤水分','田间持水','田间持水量','饱和含水','萎蔫',
+            '气象站','气象数据','国家气象','气象科学数据中心','NASA','51356','石河子站','自动气象','逐日','逐小时','日太阳辐射','太阳辐射','最高气温','最低气温','降水量',
+            '播种','株距','行距','密度','种植密度','灌水','灌溉','W1','W2','W3','W4','新玉66','P1','P2','P5','G2','G3','PHINT',
+            'SLLL','SDUL','SSAT','SBDM','SLCL','SLSI','SLHW','SLOC','ICDAT','SH2O','SNO3','SNH4','FDATE','FAMN'
+          ]
+          hits=[]
+          for i,line in enumerate(ch):
+              found=[k for k in kws if k.lower() in line.lower()]
+              if found:
+                  a=max(0,i-4); b=min(len(ch),i+5)
+                  block='\n'.join(ch[a:b]).strip()
+                  hits.append({'chapter_line':i+1,'pdf_text_line':start+i+1,'keywords':found,'context':block})
+          # deduplicate contexts
+          uniq=[]; seen=set()
+          for h in hits:
+              if h['context'] not in seen:
+                  seen.add(h['context']); uniq.append(h)
+          (out/'keyword_context.json').write_text(json.dumps(uniq,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Guo 2025 Chapter 2 exact-input extraction','',
+              f'- Full public thesis text lines: {len(lines)}.',
+              f'- Chapter 2 body: source text lines {start+1}-{end}, {len(ch)} lines.',
+              '- Extraction is verbatim text from the publicly accessible thesis attachment; only Chapter 2 and targeted contexts are committed, not the PDF.','',
+              '## Keyword/context findings','']
+          for h in uniq:
+              md.append(f"### Chapter line {h['chapter_line']} / source line {h['pdf_text_line']} — {', '.join(h['keywords'])}")
+              md.append('```text')
+              md.append(h['context'])
+              md.append('```')
+              md.append('')
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md[:800]))
+          PY
+
+      - name: Commit Chapter 2 extraction
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo2025_chapter2_exact_inputs
+          if ! git diff --cached --quiet; then
+            git commit -m 'Extract exact Guo 2025 Chapter 2 DSSAT inputs'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
