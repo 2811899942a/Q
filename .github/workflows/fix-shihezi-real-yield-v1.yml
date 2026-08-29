@@ -1,0 +1,47 @@
+name: Fix Shihezi Real Yield V1
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/fix-shihezi-real-yield-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Patch fixed-column input builder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/shihezi-real-yield-v1.yml')
+          s=p.read_text()
+          # DSSAT experiment stems must be 8 characters here; SHIHYYTT matches WSTA and avoids parser shift.
+          s=s.replace('SHR', 'SHIH')
+          bad='  1 1 0 0 GUO2025 XINYU66 REAL       1  1  0  1  1  1  0  0  0  0  0  0  1'
+          levels=[1,1,0,1,1,1,0,0,0,0,0,0,1]
+          good=f'{1:3d}{1:1d} {0:1d} {0:1d} '+f'{"GUO2025 XINYU66 REAL":25s}'+''.join(f'{v:3d}' for v in levels)
+          if bad not in s:
+              raise SystemExit('expected bad treatment row not found')
+          s=s.replace(bad,good)
+          p.write_text(s)
+          print('new treatment row:',repr(good))
+          print('row length:',len(good))
+          PY
+          git diff -- .github/workflows/shihezi-real-yield-v1.yml
+      - name: Commit corrected validation workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/shihezi-real-yield-v1.yml
+          git commit -m 'Fix Shihezi DSSAT fixed-column experiment names and treatment row'
+          git pull --rebase origin research/dssat-dtr-matrix
+          git push origin HEAD:research/dssat-dtr-matrix
