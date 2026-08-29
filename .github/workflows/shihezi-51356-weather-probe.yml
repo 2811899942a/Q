@@ -1,0 +1,195 @@
+name: Shihezi 51356 Weather Probe
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-51356-weather-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Fetch NOAA station daily data and compare with POWER
+        run: |
+          set -euo pipefail
+          OUT=research/dssat_dtr/data/shihezi_real_case/station_weather_probe
+          mkdir -p "$OUT/raw"
+
+          # Station metadata. Chinese WMO 51356 is normally USAF 513560 / WBAN 99999.
+          curl -L --fail --retry 2 -o "$OUT/raw/isd-history.csv" \
+            https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv || true
+
+          for Y in 2019 2020; do
+            curl -L --fail --retry 2 -o "$OUT/raw/gsod_${Y}_51356099999.csv" \
+              "https://www.ncei.noaa.gov/data/global-summary-of-the-day/access/${Y}/51356099999.csv" || true
+          done
+
+          # GHCN-Daily fallback / cross-check.
+          curl -L --fail --retry 2 -o "$OUT/raw/CHM00051356.dly" \
+            https://www.ncei.noaa.gov/pub/data/ghcn/daily/all/CHM00051356.dly || true
+
+          python - <<'PY'
+          from pathlib import Path
+          import csv, json, math, statistics, re
+          out=Path('research/dssat_dtr/data/shihezi_real_case/station_weather_probe')
+          raw=out/'raw'
+
+          metadata=[]
+          p=raw/'isd-history.csv'
+          if p.exists() and p.stat().st_size:
+              with p.open(errors='replace') as f:
+                  for r in csv.DictReader(f):
+                      if str(r.get('USAF','')).strip() in {'513560','51356'} or str(r.get('STATION NAME','')).upper().find('SHIHEZI')>=0:
+                          metadata.append(r)
+
+          def fnum(x):
+              try: return float(x)
+              except: return None
+
+          gsod={}
+          for y in (2019,2020):
+              p=raw/f'gsod_{y}_51356099999.csv'
+              rr=[]
+              if p.exists() and p.stat().st_size:
+                  try:
+                      with p.open(errors='replace') as f:
+                          for r in csv.DictReader(f):
+                              if not r.get('DATE'): continue
+                              mo=int(r['DATE'][5:7]); da=int(r['DATE'][8:10])
+                              maxf=fnum(r.get('MAX')); minf=fnum(r.get('MIN')); pr=fnum(r.get('PRCP'))
+                              # GSOD public CSV temperatures are deg F; precip is inches.
+                              maxc=(maxf-32)*5/9 if maxf is not None and maxf<999 else None
+                              minc=(minf-32)*5/9 if minf is not None and minf<999 else None
+                              prmm=pr*25.4 if pr is not None and pr<99 else None
+                              rr.append({'date':r['DATE'],'month':mo,'day':da,'TMAX_C':maxc,'TMIN_C':minc,'PRCP_mm':prmm,
+                                         'MAX_ATTRIBUTES':r.get('MAX_ATTRIBUTES',''),'MIN_ATTRIBUTES':r.get('MIN_ATTRIBUTES',''),'PRCP_ATTRIBUTES':r.get('PRCP_ATTRIBUTES','')})
+                  except Exception as e:
+                      (out/f'gsod_{y}_parse_error.txt').write_text(repr(e))
+              gsod[y]=rr
+
+          # Parse GHCN fixed-width daily file for 2019-2020.
+          gh={2019:{},2020:{}}
+          p=raw/'CHM00051356.dly'
+          if p.exists() and p.stat().st_size:
+              for line in p.read_text(errors='replace').splitlines():
+                  if len(line)<269: continue
+                  year=int(line[11:15]); month=int(line[15:17]); elem=line[17:21]
+                  if year not in gh or elem not in {'TMAX','TMIN','PRCP'}: continue
+                  for d in range(1,32):
+                      s=21+(d-1)*8
+                      val=int(line[s:s+5]); q=line[s+6:s+7]
+                      if val==-9999 or q.strip(): continue
+                      gh[year].setdefault(f'{year:04d}-{month:02d}-{d:02d}',{})[elem]=val
+
+          # Existing POWER reconstruction.
+          pp=Path('research/dssat_dtr/data/shihezi_real_case/power_daily/shihezi_power_2019_2020_wth_inputs.csv')
+          power={2019:[],2020:[]}
+          if pp.exists():
+              with pp.open(encoding='utf-8-sig') as f:
+                  for r in csv.DictReader(f):
+                      y=int(r['year'])
+                      if y in power:
+                          power[y].append({'doy':int(r['doy']),'TMAX_C':float(r['TMAX_C']),'TMIN_C':float(r['TMIN_C']),'PRCP_mm':float(r['RAIN_mm']),'SRAD':float(r['SRAD_MJ_m2_d'])})
+
+          def season_stats(rows, date_key=False):
+              q=[]
+              for r in rows:
+                  if date_key:
+                      mo=int(r['date'][5:7]); da=int(r['date'][8:10])
+                      if (mo,da)<(5,1) or (mo,da)>(8,31): continue
+                  else:
+                      # May 1-Aug 31 = DOY 121/122 through 243/244; adequate per year below handled using month conversion impossible here.
+                      if not (121 <= r['doy'] <= 244): continue
+                  q.append(r)
+              def mean(k):
+                  a=[x[k] for x in q if x.get(k) is not None]
+                  return sum(a)/len(a) if a else None
+              def total(k):
+                  a=[x[k] for x in q if x.get(k) is not None]
+                  return sum(a) if a else None
+              return {'n_rows':len(q),'n_tmax':sum(x.get('TMAX_C') is not None for x in q),'n_tmin':sum(x.get('TMIN_C') is not None for x in q),'n_prcp':sum(x.get('PRCP_mm') is not None for x in q),
+                      'mean_TMAX_C':mean('TMAX_C'),'mean_TMIN_C':mean('TMIN_C'),'total_PRCP_mm':total('PRCP_mm'),'mean_SRAD':mean('SRAD') if q and 'SRAD' in q[0] else None}
+
+          summaries={'station_metadata_matches':metadata,'files':{},'GSOD':{},'GHCN':{},'POWER':{}}
+          for f in raw.iterdir(): summaries['files'][f.name]=f.stat().st_size
+          for y in (2019,2020):
+              summaries['GSOD'][str(y)]=season_stats(gsod[y],True)
+              ghrows=[]
+              for d,r in sorted(gh[y].items()):
+                  ghrows.append({'date':d,'TMAX_C':r.get('TMAX')/10 if r.get('TMAX') is not None else None,
+                                 'TMIN_C':r.get('TMIN')/10 if r.get('TMIN') is not None else None,
+                                 'PRCP_mm':r.get('PRCP')/10 if r.get('PRCP') is not None else None})
+              summaries['GHCN'][str(y)]=season_stats(ghrows,True)
+              summaries['POWER'][str(y)]=season_stats(power[y],False)
+
+              # Pair daily GSOD vs POWER on date/doy to quantify forcing difference during May-Aug.
+              if gsod[y] and power[y]:
+                  from datetime import date
+                  gp={r['date']:r for r in gsod[y]}
+                  pairs=[]
+                  for r in power[y]:
+                      dt=date(y,1,1).fromordinal(date(y,1,1).toordinal()+r['doy']-1).isoformat()
+                      if dt in gp and 5<=int(dt[5:7])<=8:
+                          g=gp[dt]
+                          if g['TMAX_C'] is not None and g['TMIN_C'] is not None:
+                              pairs.append((g,r))
+                  if pairs:
+                      summaries.setdefault('GSOD_minus_POWER',{})[str(y)]={
+                         'n_pairs':len(pairs),
+                         'mean_dTMAX_C':sum(g['TMAX_C']-p['TMAX_C'] for g,p in pairs)/len(pairs),
+                         'mean_dTMIN_C':sum(g['TMIN_C']-p['TMIN_C'] for g,p in pairs)/len(pairs),
+                         'rmse_TMAX_C':math.sqrt(sum((g['TMAX_C']-p['TMAX_C'])**2 for g,p in pairs)/len(pairs)),
+                         'rmse_TMIN_C':math.sqrt(sum((g['TMIN_C']-p['TMIN_C'])**2 for g,p in pairs)/len(pairs)),
+                      }
+
+          (out/'weather_probe_summary.json').write_text(json.dumps(summaries,ensure_ascii=False,indent=2),encoding='utf-8')
+
+          # Save normalized station daily table, preferring GHCN if available, else GSOD.
+          for y in (2019,2020):
+              norm=[]
+              gh_count=sum(bool(v) for v in gh[y].values())
+              if gh_count:
+                  for d,r in sorted(gh[y].items()):
+                      norm.append({'date':d,'source':'GHCN-Daily CHM00051356','TMAX_C':r.get('TMAX')/10 if r.get('TMAX') is not None else '',
+                                   'TMIN_C':r.get('TMIN')/10 if r.get('TMIN') is not None else '','PRCP_mm':r.get('PRCP')/10 if r.get('PRCP') is not None else ''})
+              else:
+                  for r in gsod[y]: norm.append({'date':r['date'],'source':'NOAA GSOD 51356099999','TMAX_C':r['TMAX_C'] if r['TMAX_C'] is not None else '',
+                                                  'TMIN_C':r['TMIN_C'] if r['TMIN_C'] is not None else '','PRCP_mm':r['PRCP_mm'] if r['PRCP_mm'] is not None else ''})
+              if norm:
+                  with (out/f'shihezi_51356_daily_{y}.csv').open('w',newline='',encoding='utf-8-sig') as f:
+                      w=csv.DictWriter(f,fieldnames=list(norm[0])); w.writeheader(); w.writerows(norm)
+
+          md=['# Shihezi 51356 station weather probe','',
+              '**Purpose:** recover public station daily TMAX/TMIN/PRCP for the Guo 2019–2020 real-case reconstruction. No crop parameters are adjusted.','',
+              f"Station metadata matches: **{len(metadata)}**",'']
+          for y in (2019,2020):
+              md += [f'## {y}',f"- GSOD May-Aug: `{summaries['GSOD'][str(y)]}`",f"- GHCN May-Aug: `{summaries['GHCN'][str(y)]}`",f"- POWER May-Aug: `{summaries['POWER'][str(y)]}`"]
+              if str(y) in summaries.get('GSOD_minus_POWER',{}): md.append(f"- GSOD minus POWER paired comparison: `{summaries['GSOD_minus_POWER'][str(y)]}`")
+              md.append('')
+          md += ['Interpretation: station observations, if sufficiently complete, should replace provisional POWER TMAX/TMIN/RAIN in the next M0 reconstruction; POWER can remain the SRAD source consistent with Guo stating National Meteorological Science Data Center + NASA.']
+          (out/'README_STATION_WEATHER_PROBE.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit weather probe
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/station_weather_probe
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi 51356 station weather probe'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
