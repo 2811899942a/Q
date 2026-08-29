@@ -1,0 +1,43 @@
+name: Shihezi Genotype Format Fast
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-genotype-format-fast.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Clone frozen DSSAT data and inspect maize cultivar files
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/data
+          git -C /tmp/data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          echo '=== cultivar files ==='
+          find /tmp/data -type f \( -iname '*MZ*CUL*' -o -iname '*.CUL' \) | head -100
+          echo '=== all IB0035 hits ==='
+          grep -RIn --binary-files=without-match 'IB0035\|McCurdy' /tmp/data | head -80 || true
+          echo '=== all cultivar header hits ==='
+          grep -RIn --binary-files=without-match '@VAR#\|@VARNO\|P1.*P2.*P5.*G2.*G3.*PHINT' /tmp/data | head -100 || true
+          echo '=== format context for first useful file ==='
+          F=$(grep -RIl --binary-files=without-match 'IB0035\|McCurdy\|P1.*P2.*P5.*G2.*G3.*PHINT' /tmp/data | head -1 || true)
+          echo "FILE=$F"
+          if [ -n "$F" ]; then
+            python - "$F" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1]); lines=p.read_text(errors='replace').splitlines()
+          for i,l in enumerate(lines,1):
+              if i <= 20 or 'IB0035' in l or 'McCurdy' in l or ('P1' in l and 'P2' in l and 'P5' in l):
+                  print(f'{i:04d} len={len(l):3d} repr={l!r}')
+                  if not l.startswith(('*','!','@')):
+                      for a,b in [(0,6),(6,7),(7,23),(23,24),(24,30),(30,31),(31,37),(37,43),(43,49),(49,55),(55,61),(61,67)]:
+                          print(f'  {a+1:02d}-{b:02d}: {l[a:b]!r}')
+          PY
+          fi
