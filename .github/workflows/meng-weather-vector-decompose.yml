@@ -1,0 +1,110 @@
+name: Meng Weather Vector Decompose
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/meng-weather-vector-decompose.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  decompose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Decompose vector plot
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf
+          OUT='research/dssat_dtr/data/shihezi_real_case/meng_weather_vector_decompose'
+          mkdir -p "$OUT" /tmp/mdec
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132' -o /tmp/mdec/meng.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import pymupdf as fitz, collections, json, re
+          out=Path('research/dssat_dtr/data/shihezi_real_case/meng_weather_vector_decompose')
+          doc=fitz.open('/tmp/mdec/meng.pdf'); page=doc[20]
+          # Numeric/text labels from the figure region.
+          spans=[]
+          for b in page.get_text('dict').get('blocks',[]):
+              for line in b.get('lines',[]):
+                  for s in line.get('spans',[]):
+                      x0,y0,x1,y1=s['bbox']; t=s['text']
+                      if 170 <= y0 <= 650:
+                          spans.append({'text':t,'bbox':[x0,y0,x1,y1],'size':s['size'],'font':s['font']})
+          # Drawing summaries.
+          ds=[]
+          def pt(v):
+              if isinstance(v,fitz.Point): return [v.x,v.y]
+              if isinstance(v,fitz.Rect): return [v.x0,v.y0,v.x1,v.y1]
+              if isinstance(v,fitz.Quad): return [[v.ul.x,v.ul.y],[v.ur.x,v.ur.y],[v.ll.x,v.ll.y],[v.lr.x,v.lr.y]]
+              if isinstance(v,(list,tuple)): return [pt(x) for x in v]
+              return v if isinstance(v,(int,float,str,type(None),bool)) else repr(v)
+          for idx,d in enumerate(page.get_drawings()):
+              ops=collections.Counter(str(it[0]) for it in d.get('items',[]) if it)
+              rec={'idx':idx,'type':d.get('type'),'width':d.get('width'),'rect':pt(d.get('rect')),'nitems':len(d.get('items',[])),
+                   'ops':dict(ops),'fill':pt(d.get('fill')),'color':pt(d.get('color')),
+                   'items':[pt(it) for it in d.get('items',[])]}
+              ds.append(rec)
+          # Useful distributions / top complex paths.
+          dist=collections.Counter((d['type'],round(float(d['width'] or 0),3),d['nitems'],tuple(sorted(d['ops'].items()))) for d in ds)
+          top_complex=sorted(ds,key=lambda d:d['nitems'],reverse=True)[:30]
+          fills=[d for d in ds if d['type'] in ('f','fs')]
+          strokes=[d for d in ds if d['type'] in ('s','fs')]
+          # Candidate rainfall rectangles: filled objects with rectangle op and within main figure vertical band.
+          bars=[]
+          for d in fills:
+              r=d['rect']
+              if not r: continue
+              x0,y0,x1,y1=r
+              if 180<y0<600 and y1<650 and x1-x0<30:
+                  bars.append(d)
+          # Candidate long temperature paths: stroke paths containing >=5 line segments and within figure band.
+          temp=[]
+          for d in strokes:
+              if d['ops'].get('l',0)>=5 and d['rect']:
+                  r=d['rect'];
+                  if r[1]<600 and r[3]>180: temp.append(d)
+          md=['# Meng Fig.2-3 vector decomposition','',f'- figure-region text spans: {len(spans)}',f'- drawings: {len(ds)}',
+              f'- candidate filled rain bars: {len(bars)}',f'- candidate multi-segment temperature paths: {len(temp)}','',
+              '## Figure-region text spans']
+          for s in spans:
+              md.append(f"- `{s['text']}` bbox={['%.2f'%x for x in s['bbox']]} size={s['size']:.2f}")
+          md += ['','## Drawing structure distribution']
+          for k,v in dist.most_common(): md.append(f'- {v} × {k}')
+          md += ['','## Top complex drawing paths']
+          for d in top_complex:
+              md.append(f"- idx={d['idx']} type={d['type']} width={d['width']} nitems={d['nitems']} ops={d['ops']} rect={d['rect']}")
+          md += ['','## Candidate rain bars']
+          for d in bars:
+              md.append(f"- idx={d['idx']} rect={d['rect']} width={d['width']} items={d['items']}")
+          md += ['','## Candidate temperature paths']
+          for d in temp:
+              md.append(f"- idx={d['idx']} rect={d['rect']} width={d['width']} nitems={d['nitems']} ops={d['ops']}")
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          (out/'spans.json').write_text(json.dumps(spans,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'drawings.json').write_text(json.dumps(ds,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+          (out/'candidate_bars.json').write_text(json.dumps(bars,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'candidate_temperature_paths.json').write_text(json.dumps(temp,ensure_ascii=False,indent=2),encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit decomposition
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng_weather_vector_decompose
+          if ! git diff --cached --quiet; then
+            git commit -m 'Decompose Meng vector weather figure'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
