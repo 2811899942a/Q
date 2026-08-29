@@ -1,0 +1,61 @@
+name: Shihezi Real Yield V3
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-real-yield-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Execute corrected real-yield pipeline V3
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          src=Path('.github/workflows/shihezi-real-yield-v1.yml').read_text().splitlines()
+          wanted=['Build frozen DSSAT arms','Build Guo 2025 Shihezi inputs','Run all real-case arms','Parse yield accuracy and make decision','Commit real-yield result']
+          def block(name):
+              marker='      - name: '+name
+              i=next(i for i,x in enumerate(src) if x==marker)
+              out=[]; j=i+2
+              while j < len(src) and not src[j].startswith('      - '):
+                  line=src[j]
+                  if line.startswith('          '): line=line[10:]
+                  elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+                  else: line=''
+                  out.append(line); j+=1
+              return '\n'.join(out)+'\n'
+
+          bad_treat='  1 1 0 0 GUO2025 XINYU66 REAL       1  1  0  1  1  1  0  0  0  0  0  0  1'
+          levels=[1,1,0,1,1,1,0,0,0,0,0,0,1]
+          good_treat=f'{1:3d}{1:1d} {0:1d} {0:1d} '+f'{"GUO2025 XINYU66 REAL":25s}'+''.join(f'{v:3d}' for v in levels)
+          old_cul='newline=f"XY0066 {\'Xinyu 66\':<16} {\'IB0001\':<6} {104.7:6.1f}{1.824:6.3f}{957.2:6.1f}{671:6.0f}{15.82:6.2f}{42.97:6.2f}"'
+          new_cul='newline=f"{\'XY0066\':6s} {\'Xinyu 66\':16s}     . {\'IB0001\':6s} {104.7:5.1f} {1.824:5.3f} {957.2:5.1f} {671.0:5.1f} {15.82:5.2f} {42.97:5.2f}"'
+
+          for k,name in enumerate(wanted,1):
+              s=block(name).replace('SHR','SHIH').replace(bad_treat,good_treat)
+              s=s.replace('real_yield_v1','real_yield_v3').replace('validation V1','validation V3').replace('This V1','This V3').replace('THIS V1','THIS V3')
+              if name=='Build Guo 2025 Shihezi inputs':
+                  if old_cul not in s: raise RuntimeError('old cultivar formatter not found')
+                  s=s.replace(old_cul,new_cul)
+                  # Print and enforce the exact official 72-column layout before DSSAT execution.
+                  anchor="print('CUL=',cul,'ROW=',newline)"
+                  s=s.replace(anchor, anchor+"\nassert len(newline)==72, (len(newline),repr(newline))\nassert newline[24:29]=='    .' and newline[30:36]=='IB0001', repr(newline)")
+              p=Path(f'/tmp/real_yield_v3_step{k}.sh'); p.write_text(s)
+              print(f'===== STEP {k}: {name} =====')
+              subprocess.run(['bash',str(p)],check=True)
+          PY
