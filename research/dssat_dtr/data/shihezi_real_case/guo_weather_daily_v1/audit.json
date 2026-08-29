@@ -1,0 +1,250 @@
+{
+  "panel_audits": {
+    "2019": {
+      "temp_calibration": {
+        "slope": -0.06955483248509242,
+        "intercept": 58.30484285196929,
+        "points": [
+          [
+            119.5,
+            50,
+            {
+              "text": "50",
+              "conf": 96.741806,
+              "left": 236,
+              "top": 96,
+              "width": 64,
+              "height": 47
+            }
+          ],
+          [
+            263.0,
+            40,
+            {
+              "text": "40",
+              "conf": 94.527466,
+              "left": 234,
+              "top": 240,
+              "width": 66,
+              "height": 46
+            }
+          ],
+          [
+            407.0,
+            30,
+            {
+              "text": "30",
+              "conf": 96.751091,
+              "left": 236,
+              "top": 384,
+              "width": 64,
+              "height": 46
+            }
+          ],
+          [
+            694.5,
+            10,
+            {
+              "text": "10",
+              "conf": 95.638878,
+              "left": 241,
+              "top": 671,
+              "width": 59,
+              "height": 47
+            }
+          ]
+        ],
+        "zero_y": 838.2572535771067,
+        "units_per_px": 0.06955483248509242
+      },
+      "rain_calibration": {
+        "slope": -0.0210526315789474,
+        "intercept": 17.51578947368422,
+        "points": [
+          [
+            119.5,
+            15,
+            {
+              "text": "15",
+              "conf": 96.480194,
+              "left": 1551,
+              "top": 96,
+              "width": 56,
+              "height": 47
+            }
+          ],
+          [
+            262.0,
+            12,
+            {
+              "text": "12",
+              "conf": 96.780029,
+              "left": 1551,
+              "top": 239,
+              "width": 58,
+              "height": 46
+            }
+          ]
+        ],
+        "zero_y": 831.9999999999992,
+        "units_per_px": 0.0210526315789474
+      },
+      "x0_may1": 312,
+      "px_per_day": 10.07563025210084,
+      "cyan_empirical_baseline_y": 839.0,
+      "rain_bar_runs_raw": 35,
+      "rain_events": 32,
+      "meng_red_comparison_n": 120,
+      "red_minus_meng_median_C": 7.769641724525924,
+      "red_gt_meng_fraction": 0.9666666666666667,
+      "meng_mean_prior_ok": true,
+      "masked_grid_rows": 1,
+      "masked_grid_cols": 13
+    },
+    "2020": {
+      "temp_calibration": {
+        "slope": -0.06961359367153554,
+        "intercept": 58.127368888441985,
+        "points": [
+          [
+            260.5,
+            40,
+            {
+              "text": "40",
+              "conf": 96.881088,
+              "left": 1975,
+              "top": 237,
+              "width": 66,
+              "height": 47
+            }
+          ],
+          [
+            404.0,
+            30,
+            {
+              "text": "30",
+              "conf": 96.794815,
+              "left": 1977,
+              "top": 381,
+              "width": 64,
+              "height": 46
+            }
+          ],
+          [
+            547.5,
+            20,
+            {
+              "text": "20",
+              "conf": 96.94828,
+              "left": 1976,
+              "top": 524,
+              "width": 65,
+              "height": 47
+            }
+          ],
+          [
+            691.5,
+            10,
+            {
+              "text": "10",
+              "conf": 96.587219,
+              "left": 1983,
+              "top": 668,
+              "width": 58,
+              "height": 47
+            }
+          ]
+        ],
+        "zero_y": 835.0002610511663,
+        "units_per_px": 0.06961359367153554
+      },
+      "rain_calibration": {
+        "slope": -0.021132039361413685,
+        "intercept": 17.46640404459258,
+        "points": [
+          [
+            116.5,
+            15,
+            {
+              "text": "15",
+              "conf": 95.248032,
+              "left": 3293,
+              "top": 93,
+              "width": 56,
+              "height": 47
+            }
+          ],
+          [
+            259.0,
+            12,
+            {
+              "text": "12",
+              "conf": 95.197647,
+              "left": 3293,
+              "top": 236,
+              "width": 58,
+              "height": 46
+            }
+          ],
+          [
+            542.5,
+            6,
+            {
+              "text": "6",
+              "conf": 0.0,
+              "left": 3287,
+              "top": 515,
+              "width": 135,
+              "height": 55
+            }
+          ]
+        ],
+        "zero_y": 826.5366037735847,
+        "units_per_px": 0.021132039361413685
+      },
+      "x0_may1": 2053,
+      "px_per_day": 10.07563025210084,
+      "cyan_empirical_baseline_y": 836.0,
+      "rain_bar_runs_raw": 22,
+      "rain_events": 22,
+      "meng_red_comparison_n": 119,
+      "red_minus_meng_median_C": 4.492387153028229,
+      "red_gt_meng_fraction": 0.9159663865546218,
+      "meng_mean_prior_ok": true,
+      "masked_grid_rows": 5,
+      "masked_grid_cols": 13
+    }
+  },
+  "metrics": [
+    {
+      "year": 2019,
+      "days_with_Tmax": 122,
+      "black_Tmin_days": 68,
+      "black_detection_pct": 55.73770491803279,
+      "all_mean_vs_Meng_MAE_C": 0.8688799231988694,
+      "black_only_mean_vs_Meng_MAE_C": 1.556202847520363,
+      "black_only_mean_vs_Meng_r": 0.9466767377455352,
+      "rain_events": 32,
+      "rain_sum_mm": 27.40000000000004,
+      "tmax_min": 16.850162690854205,
+      "tmax_max": 40.42925090330054,
+      "tmin_min": -0.15441628274358976,
+      "tmin_max": 33.046857581413164
+    },
+    {
+      "year": 2020,
+      "days_with_Tmax": 122,
+      "black_Tmin_days": 86,
+      "black_detection_pct": 70.49180327868852,
+      "all_mean_vs_Meng_MAE_C": 1.136657515085641,
+      "black_only_mean_vs_Meng_MAE_C": 1.6102648130379915,
+      "black_only_mean_vs_Meng_r": 0.9271529631134098,
+      "rain_events": 22,
+      "rain_sum_mm": 74.03609990271285,
+      "tmax_min": 20.7448690868274,
+      "tmax_max": 39.47092578447047,
+      "tmin_min": 8.910558162666362,
+      "tmin_max": 34.69392567654188
+    }
+  ]
+}
