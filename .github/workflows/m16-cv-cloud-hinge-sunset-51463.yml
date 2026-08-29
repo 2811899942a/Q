@@ -1,0 +1,40 @@
+name: Test M16 CV cloud-hinge sunset transfer
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/test_m16_cv_cloud_hinge_sunset_transfer_51463.py'
+      - '.github/workflows/m16-cv-cloud-hinge-sunset-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-m16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/scripts/test_m16_cv_cloud_hinge_sunset_transfer_51463.py
+      - run: cat research/dssat_dtr/data/processed_51463/README_M16_CV_CLOUD_HINGE_SUNSET.md
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_M16_CV_CLOUD_HINGE_SUNSET.md \
+                  research/dssat_dtr/data/processed_51463/m16_dense_cv_cloud_grid.csv \
+                  research/dssat_dtr/data/processed_51463/m16_parameters.csv \
+                  research/dssat_dtr/data/processed_51463/m16_validation.csv \
+                  research/dssat_dtr/data/processed_51463/m16_by_dtr.csv \
+                  research/dssat_dtr/data/processed_51463/m16_by_hour.csv \
+                  research/dssat_dtr/data/processed_51463/m16_by_cloud_strata.csv \
+                  research/dssat_dtr/data/processed_51463/m16_by_year.csv \
+                  research/dssat_dtr/data/processed_51463/m16_shape_checks.csv \
+                  research/dssat_dtr/data/processed_51463/m16_dense_sunset_validation.csv
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Add M16 CV cloud-hinge sunset-transfer results'; git pull --rebase origin research/dssat-dtr-matrix; git push origin HEAD:research/dssat-dtr-matrix; fi
