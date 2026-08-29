@@ -1,0 +1,30 @@
+name: Diagnose Diwopu DTR peak width
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/diagnose_diwopu_peak_width.py'
+      - '.github/workflows/diwopu-peak-width.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet numpy scipy
+      - run: python research/dssat_dtr/scripts/diagnose_diwopu_peak_width.py
+      - run: |
+          cat research/dssat_dtr/data/processed_514635/README_DIWOPU_PEAK_WIDTH.md
+          cat research/dssat_dtr/data/processed_514635/diwopu_peak_width_by_dtr.csv
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_514635
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Diagnose Diwopu DTR peak width'; git push origin HEAD:research/dssat-dtr-matrix; fi
