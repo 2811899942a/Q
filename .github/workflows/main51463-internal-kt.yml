@@ -1,0 +1,39 @@
+name: Screen main Urumqi 51463 internal clearness index
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/screen_51463_internal_kt.py'
+      - '.github/workflows/main51463-internal-kt.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screen-internal-kt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numpy
+        run: python -m pip install --quiet numpy
+      - name: Screen internal Kt
+        run: python research/dssat_dtr/scripts/screen_51463_internal_kt.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_MAIN51463_INTERNAL_KT.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_MAIN51463_INTERNAL_KT.md \
+                  research/dssat_dtr/data/processed_51463/main51463_internal_kt_models.csv
+          git diff --cached --quiet || git commit -m 'Add main 51463 internal Kt screening results'
+          git push origin HEAD:research/dssat-dtr-matrix
