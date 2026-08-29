@@ -1,196 +1,206 @@
-# DSSAT-DTR Urumqi Research Handoff
+# DSSAT-DTR Xinjiang Research Handoff
 
-Last checkpoint: 2026-08-29 15:44 CST
+Last material checkpoint: 2026-08-29 19:59 CST
 Branch: `research/dssat-dtr-matrix`
-Study: Urumqi DSSAT v4.8.5.0 HTEMP improvement
+Study: DSSAT v4.8.5 CERES-Maize hourly-temperature / extreme-day thermal-time improvement
 
-## 1. Frozen DSSAT v4.8.5.0 baseline — END-TO-END PASS
+## 1. Frozen scientific method
 
-Formal source/data baseline:
-- `DSSAT/dssat-csm-os`, tag `v4.8.5.0`, commit `0b91373806786b600d89ccfcfff78fa2f82cb26b`
-- `DSSAT/dssat-csm-data`, tag `v4.8.5.0`, commit `79cb5db71bbca186add92a6a9695866a09c8b51d`
-- official regression experiment `Maize/UFGA8201.MZX`, 6 treatments, executable `dscsm048`
+Do not retune the temperature method or Xinyu66 cultivar coefficients to force crop-output gains.
 
-Untouched M0 completed: exact checkout -> compile/install -> matching official data -> real UFGA8201 execution -> `Summary.OUT`/`PlantGro.OUT` acceptance -> output hashes -> repository snapshot.
-Frozen M0 outputs: `research/dssat_dtr/data/dssat485_m0_official/`.
+### M15 hourly-temperature refinement
+- DTR threshold: `DTRc = 14.8 C`
+- sunset correction coefficient: `alpha = 7.8094`
+- if `DTR <= 14.8 C` or `CLOUDS <= 0`, behavior is exactly official HTEMP;
+- pre-peak daytime branch unchanged;
+- official Tmax anchor unchanged;
+- modeled Tmax -> sunset branch is rescaled to a corrected sunset anchor;
+- night branch retains official exponential structure.
 
-## 2. Confirmed Urumqi mechanism
-
-Primary sparse station: NOAA `51463099999` + GHCN `CHM00051463`.
-Second dense station: NOAA `51463599999` (Diwopu), also within Urumqi.
-
-Formal primary calibration-only failure threshold:
-`DTRc = 14.8 C`.
-
-Observed mechanism:
-- below this regime official HTEMP performs much better;
-- above ~14-15 C DTR, late-afternoon / sunset warm persistence error increases sharply;
-- solar radiation / cloud state strongly modulates error magnitude;
-- dynamic Tmax timing is not the main general mechanism;
-- DSSAT v4.8.5.0 already computes `CLOUDS = clamp(1 - SRAD/SCLEAR,0,1)` in `SOLAR.for` and passes it to `HMET`, so no new WTH variable is required.
-
-## 3. Statistical upper reference M10
-
-Primary-station independent 2017-2024, DTR>=15 C:
-- official RMSE 5.1215 C
-- M10 RMSE 4.4196 C
-- improvement 13.71%
-- Bias +1.2167 -> +0.4936 C
-- R2 0.5559 -> 0.6107
-- 5/5 validation years improved
-- day-block bootstrap improvement 95% CI 10.76%-16.54%.
-
-M10 is a statistical reference only; its direct implementation is not the chosen source formula.
-
-## 4. Rejected / intermediate forms
-
-### M12 native-CLOUDS additive shoulder
-High-DTR RMSE improved 13.44%, but full-curve QA failed severely: 113/130 rising non-monotonic, 52/130 falling non-monotonic, 37/130 below Tmin, max Tmin undershoot >51 C. Mechanism retained; additive formula permanently rejected.
-
-### M13 monotonic power warp
-0 physical violations; high-DTR improvement only 4.28%; k_pre hit upper bound. Rejected.
-
-### M14 robust crossover monotonic warp
-Calibration median-residual crossover H0=10.455 solar hour. 0 physical violations; high-DTR improvement 7.43%; k_pre still hit upper bound. Rejected as final family; do not continue tuning power-warp form.
-
-## 5. Dense-station sunset-anchor mechanism — STRONGLY SUPPORTED
-
-Dense Diwopu `51463599999`:
-- 8,806 days with >=20 observed solar hours
-- 3,790 May-Sep dense days
-- HTEMP RMSE breakpoint replicated around 12.8 C calibration / 13.4 C validation.
-
-Dense validation DTR 14.5-18 C warm bias grows through afternoon, reaching about +2.02 C at 19 solar h.
-
-Dedicated sunset-anchor test compared official `T_PL(SNDN)` with the real observation within 45 min of sunset.
-
-Dense calibration 2000-2016 fitted:
-`delta_TS = alpha * max(0,DTR-14.8) * CLOUDS`
-with
-`alpha = 7.8094`.
-
-Dense independent 2017-2024 high-DTR sunset validation:
-- N=59 days
-- raw sunset Bias +2.389 C
-- raw RMSE 4.536 C
-- corrected Bias +1.023 C
-- corrected RMSE 3.725 C
-- RMSE improvement 17.88%
-- r(sunset error, DTR x CLOUDS)=0.429.
-
-This directly supports an overly warm official sunset anchor under high-DTR cloudy/radiatively weak conditions.
-
-## 6. M15 — PREFERRED SCIENTIFIC/SOURCE FORM
-
-M15 freezes `alpha=7.8094` from dense Diwopu 2000-2016 and transfers it WITHOUT REFITTING to primary station `51463099999` 2017-2024.
-
-Formula logic:
-- DTR<=14.8 C or CLOUDS<=0: exact official HTEMP.
-- official Tmax anchor unchanged.
-- `TS1 = max(TMIN, TS0 - 7.8094*(DTR-14.8)*CLOUDS)`.
-- modeled Tmax -> sunset: preserve official normalized cooling progress but rescale endpoint to TS1.
-- night: retain official B=2.2 exponential structure, re-anchored to TS1 and TMIN.
-- pre-peak daytime branch unchanged.
-
-Primary cross-station independent validation 2017-2024:
-- May-Sep RMSE 2.9469 -> 2.8241 C = 4.17%
-- DTR>=15 RMSE 5.1215 -> 4.6783 C = 8.65%
-- Bias +1.2167 -> +0.3784 C
-- R2 0.5559 -> 0.6210
+Independent Urumqi primary-station 2017-2024 validation:
+- May-Sep hourly RMSE: 2.9469 -> 2.8241 C (4.17% improvement)
+- DTR>=15 C RMSE: 5.1215 -> 4.6783 C (8.65% improvement)
+- Bias: +1.2167 -> +0.3784 C
+- R2: 0.5559 -> 0.6210
 - complete 24-h physical violations: 0/130
-- high-DTR years: 5/5 improved.
+- 5/5 high-DTR validation years improved.
 
-DTR bins:
-- 15-<18: 4.8348 -> 4.4542 C
-- 18-<20: 6.2900 -> 5.5425 C
-- >=20: 7.6018 -> 6.7444 C (sparse extreme group).
+M15 is frozen.
 
-Key hours:
-- 17 h 3.951 -> 3.351 C
-- 18 h 4.547 -> 2.922 C
-- 20 h 2.509 -> 2.137 C.
+## 2. DSSAT v4.8.5 source integration
 
-M15 has less pointwise gain than M10 but substantially stronger evidence structure: second-station mechanism/parameter calibration -> first-station temporal validation, exact physical shape, and clean source implementation.
+Frozen upstream:
+- `DSSAT/dssat-csm-os` tag `v4.8.5.0`
+- `DSSAT/dssat-csm-data` tag `v4.8.5.0`
 
-## 7. M16 sensitivity — NOT ADOPTED
+M15 source integration and real DSSAT compile/run passed. Official `HTEMP` is preserved and a separate correction routine is called after it. Official UFGA8201 six-treatment regression produced valid `Summary.OUT` and `PlantGro.OUT` and confirmed the modified hourly-temperature path is active.
 
-Dense-station LOYO CV added a CLOUDS hinge and selected c0=0.020, alpha=8.4973.
-Primary high-DTR improvement 8.86% versus M15 8.65%.
-Only +0.21 percentage points while adding a near-zero threshold. Rejected for parsimony; keep as sensitivity analysis only.
+## 3. Crop propagation status before Shihezi
 
-## 8. M15 source integration into DSSAT v4.8.5.0 — FULL PASS
+Anningqu controlled potential-growth Stage A:
+- 10 scenarios (2021/2022 x five sowing dates)
+- M0 vs M15
+- WATER=N, NITRO=N
+- M15 trigger days were present, but reported HWAM/CWAM/HIAM/LAIX did not change.
 
-Files:
-- `research/dssat_dtr/dssat485/apply_m15_htemp_patch.py`
-- `research/dssat_dtr/dssat485/build_m15_fortran_unit.py`
-- `.github/workflows/dssat485-m15-source.yml`
+Interpretation: the hourly-temperature modification does not automatically alter CERES core crop output under potential-growth settings. Full process/stress pathways matter.
 
-Successful formal workflow run: `33235735664`.
+## 4. Shihezi real Xinyu66 case
 
-The deterministic patch:
-- operates only on exact frozen v4.8.5.0 source anchors;
-- handles legacy `HMET.for` text losslessly with Latin-1;
-- leaves official `HTEMP` subroutine unchanged;
-- adds a separate `HTEMP_DTRCLOUD` called immediately after official `HTEMP`.
+Target case:
+- Shihezi University modern water-saving irrigation experimental station
+- 2019 calibration year
+- 2020 independent validation year
+- cultivar Xinyu66
+- treatments W1-W4
 
-Acceptance chain — all PASS:
-1. exact v4.8.5 source/data checkout;
-2. deterministic source patch;
-3. source-extracted real Fortran unit test;
-4. low-DTR exact no-change test;
-5. high-DTR + CLOUDS=0 exact no-change test;
-6. high-DTR cloudy bounded/late-cooling test;
-7. full DSSAT CMake compile/install;
-8. official `UFGA8201.MZX` six-treatment real execution;
-9. `Summary.OUT` and `PlantGro.OUT` generated;
-10. source/output snapshots and M0-vs-M15 diffs committed.
+Frozen published Xinyu66 coefficients:
+- P1=104.7
+- P2=1.824
+- P5=957.2
+- G2=671
+- G3=15.82
+- PHINT=42.97
 
-Frozen M15 source snapshot:
-`research/dssat_dtr/data/dssat485_m15_source/`
+Source-supported field inputs recovered:
+- longitude 85.9964 E
+- latitude 44.3244 N
+- elevation 412 m
+- sowing 2019-05-03 / 2020-05-05
+- Guo text: 25 cm plant spacing, 30/60 cm narrow/wide rows, 4 cm sowing depth, 1.45 m mulch
+- W1/W2/W3/W4 irrigation totals 487.5/525/562.5/600 mm
+- 10 irrigation events
+- Guo soil hydraulic layers recovered
+- ecotype `IB0001` is source-supported through the published initial cultivar-coefficient match.
 
-UFGA8201 M15 outputs are not byte-identical to M0. Phenological dates shown in Summary remain unchanged in the regression case, while small biomass/yield/water/N differences confirm that the new temperature pathway is actually active. Florida is software propagation QA, not Urumqi scientific validation.
+Published original CERES yield RRMSE:
+- 2019: ~6.52%
+- 2020: ~5.69%
 
-## 9. Anningqu Stage A controlled crop propagation — FULL SOFTWARE PASS, ZERO CORE RESPONSE
+## 5. Three-arm definition
 
-Formal workflow: `.github/workflows/anningqu-stageA-final.yml`, run `33240724580`.
-After correcting DSSAT v4.8.5 fixed-width experiment and soil formats, all 20 real simulations PASS:
-- 10 public Anningqu scenarios = 2021/2022 x five sowing dates;
-- each scenario run with frozen M0 and M15;
-- identical WTH/soil/management/cultivar within each pair;
-- official proxy maize cultivar IB0035;
-- `WATER=N`, `NITRO=N` to isolate the potential-growth temperature pathway.
+All arms use identical reconstructed crop/soil/management/weather inputs.
 
-Final Stage A output:
-`research/dssat_dtr/data/anningqu/stageA_propagation/anningqu_stageA_m0_m15.csv`
+- `M0`: official DSSAT v4.8.5 CERES baseline.
+- `H0TT`: official HMET/TGRO hourly temperature inserted into CERES existing extreme-day 24-h DTT branch.
+- `M15TT`: frozen M15 hourly refinement + the same TGRO-based extreme-day DTT integration.
 
-Critical result:
-- scenarios with any M0-M15 reported core crop-output change: **0/10**;
-- HWAM, CWAM, HIAM and LAIX are identical for all ten paired scenarios;
-- parsed ADAT/MDAT fields are also unchanged, although date-column parsing itself needs cleanup before publication use.
+No arm-specific recalibration is permitted.
 
-Independent thermal-activation check showed that M15 was not simply inactive:
-- 2021 crop windows: roughly 7-15 M15 trigger days per scenario; maximum hourly correction about 3.93 C;
-- 2022 crop windows: about 1 trigger day per scenario; maximum correction about 0.56 C.
+## 6. V4 real-yield run — VALID execution, baseline reproduction FAIL
 
-Scientific interpretation:
-**Under CERES-Maize potential-growth settings with water and N stress disabled, the M15-modified hourly HTEMP pathway does not propagate into the reported core phenology / biomass / grain-yield outputs.** This is an important negative mechanistic result and prevents falsely claiming crop improvement from the weather-layer gain alone. It does NOT invalidate M15's demonstrated hourly-temperature improvement.
+Workflow:
+`.github/workflows/shihezi-real-yield-v4.yml`
+Run: `33246786517` (success)
 
-The official Florida regression previously showed small M0-M15 biomass/yield/water/N differences under its full process configuration, indicating that the modified hourly-temperature path can affect other DSSAT process chains.
+All 24 simulations completed: 3 arms x 2 years x 4 treatments.
+`Summary.OUT` HWAM parsing was audited against raw rows and is valid.
 
-## 10. Current decision rule — DO NOT INVENT M17
+### 2019
+| Arm | RMSE kg/ha | RRMSE % | MAE kg/ha | Bias kg/ha |
+|---|---:|---:|---:|---:|
+| M0 | 2069.2 | 18.602 | 1644.8 | +1644.8 |
+| H0TT | 1944.4 | 17.480 | 1484.8 | +1484.8 |
+| M15TT | 2068.8 | 18.598 | 1644.5 | +1644.5 |
 
-Do not continue empirical temperature-formula tuning. M15 remains frozen.
+### 2020 independent validation
+| Arm | RMSE kg/ha | RRMSE % | MAE kg/ha | Bias kg/ha |
+|---|---:|---:|---:|---:|
+| M0 | 6684.8 | 60.771 | 6603.0 | +6603.0 |
+| H0TT | 5985.5 | 54.414 | 5916.2 | +5916.2 |
+| M15TT | 6267.0 | 56.973 | 6179.2 | +6179.2 |
 
-Immediate next work:
-1. audit DSSAT v4.8.5 source call chain from `HMET -> TAIRHR/TGRO` into CERES-Maize, soil water, ET, soil temperature, N and stress modules;
-2. identify exactly which process(es) consume the M15-modified hourly temperatures;
-3. only if the source audit supports it, run Anningqu Stage A2 with water/N process pathways enabled using one defensible common management setup for M0 and M15;
-4. seek a clear process response (ET / soil water / stress / biomass / yield) that scales with 2021 strong activation and remains near-neutral in 2022 weak activation;
-5. only after a propagation pathway is proven, compare with Tang 2024 observations. Crop accuracy is valid only if `|M15-observed| < |M0-observed|`; output change alone is not evidence of improvement.
+2020 provisional contrasts:
+- H0TT vs M0 relative RRMSE reduction: 10.461%
+- M15TT vs M0 relative RRMSE reduction: 6.250%
+- M15TT vs H0TT: 4.703% worse locally
+- maximum arm-induced HWAM shift: 934 kg/ha
 
-## User-input / stop conditions
+These numbers prove crop propagation is material in this real-cultivar reconstruction. They do not prove predictive accuracy improvement because M0 fails the published baseline reproduction gate badly: 60.771% vs 5.69%.
 
-Do NOT ask the user to run DSSAT locally. Continue with GitHub and public data. Stop for user input only if:
-- public sources cannot provide/reconstruct a defensible key Anningqu input;
-- cultivar calibration requires a major choice among scientifically different strategies;
-- M15 causes an unexpected source-level or crop-level behavior that requires a research-direction decision.
+Example raw M0 2020 W1 output confirms the large value is genuine model output: HWAM ~17,591 kg/ha.
+
+## 7. V5 density sensitivity
+
+A same-trial source conflict was tested:
+- Guo text-derived equivalent density: 8.89 plants/m2
+- Meng same-trial method: 8.25 plants/m2
+
+V5 with 8.25 plants/m2 produced 2020 RRMSE:
+- M0 58.945%
+- H0TT 52.483%
+- M15TT 55.230%
+
+Density changes M0 by only ~1.83 percentage points and is not the dominant error source. Formal Guo reconstruction remains at 8.89 plants/m2 unless stronger source evidence changes the decision.
+
+## 8. Main M0 reproduction gaps recovered
+
+The current V4 weather is provisional NASA POWER-only forcing. Published thesis information indicates:
+- growing-season precipitation totals ~96.45 mm (2019), 119.88 mm (2020)
+- mean total radiation ~19.8 MJ m-2 d-1
+
+V4 Summary.OUT reports approximately:
+- 2019 SRADA 23.3, PRCP 83.3 mm
+- 2020 SRADA 24.2, PRCP 103.1 mm
+
+Thus V4 is systematically higher-radiation and lower-rain than the published experiment description.
+
+Source-recovered Guo Fig.2-2 temperature series is available under:
+`research/dssat_dtr/data/shihezi_real_case/guo_weather_daily_v1/`
+
+Current dominant unresolved common-arm inputs:
+1. exact original 2019/2020 CMA + NASA WTH;
+2. exact fertilizer schedule and N initialization;
+3. exact initial soil-water profile;
+4. raw numerical observed yields (current targets digitized from figure, ~+/-100 kg/ha uncertainty).
+
+## 9. Nitrogen root-cause diagnostic — first run invalid as rate response
+
+Same station / same Xinyu66 later experiment (2021-2022) reports a management clue:
+- urea 280 kg/ha at 46% N = 128.8 kg N/ha
+- monoammonium phosphate 100 kg/ha
+- potassium sulfate 60 kg/ha
+- fertigation with irrigation.
+
+This later schedule is diagnostic evidence only, not accepted as the exact 2019/2020 input.
+
+First M0-only N diagnostic intended to compare:
+- UNLIMITED (`NITRO=N`)
+- N64_SPLIT
+- N129_SPLIT
+- N193_SPLIT
+- N129_BASAL
+
+Initial result showed every finite-N scenario at the same ~4.73 t/ha and was classified engineering-inconclusive.
+
+### Exact cause found
+The treatment factor row still had:
+`CU FL SA IC MP MI MF MR MC MT ME MH SM = 1 1 0 1 1 1 0 0 0 0 0 0 1`
+
+`MF=0`, so the generated `*FERTILIZERS` factor level 1 was not linked to the treatment. `NITRO=Y` was active, but the intended fertilizer scenarios were not selected.
+
+Therefore the common ~4.73 t/ha result represents severe N stress with effectively no selected fertilizer and cannot be interpreted as an N-rate response.
+
+## 10. Immediate next action
+
+Correct the nitrogen diagnostic only:
+1. set treatment `MF=1` for finite-N scenarios;
+2. keep `NITRO=Y`, `FERTI=R`;
+3. preserve UNLIMITED V4 baseline unchanged;
+4. save exact generated fertilizer sections;
+5. record `NI#M`, `NICM`, `NUCM`, N-loss/stress fields and HWAM;
+6. verify DSSAT actually reports different applied-N totals for N64/N129/N193;
+7. only then interpret nitrogen leverage on the M0 yield gap.
+
+After the corrected diagnostic:
+- if a defensible finite-N range brings M0 substantially toward the published 2020 baseline, continue recovering exact 2019/2020 fertilizer management before any three-arm accuracy claim;
+- if nitrogen cannot explain the gap, return priority to exact WTH / initial-water reconstruction or select another public real case with complete DSSAT inputs.
+
+## 11. Hard scientific rules
+
+- Do not retune M15 (`DTRc=14.8 C`, `alpha=7.8094`).
+- Do not retune Xinyu66 coefficients against the validation yield.
+- Do not describe V4 H0TT/M15TT percentage reductions as final real-yield accuracy gains while M0 reproduction fails.
+- All common-arm reconstruction changes must be source-supported or explicitly labeled diagnostic.
+- After every material result, failure, method switch or major decision, write a GitHub checkpoint and update this handoff before continuing.
+- Do not ask the user to run DSSAT locally.
