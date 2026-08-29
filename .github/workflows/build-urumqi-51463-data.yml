@@ -6,6 +6,7 @@ on:
       - research/dssat-dtr-matrix
     paths:
       - 'research/dssat_dtr/scripts/process_noaa_51463.py'
+      - 'research/dssat_dtr/scripts/process_ghcn_51463.py'
       - '.github/workflows/build-urumqi-51463-data.yml'
   workflow_dispatch:
 
@@ -26,17 +27,25 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Download and process NOAA station 51463099999
+      - name: Download and process NOAA Global Hourly station 51463099999
         env:
           START_YEAR: '2000'
           END_YEAR: '2024'
         run: python research/dssat_dtr/scripts/process_noaa_51463.py
 
-      - name: Show QC summary
+      - name: Download GHCN Daily and merge formal Tmax Tmin DTR
+        env:
+          START_YEAR: '2000'
+          END_YEAR: '2024'
+        run: python research/dssat_dtr/scripts/process_ghcn_51463.py
+
+      - name: Show QC summaries
         run: |
           cat research/dssat_dtr/data/processed_51463/README_QC.md
-          echo '--- yearly QC head ---'
-          head -30 research/dssat_dtr/data/processed_51463/51463099999_yearly_qc_2000_2024.csv
+          echo '--- formal DTR merge ---'
+          cat research/dssat_dtr/data/processed_51463/README_DTR_MERGED.md
+          echo '--- yearly formal DTR ---'
+          cat research/dssat_dtr/data/processed_51463/51463099999_formal_dtr_yearly_summary_2000_2024.csv
 
       - name: Commit processed data
         run: |
@@ -46,6 +55,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No processed-data changes to commit.'
           else
-            git commit -m 'Build NOAA 51463 processed hourly and DTR QC data'
+            git commit -m 'Build NOAA 51463 processed hourly and formal DTR data'
             git push origin HEAD:research/dssat-dtr-matrix
           fi
