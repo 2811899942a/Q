@@ -1,0 +1,88 @@
+name: Meng 2021 Targeted Management Summary
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/meng2021-targeted-management-summary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Extract only DSSAT-critical same-trial facts
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/mengt research/dssat_dtr/data/shihezi_real_case/meng2021_targeted_management
+          URL='https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132'
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' "$URL" -o /tmp/mengt/full.pdf
+          file /tmp/mengt/full.pdf | grep -qi PDF
+          pdftotext -layout /tmp/mengt/full.pdf /tmp/mengt/full.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re,json
+          lines=Path('/tmp/mengt/full.txt').read_text(errors='replace').splitlines()
+          groups={
+            'planting_density':['播种','种植模式','种植密度','密度','基本株数','株距','行距','播深','出苗率'],
+            'fertilizer':['施肥','肥料','氮肥','尿素','磷肥','磷酸一铵','磷酸二铵','硫酸钾','钾肥','基肥','追肥','水肥','滴施','肥液','N肥'],
+            'initial_water':['播前','播种前','初始含水','初始水分','初始土壤','土壤初始','灌前','灌水前','含水率','土壤含水','土壤水分'],
+            'weather':['气象站','气象资料','气象数据','自动气象','国家气象','NASA','降水量','最高气温','最低气温','太阳辐射'],
+            'same_trial':['2019','2020','新玉66','新玉 66','W1','W2','W3','W4','4875','5250','5625','6000','普通膜','PE']
+          }
+          rec=[]
+          for g,kws in groups.items():
+              for i,line in enumerate(lines):
+                  found=[k for k in kws if k.lower() in line.lower()]
+                  if found:
+                      # Keep context only when the line is plausibly methods/data, not references/table of contents.
+                      block='\n'.join(lines[max(0,i-4):min(len(lines),i+5)]).strip()
+                      rec.append({'group':g,'line':i+1,'keywords':found,'text':line.strip(),'context':block})
+          # Deduplicate by group+context.
+          uniq=[]; seen=set()
+          for r in rec:
+              key=(r['group'],r['context'])
+              if key not in seen:
+                  seen.add(key); uniq.append(r)
+          out=Path('research/dssat_dtr/data/shihezi_real_case/meng2021_targeted_management')
+          (out/'all_targeted_hits.json').write_text(json.dumps(uniq,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Meng 2021 same-trial DSSAT-critical management','',
+              'Same 2019-2020 Shihezi Xinyu66 W1-W4 field experiment used to recover management details omitted from Guo 2025.','',
+              f'- Full extracted text lines: {len(lines)}.','']
+          # For each group print only likely methods section hits: source line 300-1600, plus any numeric fertilizer/density context anywhere.
+          for g in groups:
+              sel=[]
+              for r in uniq:
+                  if r['group']!=g: continue
+                  numeric=bool(re.search(r'\d',r['context']))
+                  if 250 <= r['line'] <= 1800 or (numeric and g in ('planting_density','fertilizer','initial_water')):
+                      sel.append(r)
+              md += [f'## {g} — {len(sel)} selected contexts','']
+              for r in sel[:80]:
+                  md += [f"### L{r['line']} — {', '.join(r['keywords'])}",'```text',r['context'],'```','']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md[:1500]))
+          PY
+
+      - name: Commit targeted management
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng2021_targeted_management
+          if ! git diff --cached --quiet; then
+            git commit -m 'Extract Meng 2021 DSSAT-critical management facts'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
