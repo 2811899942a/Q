@@ -1,0 +1,163 @@
+name: Anningqu Stage A2 Water6 M0 vs M15
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/anningqu-stageA2-water6.yml'
+      - 'research/dssat_dtr/anningqu/build_stageA2_water6_experiments.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stageA2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Build frozen M0 and M15
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/m0-os
+          git -C /tmp/m0-os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/base-data
+          git -C /tmp/base-data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          cp -a /tmp/m0-os /tmp/m15-os
+          python research/dssat_dtr/dssat485/apply_m15_htemp_patch.py /tmp/m15-os
+          for V in m0 m15; do
+            cmake -S /tmp/${V}-os -B /tmp/${V}-build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/${V}-run >/dev/null
+            cmake --build /tmp/${V}-build --parallel 2 >/dev/null
+            cmake --install /tmp/${V}-build >/dev/null
+            cp -a /tmp/base-data/. /tmp/${V}-run/
+          done
+
+      - name: Assemble Stage A2 scenarios
+        run: |
+          for R in /tmp/m0-run /tmp/m15-run; do
+            cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2101.WTH "$R/Weather/ANQH2101.WTH"
+            cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2201.WTH "$R/Weather/ANQH2201.WTH"
+            cp research/dssat_dtr/anningqu/AN.SOL "$R/Soil/AN.SOL"
+            python research/dssat_dtr/anningqu/build_stageA2_water6_experiments.py "$R/Maize/UFGA8201.MZX" "$R/Maize"
+          done
+
+      - name: Run 10 Water6 scenarios under M0 and M15
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/results/M0 /tmp/results/M15
+          SCENS='ANQH2101 ANQH2102 ANQH2103 ANQH2104 ANQH2105 ANQH2201 ANQH2202 ANQH2203 ANQH2204 ANQH2205'
+          for V in M0 M15; do
+            if [ "$V" = M0 ]; then ROOT=/tmp/m0-run; else ROOT=/tmp/m15-run; fi
+            sudo rm -rf /DSSAT48
+            sudo ln -s "$ROOT" /DSSAT48
+            cd "$ROOT/Maize"
+            for X in $SCENS; do
+              rm -f Summary.OUT PlantGro.OUT SoilWat.OUT ETPhot.OUT Evaluate.OUT ERROR.OUT WARNING.OUT
+              set +e
+              ../dscsm048 A "${X}.MZX" > "/tmp/results/${V}/${X}.stdout" 2>&1
+              rc=$?
+              set -e
+              if [ "$rc" -ne 0 ] || [ ! -s Summary.OUT ] || [ ! -s PlantGro.OUT ]; then
+                echo "FAILED ${V} ${X} rc=${rc}"
+                cat "/tmp/results/${V}/${X}.stdout" || true
+                test -f ERROR.OUT && cat ERROR.OUT || true
+                test -f WARNING.OUT && cat WARNING.OUT || true
+                exit 1
+              fi
+              cp Summary.OUT "/tmp/results/${V}/${X}_Summary.OUT"
+              cp PlantGro.OUT "/tmp/results/${V}/${X}_PlantGro.OUT"
+              test -s SoilWat.OUT && cp SoilWat.OUT "/tmp/results/${V}/${X}_SoilWat.OUT" || true
+              test -s ETPhot.OUT && cp ETPhot.OUT "/tmp/results/${V}/${X}_ETPhot.OUT" || true
+            done
+          done
+
+      - name: Parse Stage A2 process propagation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,re,math
+          scenarios=[f'ANQH21{i:02d}' for i in range(1,6)]+[f'ANQH22{i:02d}' for i in range(1,6)]
+          sow={1:'Apr21',2:'Apr26',3:'May06',4:'May16',5:'May26'}
+
+          def parse_summary(path):
+              lines=Path(path).read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              header=lines[hi]
+              data=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=header.split()
+              if names and names[0]=='@': names=names[1:]
+              elif names and names[0].startswith('@'): names[0]=names[0][1:]
+              vals=data.split()
+              if len(vals)==len(names): return dict(zip(names,vals))
+              starts=[m.start() for m in re.finditer(r'\S+',header)]
+              raw=[m.group() for m in re.finditer(r'\S+',header)]
+              if raw[0]=='@': raw=raw[1:]; starts=starts[1:]
+              elif raw[0].startswith('@'): raw[0]=raw[0][1:]
+              out={}
+              for j,n in enumerate(raw):
+                  a=starts[j]; b=starts[j+1] if j+1<len(starts) else len(data)
+                  out[n]=data[a:b].strip()
+              return out
+
+          targets=['PDAT','EDAT','ADAT','MDAT','CWAM','HWAM','HIAM','LAIX',
+                   'IRCM','PRCM','ETCM','EPCM','ESCM','ROCM','DRCM','SWXM',
+                   'ETCP','ESCP','EPCP','CRST']
+          delta_keys=['CWAM','HWAM','HIAM','LAIX','ETCM','EPCM','ESCM','ROCM','DRCM','SWXM','ETCP','ESCP','EPCP']
+          rows=[]
+          for sc in scenarios:
+              a=parse_summary(f'/tmp/results/M0/{sc}_Summary.OUT')
+              b=parse_summary(f'/tmp/results/M15/{sc}_Summary.OUT')
+              year=2000+int(sc[4:6]); idx=int(sc[6:8])
+              r={'scenario':sc,'year':year,'sowing':sow[idx]}
+              for k in targets:
+                  r[f'M0_{k}']=a.get(k,''); r[f'M15_{k}']=b.get(k,'')
+              for k in delta_keys:
+                  try:r[f'D_{k}']=float(b[k])-float(a[k])
+                  except:r[f'D_{k}']=''
+              rows.append(r)
+
+          out=Path('research/dssat_dtr/data/anningqu/stageA2_water6'); out.mkdir(parents=True,exist_ok=True)
+          with (out/'anningqu_stageA2_water6_m0_m15.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+
+          def ff(x):
+              try:return f'{float(x):.3f}'
+              except:return str(x)
+          changed=[]
+          for r in rows:
+              flag=False
+              for k in delta_keys:
+                  try:flag |= abs(float(r[f'D_{k}']))>1e-9
+                  except:pass
+              if flag: changed.append(r['scenario'])
+
+          md=['# Anningqu Stage A2: Water-6-like hourly ET pathway, M0 vs M15','',
+              'Configuration: DSSAT v4.8.5; WATER=Y, NITRO=N, EVAPO=Z, PHOTO=L; one public Water-6 irrigation of 67.5 mm at sowing and no later irrigation. M0/M15 management is identical.','',
+              '|Year|Sowing|M0 HWAM|M15 HWAM|dHWAM|M0 CWAM|M15 CWAM|dCWAM|M0 ETCM|M15 ETCM|dETCM|M0 SWXM|M15 SWXM|dSWXM|',
+              '|---:|:---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|']
+          for r in rows:
+              md.append(f"|{r['year']}|{r['sowing']}|{r['M0_HWAM']}|{r['M15_HWAM']}|{ff(r['D_HWAM'])}|{r['M0_CWAM']}|{r['M15_CWAM']}|{ff(r['D_CWAM'])}|{r['M0_ETCM']}|{r['M15_ETCM']}|{ff(r['D_ETCM'])}|{r['M0_SWXM']}|{r['M15_SWXM']}|{ff(r['D_SWXM'])}|")
+          md += ['',f'- Scenarios with any M0-M15 process/crop difference: **{len(changed)}/10**.',
+                 f'- Changed scenarios: {", ".join(changed) if changed else "none"}.',
+                 '- This stage tests source propagation through hourly energy/water balance. A changed crop output is not yet proof of improved observed yield.']
+          (out/'README_STAGEA2_WATER6.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit Stage A2 result
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/anningqu/stageA2_water6
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Anningqu Stage A2 Water6 M0-M15 process results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
