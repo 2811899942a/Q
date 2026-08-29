@@ -1,0 +1,198 @@
+name: Shihezi Initial N Model Read Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-initial-n-model-read-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 M0 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_initial_n_read_audit.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Audit FileX to DSSAT48.INP propagation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv,json,re,shutil,subprocess
+
+          root=Path('/tmp/run_M0'); maize=root/'Maize'; soil=root/'Soil'/'SH.SOL'; weather=root/'Weather'
+          xfile=maize/'SHIH2002.MZX'
+          out=Path('research/dssat_dtr/data/shihezi_real_case/initial_n_model_read_audit')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+          subprocess.run(['sudo','ln','-s',str(root),'/DSSAT48'],check=True)
+
+          soil_orig=soil.read_bytes(); x_orig=xfile.read_bytes(); wth=weather/'SHIH2001.WTH'; wth_orig=wth.read_bytes()
+
+          written=[('MINN30',0.9517766497461929),('MINN60',1.9035532994923858),('MINN90',2.8553299492385786),('MINN120',3.8071065989847717),('MINN150',4.758883248730965)]
+          highom=[0.8614,0.8179,0.7332,0.7581,0.5928]
+          hyd=[
+            (20,0.122,0.237,0.457,1.00,1.51,32.75,51.93),
+            (40,0.136,0.264,0.425,0.85,1.54,31.52,54.11),
+            (60,0.120,0.231,0.371,0.70,1.59,43.28,44.53),
+            (80,0.113,0.214,0.346,0.55,1.63,30.21,60.74),
+            (100,0.105,0.236,0.385,0.40,1.61,29.13,49.76),
+          ]
+          fert_dates=['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237']
+
+          def build_soil(vals):
+              lines=['*Soils: Shihezi University Modern Water-saving Irrigation Key Experimental Station','',
+                     '*SHIH000100  SHIHEZI     -99     100 Guo measured 0-100 cm profile',
+                     '@SITE        COUNTRY          LAT     LONG SCS FAMILY',
+                     f" {'Shihezi':<11}{'China':<14}{44.324:8.3f}{85.996:9.3f} -99",
+                     '@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE',
+                     '    -9  0.15   6.0  0.50  60.0  1.00  1.00 IB001 IB001 IB001',
+                     '@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC']
+              for (dep,ll,dul,sat,rgf,bd,clay,silt),oc in zip(hyd,vals):
+                  lines.append(f"{dep:6d}{'-99':>6}{ll:6.3f}{dul:6.3f}{sat:6.3f}{rgf:6.3f}{'-99':>6}{bd:6.2f}{oc:6.3f}{clay:6.2f}{silt:6.2f}{0.0:6.1f}{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}")
+              return '\n'.join(lines)+'\n'
+
+          def edit_srad():
+              lines=[]; factor=19.8/24.2; n=0
+              for raw in wth.read_text(encoding='latin-1').splitlines():
+                  z=raw.split()
+                  if len(z)>=5 and z[0].isdigit() and len(z[0])==5:
+                      dt,sr,tx,tn,rn=z[:5]
+                      raw=f'{dt:>5s}{float(sr)*factor:6.1f}{float(tx):6.1f}{float(tn):6.1f}{float(rn):6.1f}'; n+=1
+                  lines.append(raw)
+              if n==0: raise RuntimeError('no WTH rows')
+              wth.write_text('\n'.join(lines)+'\n',encoding='latin-1')
+
+          def repl(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError(start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+
+          def set_n193(txt):
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'; new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError('MF factor row missing')
+              txt=txt.replace(old,new,1); each=193.2/10
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              for d in fert_dates: rows.append(f' 1 {d} FE005 AP001   5.0 {each:6.2f}   0.0   0.0   0.0   0.0   -99 Initial-N read audit')
+              txt=repl(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',' 1 MA              R     R     R     N     M')
+              return txt
+
+          def set_initial_value(txt,v):
+              lines=txt.splitlines(); outl=[]; active=False; n=0; section=[]
+              for line in lines:
+                  if line.startswith('@C') and 'ICBL' in line and 'SH2O' in line:
+                      active=True; outl.append(line); section.append(line); continue
+                  if active and line.startswith('*'):
+                      active=False
+                  if active and line.strip() and not line.startswith(('@','!','*')):
+                      z=line.split()
+                      if len(z)>=5 and z[0].isdigit():
+                          depth=float(z[1]); water=float(z[2])
+                          line=f' 1 {depth:5.0f} {water:6.3f} {v:6.2f} {v:6.2f}'; n+=1; section.append(line)
+                  outl.append(line)
+              if n!=5: raise RuntimeError(f'expected 5 IC rows, got {n}')
+              return '\n'.join(outl)+'\n','\n'.join(section)+'\n'
+
+          def parse_summary(p):
+              ls=p.read_text(errors='replace').splitlines(); hi=next(i for i,l in enumerate(ls) if l.startswith('@') and 'HWAM' in l)
+              h=ls[hi]; d=next(l for l in ls[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); return dict(zip(names[idx:],vals[-len(names[idx:]):]))
+
+          def consolidated_initial(txt):
+              lines=txt.splitlines(); start=next(i for i,l in enumerate(lines) if l.startswith('*INITIAL CONDITIONS'))
+              block=[]
+              for l in lines[start:]:
+                  if block and l.startswith('*PLANTING'): break
+                  block.append(l)
+              numeric=[]
+              for l in block:
+                  z=l.split()
+                  if len(z)>=4:
+                      try:
+                          dep=float(z[0]); water=float(z[1]); nh4=float(z[2]); no3=float(z[3])
+                          if 0<dep<=200 and 0<=water<=1: numeric.append({'depth_cm':dep,'SH2O':water,'SNH4':nh4,'SNO3':no3})
+                      except Exception: pass
+              return '\n'.join(block)+'\n',numeric
+
+          result=[]
+          try:
+              for label,v in written:
+                  soil.write_bytes(soil_orig); xfile.write_bytes(x_orig); wth.write_bytes(wth_orig)
+                  soil.write_text(build_soil(highom),encoding='latin-1'); edit_srad()
+                  txt=set_n193(xfile.read_text(encoding='latin-1'))
+                  txt,filex_ic=set_initial_value(txt,v); xfile.write_text(txt,encoding='latin-1')
+                  for p in root.rglob('DSSAT48.INP'): p.unlink()
+                  for p in maize.glob('*.OUT'): p.unlink()
+                  cp=subprocess.run(['../dscsm048','A','SHIH2002.MZX'],cwd=maize,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                  if cp.returncode!=0 or not (maize/'Summary.OUT').exists(): raise RuntimeError(label+' failed\n'+cp.stdout[-2500:])
+                  inp=next(iter(root.rglob('DSSAT48.INP')),None)
+                  if inp is None: raise RuntimeError(label+' DSSAT48.INP missing')
+                  block,numeric=consolidated_initial(inp.read_text(errors='replace'))
+                  if not numeric: raise RuntimeError(label+' no model-read IC numeric rows')
+                  z=parse_summary(maize/'Summary.OUT')
+                  (out/f'{label}_FileX_initial.txt').write_text(filex_ic,encoding='utf-8')
+                  (out/f'{label}_DSSAT48_initial.txt').write_text(block,encoding='utf-8')
+                  result.append({'scenario':label,'written_each':v,'model_read_rows':numeric,'HWAM':z.get('HWAM'),'NI#M':z.get('NI#M'),'NICM':z.get('NICM'),'NUCM':z.get('NUCM'),'NMINC':z.get('NMINC')})
+          finally:
+              soil.write_bytes(soil_orig); xfile.write_bytes(x_orig); wth.write_bytes(wth_orig)
+
+          (out/'audit.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
+          md=['# Shihezi initial-N model-read audit','',
+              '|Scenario|Written SNH4=SNO3|Model-read unique SNH4|Model-read unique SNO3|HWAM|NUCM|NMINC|',
+              '|---|---:|---|---|---:|---:|---:|']
+          for r in result:
+              nh=sorted(set(x['SNH4'] for x in r['model_read_rows'])); no=sorted(set(x['SNO3'] for x in r['model_read_rows']))
+              md.append(f"|{r['scenario']}|{r['written_each']:.3f}|{nh}|{no}|{float(r['HWAM']):.0f}|{r['NUCM']}|{r['NMINC']}|")
+          vals=[tuple(sorted(set(x['SNH4'] for x in r['model_read_rows']))) for r in result]
+          gate=len(set(vals))==len(result)
+          md += ['',f"Model-read distinct-value gate: **{'PASS' if gate else 'FAIL'}**.",
+                 '', 'If the gate fails, the V1 initial-N sensitivity is withdrawn and the FileX fixed-column/unit handling is corrected before any scientific interpretation. If it passes, the nonmonotonic biological/N-cycle response is investigated from SoilNi/PlantN outputs.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_INITIAL_N_MODEL_READ_AUDIT.md')
+          cp.write_text('# Initial N model-read audit checkpoint\n\n'+'\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit model-read audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/initial_n_model_read_audit research/dssat_dtr/checkpoints/CHECKPOINT_20260829_INITIAL_N_MODEL_READ_AUDIT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Audit Shihezi initial N as read by DSSAT'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
