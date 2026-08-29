@@ -1,0 +1,29 @@
+name: Analyze dense Diwopu HTEMP residual hours
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/analyze_dense_514635_residual_hours.py'
+      - '.github/workflows/dense-residual-hours-514635.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/scripts/analyze_dense_514635_residual_hours.py
+      - run: |
+          cat research/dssat_dtr/data/processed_514635/README_DENSE_RESIDUAL_HOURS.md
+          cat research/dssat_dtr/data/processed_514635/dense_tmax_timing.csv
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_514635
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Analyze dense Diwopu hourly residuals'; git push origin HEAD:research/dssat-dtr-matrix; fi
