@@ -1,0 +1,91 @@
+name: Shihezi Weather PDF Vector Audit V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-weather-pdf-vector-audit-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Audit vector geometry robustly
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf
+          OUT='research/dssat_dtr/data/shihezi_real_case/weather_figure_vector_audit_v2'
+          mkdir -p "$OUT" /tmp/wvec2
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752' -o /tmp/wvec2/guo.pdf
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132' -o /tmp/wvec2/meng.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import pymupdf as fitz, json, collections
+          out=Path('research/dssat_dtr/data/shihezi_real_case/weather_figure_vector_audit_v2')
+          def ser(v):
+              if v is None or isinstance(v,(str,int,float,bool)): return v
+              if isinstance(v,fitz.Point): return [v.x,v.y]
+              if isinstance(v,fitz.Rect): return [v.x0,v.y0,v.x1,v.y1]
+              if isinstance(v,fitz.Quad): return [ser(v.ul),ser(v.ur),ser(v.ll),ser(v.lr)]
+              if isinstance(v,(list,tuple)): return [ser(x) for x in v]
+              try: return [ser(x) for x in v]
+              except Exception: return repr(v)
+          specs=[('guo','/tmp/wvec2/guo.pdf',19),('meng','/tmp/wvec2/meng.pdf',21)]
+          summary=[]
+          for name,path,p1 in specs:
+              doc=fitz.open(path); page=doc[p1-1]
+              spans=[]
+              for b in page.get_text('dict').get('blocks',[]):
+                  for line in b.get('lines',[]):
+                      for s in line.get('spans',[]):
+                          spans.append({'text':s['text'],'bbox':ser(s['bbox']),'size':s['size'],'font':s['font'],'color':s['color']})
+              ims=[]
+              for im in page.get_images(full=True):
+                  xref=im[0]; ex=doc.extract_image(xref)
+                  ims.append({'xref':xref,'width':im[2],'height':im[3],'bpc':im[4],'colorspace':im[5],
+                              'ext':ex.get('ext'),'bytes':len(ex.get('image',b'')),'rects':[ser(r) for r in page.get_image_rects(xref)]})
+              drawings=[]; sig=collections.Counter(); opcnt=collections.Counter()
+              for d in page.get_drawings():
+                  items=[ser(it) for it in d.get('items',[])]
+                  for it in d.get('items',[]):
+                      if it: opcnt[str(it[0])]+=1
+                  rec={'type':d.get('type'),'fill':ser(d.get('fill')),'color':ser(d.get('color')),'width':d.get('width'),
+                       'opacity':d.get('opacity'),'fill_opacity':d.get('fill_opacity'),'rect':ser(d.get('rect')),'items':items}
+                  drawings.append(rec)
+                  sig[str((d.get('type'),d.get('color'),d.get('fill'),round(float(d.get('width') or 0),3)))]+=1
+              audit={'source':name,'page':p1,'page_rect':ser(page.rect),'text_spans':spans,'images':ims,
+                     'drawing_count':len(drawings),'drawing_signatures':dict(sig.most_common()),'item_op_counts':dict(opcnt)}
+              (out/f'{name}_page{p1}_audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+              (out/f'{name}_page{p1}_drawings.json').write_text(json.dumps(drawings,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+              summary.append({'source':name,'page':p1,'spans':len(spans),'images':ims,'drawings':len(drawings),
+                              'signatures':dict(sig.most_common(30)),'ops':dict(opcnt)})
+          (out/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Weather PDF vector audit V2','']
+          for x in summary:
+              md += [f"## {x['source']} p{x['page']}",f"- text spans: {x['spans']}",f"- embedded images: {len(x['images'])}: `{json.dumps(x['images'],ensure_ascii=False)}`",
+                     f"- drawings: {x['drawings']}",f"- drawing operators: `{x['ops']}`",f"- top signatures: `{json.dumps(x['signatures'],ensure_ascii=False)}`",'']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/weather_figure_vector_audit_v2
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add robust Shihezi weather vector audit'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
