@@ -1,0 +1,44 @@
+name: Validate M12 physical diurnal shape
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/diagnose_m12_physical_shape_51463.py'
+      - '.github/workflows/m12-physical-shape-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-shape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Diagnose complete 24-hour M12 shape
+        run: python research/dssat_dtr/scripts/diagnose_m12_physical_shape_51463.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_M12_PHYSICAL_SHAPE.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_M12_PHYSICAL_SHAPE.md \
+                  research/dssat_dtr/data/processed_51463/m12_physical_shape_daily.csv \
+                  research/dssat_dtr/data/processed_51463/m12_correction_magnitude.csv
+          if git diff --cached --quiet; then
+            echo 'No result changes.'
+          else
+            git commit -m 'Add M12 physical-shape diagnostics'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
