@@ -1,0 +1,1643 @@
+硕 士 学 位 论 文
+
+
+
+
+基于作物生长模型的新疆干旱区滴灌玉米灌溉
+        决策研究
+
+    学    位 申      请   人             郭力澎
+    指     导       教   师           张金珠   教授
+                                王伟 高级工程师
+
+---
+
+硕 士 学 位 论 文
+
+
+
+
+基于作物生长模型的新疆干旱区滴灌玉米灌溉
+        决策研究
+
+     学   位 申      请   人             郭力澎
+     指     导      教   师       张金珠     教授
+                             王伟 高级工程师
+
+---
+
+导师签名：               时间：2025 年 5 月 18 日
+
+                           摘要
+目的：粮食安全是可持续发展的核心，水资源是保障粮食增产的关键。我国农业对水资源的依赖性
+强，但水资源有限，特别是在新疆干旱区，少雨和高蒸发加剧了水资源短缺。玉米是我国重要粮食
+作物，新疆是我国重要粮食基地。新疆广泛应用滴灌技术，但仍采用传统灌溉管理模式，效率低下，
+亟需科学灌溉决策。作物生长模型可动态模拟作物生长过程，为灌溉提供科学依据；智能优化算法
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+
+---
+
+摘要
+目的：粮食安全是可持续发展的核心，水资源是保障粮食增产的关键。我国农业对水资源的依赖性
+强，但水资源有限，特别是在新疆干旱区，少雨和高蒸发加剧了水资源短缺。玉米是我国重要粮食
+作物，新疆是我国重要粮食基地。新疆广泛应用滴灌技术，但仍采用传统灌溉管理模式，效率低下，
+亟需科学灌溉决策。作物生长模型可动态模拟作物生长过程，为灌溉提供科学依据；智能优化算法
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+
+---
+
+摘要
+目的：粮食安全是可持续发展的核心，水资源是保障粮食增产的关键。我国农业对水资源的依赖性
+强，但水资源有限，特别是在新疆干旱区，少雨和高蒸发加剧了水资源短缺。玉米是我国重要粮食
+作物，新疆是我国重要粮食基地。新疆广泛应用滴灌技术，但仍采用传统灌溉管理模式，效率低下，
+亟需科学灌溉决策。作物生长模型可动态模拟作物生长过程，为灌溉提供科学依据；智能优化算法
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+
+---
+
+目的：粮食安全是可持续发展的核心，水资源是保障粮食增产的关键。我国农业对水资源的依赖性
+强，但水资源有限，特别是在新疆干旱区，少雨和高蒸发加剧了水资源短缺。玉米是我国重要粮食
+作物，新疆是我国重要粮食基地。新疆广泛应用滴灌技术，但仍采用传统灌溉管理模式，效率低下，
+亟需科学灌溉决策。作物生长模型可动态模拟作物生长过程，为灌溉提供科学依据；智能优化算法
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+
+---
+
+强，但水资源有限，特别是在新疆干旱区，少雨和高蒸发加剧了水资源短缺。玉米是我国重要粮食
+作物，新疆是我国重要粮食基地。新疆广泛应用滴灌技术，但仍采用传统灌溉管理模式，效率低下，
+亟需科学灌溉决策。作物生长模型可动态模拟作物生长过程，为灌溉提供科学依据；智能优化算法
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+
+---
+
+亟需科学灌溉决策。作物生长模型可动态模拟作物生长过程，为灌溉提供科学依据；智能优化算法
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+
+---
+
+能够提升灌溉策略的精准度和效率。因此，本研究聚焦于作物生长模型在灌溉管理中的应用，基于
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+
+---
+
+CERES-Maize 模型构建滴灌玉米生长模型，结合多目标优化方法，提出灌溉制度优化方案，并开发
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+的生长；(2)不同水文年条件下，作物产量与水分利用效率的 Pareto 前沿解存在明显差异，改进
+
+---
+
+智能灌溉决策系统，提升灌溉决策的科学性与精准性。
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+的生长；(2)不同水文年条件下，作物产量与水分利用效率的 Pareto 前沿解存在明显差异，改进
+NSGA-II 算法在相同产量水平下可获得更高的水分利用效率，优化方案水资源配置效果更优。性能
+
+---
+
+方法：(1)基于 2019—2020 年田间试验数据，对 CERES-Maize 模型进行参数率定与验证，建立适用
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+的生长；(2)不同水文年条件下，作物产量与水分利用效率的 Pareto 前沿解存在明显差异，改进
+NSGA-II 算法在相同产量水平下可获得更高的水分利用效率，优化方案水资源配置效果更优。性能
+评估结果显示，改进算法的 IGD 与 SP 均值较标准算法分别降低 31.0%与 49.82%，其收敛性更强，
+
+---
+
+于研究区的玉米生长模拟模型；(2)以作物产量和水分利用效率为优化目标，构建多目标灌溉优化模
+型，采用改进 NSGA-II 算法进行优化求解，并通过 TOPSIS 方法从帕累托解集中筛选最优灌溉策略；
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+的生长；(2)不同水文年条件下，作物产量与水分利用效率的 Pareto 前沿解存在明显差异，改进
+NSGA-II 算法在相同产量水平下可获得更高的水分利用效率，优化方案水资源配置效果更优。性能
+评估结果显示，改进算法的 IGD 与 SP 均值较标准算法分别降低 31.0%与 49.82%，其收敛性更强，
+解集分布更均匀。不同年型优化后灌溉模式如下：枯水年“苗 1+拔节 2+抽雄 3+灌浆 2+成熟 1”（518
+
+---
+
+(3)在模型与算法集成的基础上，采用软件工程技术构建智能灌溉决策系统。
+结果：(1)产量、籽粒质量、最大干物质量的 RRMSE 均低于 10%，常规灌溉水平（W2、W3、W4）
+下，产量 ARE 与籽粒质量 ARE 低于 5%，最大干物质量 RRMSE 接近 10%，具备良好的跨年际适用
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+的生长；(2)不同水文年条件下，作物产量与水分利用效率的 Pareto 前沿解存在明显差异，改进
+NSGA-II 算法在相同产量水平下可获得更高的水分利用效率，优化方案水资源配置效果更优。性能
+评估结果显示，改进算法的 IGD 与 SP 均值较标准算法分别降低 31.0%与 49.82%，其收敛性更强，
+解集分布更均匀。不同年型优化后灌溉模式如下：枯水年“苗 1+拔节 2+抽雄 3+灌浆 2+成熟 1”（518
+mm），平水年“苗 1+拔节 2+抽雄 2+灌浆 2+成熟 1”（485 mm），丰水年“苗 1+拔节 1+抽雄 2+
+灌浆 2+成熟 1”
+
+---
+
+性。在对玉米生长过程的模拟中，常规灌溉水平叶面积指数的 RRMSE 低于 20%，干物质量的 RRMSE
+低于 25%，各生育期模拟误差较小，整体拟合度较高。CERES-Maize 模型可准确模拟新疆滴灌玉米
+的生长；(2)不同水文年条件下，作物产量与水分利用效率的 Pareto 前沿解存在明显差异，改进
+NSGA-II 算法在相同产量水平下可获得更高的水分利用效率，优化方案水资源配置效果更优。性能
+评估结果显示，改进算法的 IGD 与 SP 均值较标准算法分别降低 31.0%与 49.82%，其收敛性更强，
+解集分布更均匀。不同年型优化后灌溉模式如下：枯水年“苗 1+拔节 2+抽雄 3+灌浆 2+成熟 1”（518
+mm），平水年“苗 1+拔节 2+抽雄 2+灌浆 2+成熟 1”（485 mm），丰水年“苗 1+拔节 1+抽雄 2+
+灌浆 2+成熟 1”
+         （439 mm）。优化方案在平水年条件下产量达到田间试验（平水年）最优结果的 97.6%，
+但水分利用效率提升 38.32%，实现了稳产增效的优化目标；(3)系统结合作物模型与多目标优化算法，
+基于灌区历史与实时数据，以产量和水分利用效率最大为目标，动态生成最优灌溉决策。系统支持
+
+---
+
+解集分布更均匀。不同年型优化后灌溉模式如下：枯水年“苗 1+拔节 2+抽雄 3+灌浆 2+成熟 1”（518
+mm），平水年“苗 1+拔节 2+抽雄 2+灌浆 2+成熟 1”（485 mm），丰水年“苗 1+拔节 1+抽雄 2+
+灌浆 2+成熟 1”
+         （439 mm）。优化方案在平水年条件下产量达到田间试验（平水年）最优结果的 97.6%，
+但水分利用效率提升 38.32%，实现了稳产增效的优化目标；(3)系统结合作物模型与多目标优化算法，
+基于灌区历史与实时数据，以产量和水分利用效率最大为目标，动态生成最优灌溉决策。系统支持
+自动与手动控制模式，既可精准执行优化方案，也便于人工干预与调整。通过可视化界面，用户可
+实现灌溉方案查询、农田状态监测与智能策略推荐，有效提升滴灌管理的精准性与智能化水平。
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+
+---
+
+灌浆 2+成熟 1”
+         （439 mm）。优化方案在平水年条件下产量达到田间试验（平水年）最优结果的 97.6%，
+但水分利用效率提升 38.32%，实现了稳产增效的优化目标；(3)系统结合作物模型与多目标优化算法，
+基于灌区历史与实时数据，以产量和水分利用效率最大为目标，动态生成最优灌溉决策。系统支持
+自动与手动控制模式，既可精准执行优化方案，也便于人工干预与调整。通过可视化界面，用户可
+实现灌溉方案查询、农田状态监测与智能策略推荐，有效提升滴灌管理的精准性与智能化水平。
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+并确保作物产量稳定。智能灌溉决策系统的应用，有助于提升农业水资源管理的信息化、智能化水
+平，为干旱区精准灌溉提供了科学依据和技术支撑。
+
+---
+
+但水分利用效率提升 38.32%，实现了稳产增效的优化目标；(3)系统结合作物模型与多目标优化算法，
+基于灌区历史与实时数据，以产量和水分利用效率最大为目标，动态生成最优灌溉决策。系统支持
+自动与手动控制模式，既可精准执行优化方案，也便于人工干预与调整。通过可视化界面，用户可
+实现灌溉方案查询、农田状态监测与智能策略推荐，有效提升滴灌管理的精准性与智能化水平。
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+并确保作物产量稳定。智能灌溉决策系统的应用，有助于提升农业水资源管理的信息化、智能化水
+平，为干旱区精准灌溉提供了科学依据和技术支撑。
+关键词：新疆干旱区；滴灌玉米；作物模型；改进 NSGA-II 算法；灌溉决策
+
+---
+
+基于灌区历史与实时数据，以产量和水分利用效率最大为目标，动态生成最优灌溉决策。系统支持
+自动与手动控制模式，既可精准执行优化方案，也便于人工干预与调整。通过可视化界面，用户可
+实现灌溉方案查询、农田状态监测与智能策略推荐，有效提升滴灌管理的精准性与智能化水平。
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+并确保作物产量稳定。智能灌溉决策系统的应用，有助于提升农业水资源管理的信息化、智能化水
+平，为干旱区精准灌溉提供了科学依据和技术支撑。
+关键词：新疆干旱区；滴灌玉米；作物模型；改进 NSGA-II 算法；灌溉决策
+
+---
+
+自动与手动控制模式，既可精准执行优化方案，也便于人工干预与调整。通过可视化界面，用户可
+实现灌溉方案查询、农田状态监测与智能策略推荐，有效提升滴灌管理的精准性与智能化水平。
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+并确保作物产量稳定。智能灌溉决策系统的应用，有助于提升农业水资源管理的信息化、智能化水
+平，为干旱区精准灌溉提供了科学依据和技术支撑。
+关键词：新疆干旱区；滴灌玉米；作物模型；改进 NSGA-II 算法；灌溉决策
+
+---
+
+实现灌溉方案查询、农田状态监测与智能策略推荐，有效提升滴灌管理的精准性与智能化水平。
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+并确保作物产量稳定。智能灌溉决策系统的应用，有助于提升农业水资源管理的信息化、智能化水
+平，为干旱区精准灌溉提供了科学依据和技术支撑。
+关键词：新疆干旱区；滴灌玉米；作物模型；改进 NSGA-II 算法；灌溉决策
+
+
+
+                              I
+
+---
+
+结论：CERES-Maize 模型在新疆干旱区滴灌玉米生长模拟中具有较高的适用性，能较准确地预测作
+物的生长过程和水分需求，为智能灌溉决策提供理论支持。本研究构建的基于 CERES-Maize 模型和
+改进 NSGA-II 算法的智能灌溉优化方法，可有效提高滴灌玉米的水分利用效率，优化水资源管理，
+并确保作物产量稳定。智能灌溉决策系统的应用，有助于提升农业水资源管理的信息化、智能化水
+平，为干旱区精准灌溉提供了科学依据和技术支撑。
+关键词：新疆干旱区；滴灌玉米；作物模型；改进 NSGA-II 算法；灌溉决策
+
+
+
+                              I
+
+---
+
+I
+
+                                                 Abstract
+Object: Food security is at the core of sustainable development, and water resources are critical for
+ensuring increased food production. China's agriculture heavily depends on water resources, but these
+resources are limited, particularly in the arid regions of Xinjiang, where low rainfall and high evaporation
+exacerbate water scarcity. Maize is an important food crop in China, and Xinjiang is a major production
+base for this crop. While drip irrigation is widely applied in Xinjiang, traditional irrigation management
+practices remain inefficient and urgently need scientific decision-making for irrigation. Crop growth
+
+---
+
+I
+
+                                                 Abstract
+Object: Food security is at the core of sustainable development, and water resources are critical for
+ensuring increased food production. China's agriculture heavily depends on water resources, but these
+resources are limited, particularly in the arid regions of Xinjiang, where low rainfall and high evaporation
+exacerbate water scarcity. Maize is an important food crop in China, and Xinjiang is a major production
+base for this crop. While drip irrigation is widely applied in Xinjiang, traditional irrigation management
+practices remain inefficient and urgently need scientific decision-making for irrigation. Crop growth
+models can dynamically simulate the crop growth process, providing scientific evidence for irrigation;
+intelligent optimization algorithms can enhance the precision and efficiency of irrigation strategies.
+
+---
+
+Therefore, this study focuses on the application of crop growth models in irrigation management,
+constructs a drip irrigation maize growth model based on the CERES-Maize model, and proposes an
+optimized irrigation scheme using a multi-objective optimization method, along with the development of an
+intelligent irrigation decision system to improve the scientificity and precision of irrigation decisions.
+Methods: (1) Based on field trial data from 2019-2020, the CERES-Maize model was calibrated and
+validated to establish a maize growth simulation model suitable for the study area; (2) A multi-objective
+irrigation optimization model was constructed with crop yield and water use efficiency as optimization
+objectives, employing an improved NSGA-II algorithm for optimization and using the TOPSIS method to
+select the best irrigation strategies from the Pareto-optimal solutions; (3) An intelligent irrigation decision
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+
+---
+
+intelligent irrigation decision system to improve the scientificity and precision of irrigation decisions.
+Methods: (1) Based on field trial data from 2019-2020, the CERES-Maize model was calibrated and
+validated to establish a maize growth simulation model suitable for the study area; (2) A multi-objective
+irrigation optimization model was constructed with crop yield and water use efficiency as optimization
+objectives, employing an improved NSGA-II algorithm for optimization and using the TOPSIS method to
+select the best irrigation strategies from the Pareto-optimal solutions; (3) An intelligent irrigation decision
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+
+---
+
+Methods: (1) Based on field trial data from 2019-2020, the CERES-Maize model was calibrated and
+validated to establish a maize growth simulation model suitable for the study area; (2) A multi-objective
+irrigation optimization model was constructed with crop yield and water use efficiency as optimization
+objectives, employing an improved NSGA-II algorithm for optimization and using the TOPSIS method to
+select the best irrigation strategies from the Pareto-optimal solutions; (3) An intelligent irrigation decision
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+20% and dry matter mass RRMSE was below 25%, with small errors across growth stages and high overall
+
+---
+
+validated to establish a maize growth simulation model suitable for the study area; (2) A multi-objective
+irrigation optimization model was constructed with crop yield and water use efficiency as optimization
+objectives, employing an improved NSGA-II algorithm for optimization and using the TOPSIS method to
+select the best irrigation strategies from the Pareto-optimal solutions; (3) An intelligent irrigation decision
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+20% and dry matter mass RRMSE was below 25%, with small errors across growth stages and high overall
+fitting accuracy. The CERES-Maize model accurately simulated the growth of maize under drip irrigation
+
+---
+
+irrigation optimization model was constructed with crop yield and water use efficiency as optimization
+objectives, employing an improved NSGA-II algorithm for optimization and using the TOPSIS method to
+select the best irrigation strategies from the Pareto-optimal solutions; (3) An intelligent irrigation decision
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+20% and dry matter mass RRMSE was below 25%, with small errors across growth stages and high overall
+fitting accuracy. The CERES-Maize model accurately simulated the growth of maize under drip irrigation
+in Xinjiang; (2) Under different hydrological years, there were significant differences in the Pareto front
+
+---
+
+select the best irrigation strategies from the Pareto-optimal solutions; (3) An intelligent irrigation decision
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+20% and dry matter mass RRMSE was below 25%, with small errors across growth stages and high overall
+fitting accuracy. The CERES-Maize model accurately simulated the growth of maize under drip irrigation
+in Xinjiang; (2) Under different hydrological years, there were significant differences in the Pareto front
+solutions for crop yield and water use efficiency. The improved NSGA-II algorithm achieved higher water
+use efficiency at the same yield level, with better water resource allocation in the optimized scheme.
+
+---
+
+system was developed by integrating the model and algorithm, using software engineering techniques.
+Results: (1) The RRMSE for yield, grain quality, and maximum dry matter mass was below 10%. Under
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+20% and dry matter mass RRMSE was below 25%, with small errors across growth stages and high overall
+fitting accuracy. The CERES-Maize model accurately simulated the growth of maize under drip irrigation
+in Xinjiang; (2) Under different hydrological years, there were significant differences in the Pareto front
+solutions for crop yield and water use efficiency. The improved NSGA-II algorithm achieved higher water
+use efficiency at the same yield level, with better water resource allocation in the optimized scheme.
+Performance evaluation results showed that the IGD and SP mean values of the improved algorithm were
+
+---
+
+high irrigation levels (W2, W3, W4), the ARE for yield and grain quality was below 5%, with RRMSE for
+maximum dry matter mass close to 10%, demonstrating good cross-year applicability. The simulation of
+maize growth under conventional irrigation levels showed that the RRMSE for leaf area index was below
+20% and dry matter mass RRMSE was below 25%, with small errors across growth stages and high overall
+fitting accuracy. The CERES-Maize model accurately simulated the growth of maize under drip irrigation
+in Xinjiang; (2) Under different hydrological years, there were significant differences in the Pareto front
+solutions for crop yield and water use efficiency. The improved NSGA-II algorithm achieved higher water
+use efficiency at the same yield level, with better water resource allocation in the optimized scheme.
+Performance evaluation results showed that the IGD and SP mean values of the improved algorithm were
+reduced by 31.0% and 49.82%, respectively, compared to the standard algorithm, indicating stronger
+convergence and more evenly distributed solution sets. The optimized irrigation patterns for different
+
+---
+
+fitting accuracy. The CERES-Maize model accurately simulated the growth of maize under drip irrigation
+in Xinjiang; (2) Under different hydrological years, there were significant differences in the Pareto front
+solutions for crop yield and water use efficiency. The improved NSGA-II algorithm achieved higher water
+use efficiency at the same yield level, with better water resource allocation in the optimized scheme.
+Performance evaluation results showed that the IGD and SP mean values of the improved algorithm were
+reduced by 31.0% and 49.82%, respectively, compared to the standard algorithm, indicating stronger
+convergence and more evenly distributed solution sets. The optimized irrigation patterns for different
+hydrological years are as follows: for drought years “seedling 1 + jointing 2 + tasseling 3 + filling 2 +
+maturity 1” (518 mm), for normal water years “seedling 1 + jointing 2 + tasseling 2 + filling 2 + maturity 1”
+
+---
+
+solutions for crop yield and water use efficiency. The improved NSGA-II algorithm achieved higher water
+use efficiency at the same yield level, with better water resource allocation in the optimized scheme.
+Performance evaluation results showed that the IGD and SP mean values of the improved algorithm were
+reduced by 31.0% and 49.82%, respectively, compared to the standard algorithm, indicating stronger
+convergence and more evenly distributed solution sets. The optimized irrigation patterns for different
+hydrological years are as follows: for drought years “seedling 1 + jointing 2 + tasseling 3 + filling 2 +
+maturity 1” (518 mm), for normal water years “seedling 1 + jointing 2 + tasseling 2 + filling 2 + maturity 1”
+
+
+                                                         II
+
+---
+
+第 1 章 绪论 .............................................................................................................................. 1
+       1.1 研究背景及意义 ......................................................................................................... 1
+       1.2 国内外研究现状 ......................................................................................................... 2
+               1.2.1 膜下滴灌对玉米产量及水分利用效率的影响 .............................................. 2
+               1.2.2 作物模型研究进展 .......................................................................................... 4
+               1.2.3 智能灌溉决策 .................................................................................................. 5
+       1.3 研究内容及技术路线 ................................................................................................. 7
+               1.3.1 研究内容 .......................................................................................................... 7
+               1.3.2 技术路线 .......................................................................................................... 8
+第 2 章 基于 CERES‐Maize 模型的滴灌玉米生长模型构建与验证 .................................... 9
+       2.1 试验区概况 ................................................................................................................. 9
+
+---
+
+2.3 模型参数率定 ........................................................................................................... 14
+       2.4 模型验证与精度分析 ............................................................................................... 15
+               2.4.1 模型模拟与校准验证结果 ............................................................................ 15
+               2.4.2 玉米生长指标模拟与验证 ............................................................................ 17
+       2.5 本章小结 ................................................................................................................... 18
+第 3 章 新疆滴灌玉米灌溉制度多目标优化研究 ................................................................ 20
+       3.1 模型文件及交互方法 ............................................................................................... 20
+       3.2 多目标优化建模与算法设计 ................................................................................... 22
+               3.2.1 优化目标 ........................................................................................................ 22
+               3.2.2 优化变量与约束条件 .................................................................................... 22
+               3.2.3 改进 NSGA-II 算法设计与原理 ................................................................... 23
+
+---
+
+IV
+
+              3.3.1 性能评价指标 ................................................................................................ 26
+              3.3.2 性能评价结果分析 ........................................................................................ 26
+       3.4 不同典型水文年灌溉制度优化 ............................................................................... 28
+              3.4.1 优化流程 ........................................................................................................ 28
+              3.4.2 优化结果 ........................................................................................................ 29
+       3.5 本章小结 ................................................................................................................... 31
+第 4 章 智能灌溉决策系统设计与实现 ................................................................................ 33
+       4.1 系统需求与功能 ....................................................................................................... 33
+
+---
+
+3.3.2 性能评价结果分析 ........................................................................................ 26
+       3.4 不同典型水文年灌溉制度优化 ............................................................................... 28
+              3.4.1 优化流程 ........................................................................................................ 28
+              3.4.2 优化结果 ........................................................................................................ 29
+       3.5 本章小结 ................................................................................................................... 31
+第 4 章 智能灌溉决策系统设计与实现 ................................................................................ 33
+       4.1 系统需求与功能 ....................................................................................................... 33
+       4.2 系统总体结构设计 ................................................................................................... 35
+       4.3 系统开发环境与实现 ............................................................................................... 36
+       4.4 灌区数据获取模块 ................................................................................................... 40
+       4.5 智能灌溉决策系统 ................................................................................................... 41
+
+---
+
+第 4 章 智能灌溉决策系统设计与实现 ................................................................................ 33
+       4.1 系统需求与功能 ....................................................................................................... 33
+       4.2 系统总体结构设计 ................................................................................................... 35
+       4.3 系统开发环境与实现 ............................................................................................... 36
+       4.4 灌区数据获取模块 ................................................................................................... 40
+       4.5 智能灌溉决策系统 ................................................................................................... 41
+       4.6 本章小结 ................................................................................................................... 43
+第 5 章 结论与展望 ................................................................................................................ 44
+       5.1 结论 ........................................................................................................................... 44
+       5.2 展望 ........................................................................................................................... 45
+参考文献 .................................................................................................................................. 47
+
+---
+
+中中国水资源总量为 29638.2 亿 m3[3]，淡水资源为全球淡水总量的 6%，且国内人口基
+数大，人均淡水资源不足 2300 m3，仅为全球人均淡水资源的 1/4，是 13 个“贫水国”
+之一[4]。水资源短缺已成为全球共同关注的重大问题，其中农业是各行业中最为依赖水
+资源的领域。目前，农业用水占全球总用水的比例达到 70%，在亚洲和非洲的一些国家，
+这一比例甚至高达 85%至 90%。然而，多数国家的用水效率仍处于较低水平。研究显示，
+全球每年新增的水资源需求约为 6400 km³，若农业用水效率维持当前水平，灌溉所需水
+量将增长 36%，水资源缺口可能达到 1012 km³[5, 6]。我国也面临着农业用水资源紧张以
+及分布不均的双重挑战[7]，全国降水量和径流量由东南沿海向西北内陆递减，水资源分
+布与生产生活需求不匹配，西北干旱区农业用水分配和供需管理问题仍然面临挑战[8, 9]。
+而随着我国粮食需求的不断增加，灌溉用水需求也连年增长，因此提高农业用水效率是
+保障水资源和粮食安全的关键途径。
+
+---
+
+之一[4]。水资源短缺已成为全球共同关注的重大问题，其中农业是各行业中最为依赖水
+资源的领域。目前，农业用水占全球总用水的比例达到 70%，在亚洲和非洲的一些国家，
+这一比例甚至高达 85%至 90%。然而，多数国家的用水效率仍处于较低水平。研究显示，
+全球每年新增的水资源需求约为 6400 km³，若农业用水效率维持当前水平，灌溉所需水
+量将增长 36%，水资源缺口可能达到 1012 km³[5, 6]。我国也面临着农业用水资源紧张以
+及分布不均的双重挑战[7]，全国降水量和径流量由东南沿海向西北内陆递减，水资源分
+布与生产生活需求不匹配，西北干旱区农业用水分配和供需管理问题仍然面临挑战[8, 9]。
+而随着我国粮食需求的不断增加，灌溉用水需求也连年增长，因此提高农业用水效率是
+保障水资源和粮食安全的关键途径。
+   新疆地处我国西部边陲地区，降雨量少，蒸发量大，尤为匮乏的水资源阻碍了新疆
+农业整体的提升与发展，灌溉型荒漠绿洲农业是新疆农业主要的生产方式[10]。新疆农业
+
+---
+
+这一比例甚至高达 85%至 90%。然而，多数国家的用水效率仍处于较低水平。研究显示，
+全球每年新增的水资源需求约为 6400 km³，若农业用水效率维持当前水平，灌溉所需水
+量将增长 36%，水资源缺口可能达到 1012 km³[5, 6]。我国也面临着农业用水资源紧张以
+及分布不均的双重挑战[7]，全国降水量和径流量由东南沿海向西北内陆递减，水资源分
+布与生产生活需求不匹配，西北干旱区农业用水分配和供需管理问题仍然面临挑战[8, 9]。
+而随着我国粮食需求的不断增加，灌溉用水需求也连年增长，因此提高农业用水效率是
+保障水资源和粮食安全的关键途径。
+   新疆地处我国西部边陲地区，降雨量少，蒸发量大，尤为匮乏的水资源阻碍了新疆
+农业整体的提升与发展，灌溉型荒漠绿洲农业是新疆农业主要的生产方式[10]。新疆农业
+灌溉近年来逐步大面积转为节水灌溉，其中以膜下滴灌为主，截止到 2018 年，新疆高
+效节水灌溉面积达 279.7 万 hm2，新疆农业的经济效益显著上涨[11]。依据国家统计局数
+
+---
+
+及分布不均的双重挑战[7]，全国降水量和径流量由东南沿海向西北内陆递减，水资源分
+布与生产生活需求不匹配，西北干旱区农业用水分配和供需管理问题仍然面临挑战[8, 9]。
+而随着我国粮食需求的不断增加，灌溉用水需求也连年增长，因此提高农业用水效率是
+保障水资源和粮食安全的关键途径。
+   新疆地处我国西部边陲地区，降雨量少，蒸发量大，尤为匮乏的水资源阻碍了新疆
+农业整体的提升与发展，灌溉型荒漠绿洲农业是新疆农业主要的生产方式[10]。新疆农业
+灌溉近年来逐步大面积转为节水灌溉，其中以膜下滴灌为主，截止到 2018 年，新疆高
+效节水灌溉面积达 279.7 万 hm2，新疆农业的经济效益显著上涨[11]。依据国家统计局数
+据显示：在 2018 年新疆用水总量中有 89.4%为农业灌溉用水，远高于全国农业用水的
+平均占比 61.4%。农业用水量显著高于其他行业，与“总量控制定额管理”的水资源最
+严格管理要求不符。农业用水的超量使用及其结构不合理是新疆农业生产面临的严峻问
+
+---
+
+布与生产生活需求不匹配，西北干旱区农业用水分配和供需管理问题仍然面临挑战[8, 9]。
+而随着我国粮食需求的不断增加，灌溉用水需求也连年增长，因此提高农业用水效率是
+保障水资源和粮食安全的关键途径。
+   新疆地处我国西部边陲地区，降雨量少，蒸发量大，尤为匮乏的水资源阻碍了新疆
+农业整体的提升与发展，灌溉型荒漠绿洲农业是新疆农业主要的生产方式[10]。新疆农业
+灌溉近年来逐步大面积转为节水灌溉，其中以膜下滴灌为主，截止到 2018 年，新疆高
+效节水灌溉面积达 279.7 万 hm2，新疆农业的经济效益显著上涨[11]。依据国家统计局数
+据显示：在 2018 年新疆用水总量中有 89.4%为农业灌溉用水，远高于全国农业用水的
+平均占比 61.4%。农业用水量显著高于其他行业，与“总量控制定额管理”的水资源最
+严格管理要求不符。农业用水的超量使用及其结构不合理是新疆农业生产面临的严峻问
+题[12]。同时新疆地区长期存在土壤盐碱化问题，如果不能科学合理的利用水资源，优化
+
+---
+
+而随着我国粮食需求的不断增加，灌溉用水需求也连年增长，因此提高农业用水效率是
+保障水资源和粮食安全的关键途径。
+   新疆地处我国西部边陲地区，降雨量少，蒸发量大，尤为匮乏的水资源阻碍了新疆
+农业整体的提升与发展，灌溉型荒漠绿洲农业是新疆农业主要的生产方式[10]。新疆农业
+灌溉近年来逐步大面积转为节水灌溉，其中以膜下滴灌为主，截止到 2018 年，新疆高
+效节水灌溉面积达 279.7 万 hm2，新疆农业的经济效益显著上涨[11]。依据国家统计局数
+据显示：在 2018 年新疆用水总量中有 89.4%为农业灌溉用水，远高于全国农业用水的
+平均占比 61.4%。农业用水量显著高于其他行业，与“总量控制定额管理”的水资源最
+严格管理要求不符。农业用水的超量使用及其结构不合理是新疆农业生产面临的严峻问
+题[12]。同时新疆地区长期存在土壤盐碱化问题，如果不能科学合理的利用水资源，优化
+灌溉方式，必然会增加土壤盐分累积，进而胁迫农田作物的生长发育[13, 14]。因此在新疆
+
+---
+
+保障水资源和粮食安全的关键途径。
+   新疆地处我国西部边陲地区，降雨量少，蒸发量大，尤为匮乏的水资源阻碍了新疆
+农业整体的提升与发展，灌溉型荒漠绿洲农业是新疆农业主要的生产方式[10]。新疆农业
+灌溉近年来逐步大面积转为节水灌溉，其中以膜下滴灌为主，截止到 2018 年，新疆高
+效节水灌溉面积达 279.7 万 hm2，新疆农业的经济效益显著上涨[11]。依据国家统计局数
+据显示：在 2018 年新疆用水总量中有 89.4%为农业灌溉用水，远高于全国农业用水的
+平均占比 61.4%。农业用水量显著高于其他行业，与“总量控制定额管理”的水资源最
+严格管理要求不符。农业用水的超量使用及其结构不合理是新疆农业生产面临的严峻问
+题[12]。同时新疆地区长期存在土壤盐碱化问题，如果不能科学合理的利用水资源，优化
+灌溉方式，必然会增加土壤盐分累积，进而胁迫农田作物的生长发育[13, 14]。因此在新疆
+大力发展节水灌溉技术具有重大意义。
+
+---
+
+效节水灌溉面积达 279.7 万 hm2，新疆农业的经济效益显著上涨[11]。依据国家统计局数
+据显示：在 2018 年新疆用水总量中有 89.4%为农业灌溉用水，远高于全国农业用水的
+平均占比 61.4%。农业用水量显著高于其他行业，与“总量控制定额管理”的水资源最
+严格管理要求不符。农业用水的超量使用及其结构不合理是新疆农业生产面临的严峻问
+题[12]。同时新疆地区长期存在土壤盐碱化问题，如果不能科学合理的利用水资源，优化
+灌溉方式，必然会增加土壤盐分累积，进而胁迫农田作物的生长发育[13, 14]。因此在新疆
+大力发展节水灌溉技术具有重大意义。
+   玉米作为当前世界第一大粮食作物，在保障国家粮食安全方面发挥着关键作用[15]。
+它不仅是我国乃至全球重要的饲料来源和工业原料，还兼具经济作物的属性，在我国农
+
+                          1
+
+---
+
+据显示：在 2018 年新疆用水总量中有 89.4%为农业灌溉用水，远高于全国农业用水的
+平均占比 61.4%。农业用水量显著高于其他行业，与“总量控制定额管理”的水资源最
+严格管理要求不符。农业用水的超量使用及其结构不合理是新疆农业生产面临的严峻问
+题[12]。同时新疆地区长期存在土壤盐碱化问题，如果不能科学合理的利用水资源，优化
+灌溉方式，必然会增加土壤盐分累积，进而胁迫农田作物的生长发育[13, 14]。因此在新疆
+大力发展节水灌溉技术具有重大意义。
+   玉米作为当前世界第一大粮食作物，在保障国家粮食安全方面发挥着关键作用[15]。
+它不仅是我国乃至全球重要的饲料来源和工业原料，还兼具经济作物的属性，在我国农
+
+                          1
+
+---
+
+1
+
+第 1 章 绪论                                  石河子大学硕士学位论文
+
+
+业生产体系和国民经济发展中具有举足轻重的地位[16]。截至 2022 年，我国玉米播种面
+积为 4332 万 hm2，总产量为 2.73 亿 t，占全国粮食作物总产量的 38.9%[17]，在国民经济
+中占有重要地位，提高玉米产量是保证中国粮食安全的重要途径。新疆作为中国重要的
+玉米生产基地，其独特的气候和光照环境为作物生长提供了得天独厚的生长条件[18]。然
+而，干旱少雨及蒸发量大等因素导致新疆地区水资源短缺，进一步加剧了农业生产对高
+效节水灌溉技术的依赖[19]。在新疆地区，目前主要应用滴灌技术进行灌溉，采用传统的
+
+---
+
+业生产体系和国民经济发展中具有举足轻重的地位[16]。截至 2022 年，我国玉米播种面
+积为 4332 万 hm2，总产量为 2.73 亿 t，占全国粮食作物总产量的 38.9%[17]，在国民经济
+中占有重要地位，提高玉米产量是保证中国粮食安全的重要途径。新疆作为中国重要的
+玉米生产基地，其独特的气候和光照环境为作物生长提供了得天独厚的生长条件[18]。然
+而，干旱少雨及蒸发量大等因素导致新疆地区水资源短缺，进一步加剧了农业生产对高
+效节水灌溉技术的依赖[19]。在新疆地区，目前主要应用滴灌技术进行灌溉，采用传统的
+灌溉方式，凭借过往经验，人工操控水泵的启停，管理成本大，缺乏科学合理的灌溉制
+度，灌溉时间和灌水量没有明确限制，从而导致灌溉效率低下；已有的灌溉系统大多也
+是基于专家知识进行，智能化水平不足[20, 21]。随着信息化技术的不断发展，现代农业逐
+渐向“精准控制”以及“合理灌溉”的方向发展，从而使农业技术由以人力为中心的生
+产模式转变为以信息和智能化控制为中心的生产模式[22]。
+
+---
+
+积为 4332 万 hm2，总产量为 2.73 亿 t，占全国粮食作物总产量的 38.9%[17]，在国民经济
+中占有重要地位，提高玉米产量是保证中国粮食安全的重要途径。新疆作为中国重要的
+玉米生产基地，其独特的气候和光照环境为作物生长提供了得天独厚的生长条件[18]。然
+而，干旱少雨及蒸发量大等因素导致新疆地区水资源短缺，进一步加剧了农业生产对高
+效节水灌溉技术的依赖[19]。在新疆地区，目前主要应用滴灌技术进行灌溉，采用传统的
+灌溉方式，凭借过往经验，人工操控水泵的启停，管理成本大，缺乏科学合理的灌溉制
+度，灌溉时间和灌水量没有明确限制，从而导致灌溉效率低下；已有的灌溉系统大多也
+是基于专家知识进行，智能化水平不足[20, 21]。随着信息化技术的不断发展，现代农业逐
+渐向“精准控制”以及“合理灌溉”的方向发展，从而使农业技术由以人力为中心的生
+产模式转变为以信息和智能化控制为中心的生产模式[22]。
+   随着信息化技术的不断发展，现代农业灌区管理逐步引入了智能化手段，其中数字
+
+---
+
+中占有重要地位，提高玉米产量是保证中国粮食安全的重要途径。新疆作为中国重要的
+玉米生产基地，其独特的气候和光照环境为作物生长提供了得天独厚的生长条件[18]。然
+而，干旱少雨及蒸发量大等因素导致新疆地区水资源短缺，进一步加剧了农业生产对高
+效节水灌溉技术的依赖[19]。在新疆地区，目前主要应用滴灌技术进行灌溉，采用传统的
+灌溉方式，凭借过往经验，人工操控水泵的启停，管理成本大，缺乏科学合理的灌溉制
+度，灌溉时间和灌水量没有明确限制，从而导致灌溉效率低下；已有的灌溉系统大多也
+是基于专家知识进行，智能化水平不足[20, 21]。随着信息化技术的不断发展，现代农业逐
+渐向“精准控制”以及“合理灌溉”的方向发展，从而使农业技术由以人力为中心的生
+产模式转变为以信息和智能化控制为中心的生产模式[22]。
+   随着信息化技术的不断发展，现代农业灌区管理逐步引入了智能化手段，其中数字
+孪生作为一种融合多源数据与模拟分析的新兴技术，也开始在灌区管理中有所应用。借
+
+---
+
+而，干旱少雨及蒸发量大等因素导致新疆地区水资源短缺，进一步加剧了农业生产对高
+效节水灌溉技术的依赖[19]。在新疆地区，目前主要应用滴灌技术进行灌溉，采用传统的
+灌溉方式，凭借过往经验，人工操控水泵的启停，管理成本大，缺乏科学合理的灌溉制
+度，灌溉时间和灌水量没有明确限制，从而导致灌溉效率低下；已有的灌溉系统大多也
+是基于专家知识进行，智能化水平不足[20, 21]。随着信息化技术的不断发展，现代农业逐
+渐向“精准控制”以及“合理灌溉”的方向发展，从而使农业技术由以人力为中心的生
+产模式转变为以信息和智能化控制为中心的生产模式[22]。
+   随着信息化技术的不断发展，现代农业灌区管理逐步引入了智能化手段，其中数字
+孪生作为一种融合多源数据与模拟分析的新兴技术，也开始在灌区管理中有所应用。借
+助数字技术，灌区的水资源分配、输配水过程及作物生长状况能够实现更加精细的模拟
+与监测，为农业灌溉管理提供数据支撑与辅助决策，推动其向精准化发展[23]。然而，现
+
+---
+
+渐向“精准控制”以及“合理灌溉”的方向发展，从而使农业技术由以人力为中心的生
+产模式转变为以信息和智能化控制为中心的生产模式[22]。
+   随着信息化技术的不断发展，现代农业灌区管理逐步引入了智能化手段，其中数字
+孪生作为一种融合多源数据与模拟分析的新兴技术，也开始在灌区管理中有所应用。借
+助数字技术，灌区的水资源分配、输配水过程及作物生长状况能够实现更加精细的模拟
+与监测，为农业灌溉管理提供数据支撑与辅助决策，推动其向精准化发展[23]。然而，现
+有的数字孪生灌区平台仍以状态感知和过程展示为主，缺乏科学的灌溉优化模型与智能
+决策机制，难以充分发挥其在灌溉调度与资源配置中的辅助决策潜力。作物生长模型是
+综合作物生理、生态、农学、农业气象和土壤科学等多学科理论，基于系统分析与计算
+机技术，对作物生长发育、光合生产、干物质积累及产量形成过程进行定量模拟的重要
+工具[24, 25]。在数字化和信息化手段的支持下，作物生长模型能获得更加实时、精细的环
+
+---
+
+产模式转变为以信息和智能化控制为中心的生产模式[22]。
+   随着信息化技术的不断发展，现代农业灌区管理逐步引入了智能化手段，其中数字
+孪生作为一种融合多源数据与模拟分析的新兴技术，也开始在灌区管理中有所应用。借
+助数字技术，灌区的水资源分配、输配水过程及作物生长状况能够实现更加精细的模拟
+与监测，为农业灌溉管理提供数据支撑与辅助决策，推动其向精准化发展[23]。然而，现
+有的数字孪生灌区平台仍以状态感知和过程展示为主，缺乏科学的灌溉优化模型与智能
+决策机制，难以充分发挥其在灌溉调度与资源配置中的辅助决策潜力。作物生长模型是
+综合作物生理、生态、农学、农业气象和土壤科学等多学科理论，基于系统分析与计算
+机技术，对作物生长发育、光合生产、干物质积累及产量形成过程进行定量模拟的重要
+工具[24, 25]。在数字化和信息化手段的支持下，作物生长模型能获得更加实时、精细的环
+境数据输入，从而提升对不同作物生长状况的精准预测与分析能力。不同作物的生长对
+
+---
+
+随着信息化技术的不断发展，现代农业灌区管理逐步引入了智能化手段，其中数字
+孪生作为一种融合多源数据与模拟分析的新兴技术，也开始在灌区管理中有所应用。借
+助数字技术，灌区的水资源分配、输配水过程及作物生长状况能够实现更加精细的模拟
+与监测，为农业灌溉管理提供数据支撑与辅助决策，推动其向精准化发展[23]。然而，现
+有的数字孪生灌区平台仍以状态感知和过程展示为主，缺乏科学的灌溉优化模型与智能
+决策机制，难以充分发挥其在灌溉调度与资源配置中的辅助决策潜力。作物生长模型是
+综合作物生理、生态、农学、农业气象和土壤科学等多学科理论，基于系统分析与计算
+机技术，对作物生长发育、光合生产、干物质积累及产量形成过程进行定量模拟的重要
+工具[24, 25]。在数字化和信息化手段的支持下，作物生长模型能获得更加实时、精细的环
+境数据输入，从而提升对不同作物生长状况的精准预测与分析能力。不同作物的生长对
+环境因子的响应各异，水分作为限制作物生长的重要因素，其供给方式及利用效率直接
+
+---
+
+综合作物生理、生态、农学、农业气象和土壤科学等多学科理论，基于系统分析与计算
+机技术，对作物生长发育、光合生产、干物质积累及产量形成过程进行定量模拟的重要
+工具[24, 25]。在数字化和信息化手段的支持下，作物生长模型能获得更加实时、精细的环
+境数据输入，从而提升对不同作物生长状况的精准预测与分析能力。不同作物的生长对
+环境因子的响应各异，水分作为限制作物生长的重要因素，其供给方式及利用效率直接
+影响作物的生长发育及最终产量[26, 27]。新疆干旱区降水稀少、蒸发量大，灌溉是农业生
+产的必要保障，而膜下滴灌作为一种高效节水灌溉技术，通过减少土壤水分蒸发和优化
+根区水分供应，提高水分利用效率[28]。然而，传统作物生长模型主要针对露地或常规灌
+溉条件，对膜下滴灌环境下的玉米生长模拟适应性较低，因此亟需结合现代信息技术与
+作物模型，深入研究膜下滴灌条件下玉米的生长特性、需水规律，以优化灌溉策略，为
+新疆干旱区玉米生产提供科学的决策依据。
+
+---
+
+机技术，对作物生长发育、光合生产、干物质积累及产量形成过程进行定量模拟的重要
+工具[24, 25]。在数字化和信息化手段的支持下，作物生长模型能获得更加实时、精细的环
+境数据输入，从而提升对不同作物生长状况的精准预测与分析能力。不同作物的生长对
+环境因子的响应各异，水分作为限制作物生长的重要因素，其供给方式及利用效率直接
+影响作物的生长发育及最终产量[26, 27]。新疆干旱区降水稀少、蒸发量大，灌溉是农业生
+产的必要保障，而膜下滴灌作为一种高效节水灌溉技术，通过减少土壤水分蒸发和优化
+根区水分供应，提高水分利用效率[28]。然而，传统作物生长模型主要针对露地或常规灌
+溉条件，对膜下滴灌环境下的玉米生长模拟适应性较低，因此亟需结合现代信息技术与
+作物模型，深入研究膜下滴灌条件下玉米的生长特性、需水规律，以优化灌溉策略，为
+新疆干旱区玉米生产提供科学的决策依据。
+
+---
+
+环境因子的响应各异，水分作为限制作物生长的重要因素，其供给方式及利用效率直接
+影响作物的生长发育及最终产量[26, 27]。新疆干旱区降水稀少、蒸发量大，灌溉是农业生
+产的必要保障，而膜下滴灌作为一种高效节水灌溉技术，通过减少土壤水分蒸发和优化
+根区水分供应，提高水分利用效率[28]。然而，传统作物生长模型主要针对露地或常规灌
+溉条件，对膜下滴灌环境下的玉米生长模拟适应性较低，因此亟需结合现代信息技术与
+作物模型，深入研究膜下滴灌条件下玉米的生长特性、需水规律，以优化灌溉策略，为
+新疆干旱区玉米生产提供科学的决策依据。
+
+
+1.2 国内外研究现状
+
+---
+
+第 1 章 绪论                                      石河子大学硕士学位论文
+
+
+水分精准的输送给土壤，还有保墒、省水、抗灾、增产和改善作物品质等优点[29]。膜下
+滴灌在我国北方地区得到广泛应用[30, 31]，取得了显著的效果。玉米膜下滴灌技术是针对
+生产实际需求，在棉花膜下滴灌技术的基础上发展而兴起，是对粮食作物灌溉方式的一
+次改革[32]。近些年，有大量学者为探讨地表滴灌、地下滴灌、覆膜滴灌对玉米生长的影
+响展开诸多研究。例如，张明伟[33]的研究显示浅层埋设滴灌配合秸秆回田能有效提升春
+季玉米的叶面积指数(LAI)、叶绿素相对含量(SPAD)、乳熟期光合作用速率、胞间 CO2
+浓度、植株光合潜力、冠层光合作用能力、干物质积累，相比于传统边沟灌水有显著优
+势。有相关研究比较了地表滴灌与其他灌水方式，发现相比沟灌、喷灌、边沟灌水及自
+
+---
+
+滴灌在我国北方地区得到广泛应用[30, 31]，取得了显著的效果。玉米膜下滴灌技术是针对
+生产实际需求，在棉花膜下滴灌技术的基础上发展而兴起，是对粮食作物灌溉方式的一
+次改革[32]。近些年，有大量学者为探讨地表滴灌、地下滴灌、覆膜滴灌对玉米生长的影
+响展开诸多研究。例如，张明伟[33]的研究显示浅层埋设滴灌配合秸秆回田能有效提升春
+季玉米的叶面积指数(LAI)、叶绿素相对含量(SPAD)、乳熟期光合作用速率、胞间 CO2
+浓度、植株光合潜力、冠层光合作用能力、干物质积累，相比于传统边沟灌水有显著优
+势。有相关研究比较了地表滴灌与其他灌水方式，发现相比沟灌、喷灌、边沟灌水及自
+然降雨，地表滴灌对玉米的株高、茎粗、叶面积、干物质积累及养分吸收有显著提升效
+果并正面影响了甘蔗的分数、植株高度及有效茎数[34]。进一步研究发现，覆膜滴灌较无
+膜滴灌更能促进作物生长。左顺利等[35]对多种灌水方法包括覆膜滴灌进行比较，发现覆
+膜滴灌在净光合速率与总干物质积累上表现最佳。
+
+---
+
+生产实际需求，在棉花膜下滴灌技术的基础上发展而兴起，是对粮食作物灌溉方式的一
+次改革[32]。近些年，有大量学者为探讨地表滴灌、地下滴灌、覆膜滴灌对玉米生长的影
+响展开诸多研究。例如，张明伟[33]的研究显示浅层埋设滴灌配合秸秆回田能有效提升春
+季玉米的叶面积指数(LAI)、叶绿素相对含量(SPAD)、乳熟期光合作用速率、胞间 CO2
+浓度、植株光合潜力、冠层光合作用能力、干物质积累，相比于传统边沟灌水有显著优
+势。有相关研究比较了地表滴灌与其他灌水方式，发现相比沟灌、喷灌、边沟灌水及自
+然降雨，地表滴灌对玉米的株高、茎粗、叶面积、干物质积累及养分吸收有显著提升效
+果并正面影响了甘蔗的分数、植株高度及有效茎数[34]。进一步研究发现，覆膜滴灌较无
+膜滴灌更能促进作物生长。左顺利等[35]对多种灌水方法包括覆膜滴灌进行比较，发现覆
+膜滴灌在净光合速率与总干物质积累上表现最佳。
+       目前，我国滴灌技术已广泛应用于玉米栽培中，旨在提升产量与水资源利用效率[36]。
+
+---
+
+季玉米的叶面积指数(LAI)、叶绿素相对含量(SPAD)、乳熟期光合作用速率、胞间 CO2
+浓度、植株光合潜力、冠层光合作用能力、干物质积累，相比于传统边沟灌水有显著优
+势。有相关研究比较了地表滴灌与其他灌水方式，发现相比沟灌、喷灌、边沟灌水及自
+然降雨，地表滴灌对玉米的株高、茎粗、叶面积、干物质积累及养分吸收有显著提升效
+果并正面影响了甘蔗的分数、植株高度及有效茎数[34]。进一步研究发现，覆膜滴灌较无
+膜滴灌更能促进作物生长。左顺利等[35]对多种灌水方法包括覆膜滴灌进行比较，发现覆
+膜滴灌在净光合速率与总干物质积累上表现最佳。
+       目前，我国滴灌技术已广泛应用于玉米栽培中，旨在提升产量与水资源利用效率[36]。
+在滴灌种植下设定合适的灌水配额不仅能保障高产，还能减少水资源的消耗[37]。马建蕊
+   研究表明膜下滴灌玉米的光合特性比露地滴灌较优，平水年灌水 7 次比灌水 6 次、5
+[38]
+
+---
+
+然降雨，地表滴灌对玉米的株高、茎粗、叶面积、干物质积累及养分吸收有显著提升效
+果并正面影响了甘蔗的分数、植株高度及有效茎数[34]。进一步研究发现，覆膜滴灌较无
+膜滴灌更能促进作物生长。左顺利等[35]对多种灌水方法包括覆膜滴灌进行比较，发现覆
+膜滴灌在净光合速率与总干物质积累上表现最佳。
+       目前，我国滴灌技术已广泛应用于玉米栽培中，旨在提升产量与水资源利用效率[36]。
+在滴灌种植下设定合适的灌水配额不仅能保障高产，还能减少水资源的消耗[37]。马建蕊
+   研究表明膜下滴灌玉米的光合特性比露地滴灌较优，平水年灌水 7 次比灌水 6 次、5
+[38]
+
+
+次、4 次产量分别提高 3.89%、8.20%和 99.09%。李智[39]以滴灌玉米为研究对象，设立
+
+---
+
+果并正面影响了甘蔗的分数、植株高度及有效茎数[34]。进一步研究发现，覆膜滴灌较无
+膜滴灌更能促进作物生长。左顺利等[35]对多种灌水方法包括覆膜滴灌进行比较，发现覆
+膜滴灌在净光合速率与总干物质积累上表现最佳。
+       目前，我国滴灌技术已广泛应用于玉米栽培中，旨在提升产量与水资源利用效率[36]。
+在滴灌种植下设定合适的灌水配额不仅能保障高产，还能减少水资源的消耗[37]。马建蕊
+   研究表明膜下滴灌玉米的光合特性比露地滴灌较优，平水年灌水 7 次比灌水 6 次、5
+[38]
+
+
+次、4 次产量分别提高 3.89%、8.20%和 99.09%。李智[39]以滴灌玉米为研究对象，设立
+不同水分处理进行田间试验，研究确定沙地滴灌玉米的水制度。结果表明：灌水定额为
+
+---
+
+研究表明膜下滴灌玉米的光合特性比露地滴灌较优，平水年灌水 7 次比灌水 6 次、5
+[38]
+
+
+次、4 次产量分别提高 3.89%、8.20%和 99.09%。李智[39]以滴灌玉米为研究对象，设立
+不同水分处理进行田间试验，研究确定沙地滴灌玉米的水制度。结果表明：灌水定额为
+262.5 mm，灌水 12 次，此时玉米产量为 1011.47 kg/m3，水分利用效率为 2.64 kg/m3 灌
+水水利用效率为 5.78 kg/m3。冯艳春等[40]研究中设 4 个量级灌水定额(10、20、30、40 mm)，
+结果表明在膜下滴灌 40 mm 时玉米产量和水分利用效率显著提高。张乐等[41]研究表明
+在灌水频次为 8、灌水定额 2100 m3/hm2 时，玉米产量为 14751.45 kg/hm2，灌水水生产
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+
+---
+
+[38]
+
+
+次、4 次产量分别提高 3.89%、8.20%和 99.09%。李智[39]以滴灌玉米为研究对象，设立
+不同水分处理进行田间试验，研究确定沙地滴灌玉米的水制度。结果表明：灌水定额为
+262.5 mm，灌水 12 次，此时玉米产量为 1011.47 kg/m3，水分利用效率为 2.64 kg/m3 灌
+水水利用效率为 5.78 kg/m3。冯艳春等[40]研究中设 4 个量级灌水定额(10、20、30、40 mm)，
+结果表明在膜下滴灌 40 mm 时玉米产量和水分利用效率显著提高。张乐等[41]研究表明
+在灌水频次为 8、灌水定额 2100 m3/hm2 时，玉米产量为 14751.45 kg/hm2，灌水水生产
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+限量补灌的灌水利用效率是常规滴灌和覆膜常规滴灌的 2.7 倍和 25 倍，且对比雨养处理
+
+---
+
+次、4 次产量分别提高 3.89%、8.20%和 99.09%。李智[39]以滴灌玉米为研究对象，设立
+不同水分处理进行田间试验，研究确定沙地滴灌玉米的水制度。结果表明：灌水定额为
+262.5 mm，灌水 12 次，此时玉米产量为 1011.47 kg/m3，水分利用效率为 2.64 kg/m3 灌
+水水利用效率为 5.78 kg/m3。冯艳春等[40]研究中设 4 个量级灌水定额(10、20、30、40 mm)，
+结果表明在膜下滴灌 40 mm 时玉米产量和水分利用效率显著提高。张乐等[41]研究表明
+在灌水频次为 8、灌水定额 2100 m3/hm2 时，玉米产量为 14751.45 kg/hm2，灌水水生产
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+限量补灌的灌水利用效率是常规滴灌和覆膜常规滴灌的 2.7 倍和 25 倍，且对比雨养处理
+下的水分利用效率提高 1.23 kg/m3，增产率提高 13.1%，是一种既节水又增产的最佳膜
+
+---
+
+次、4 次产量分别提高 3.89%、8.20%和 99.09%。李智[39]以滴灌玉米为研究对象，设立
+不同水分处理进行田间试验，研究确定沙地滴灌玉米的水制度。结果表明：灌水定额为
+262.5 mm，灌水 12 次，此时玉米产量为 1011.47 kg/m3，水分利用效率为 2.64 kg/m3 灌
+水水利用效率为 5.78 kg/m3。冯艳春等[40]研究中设 4 个量级灌水定额(10、20、30、40 mm)，
+结果表明在膜下滴灌 40 mm 时玉米产量和水分利用效率显著提高。张乐等[41]研究表明
+在灌水频次为 8、灌水定额 2100 m3/hm2 时，玉米产量为 14751.45 kg/hm2，灌水水生产
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+限量补灌的灌水利用效率是常规滴灌和覆膜常规滴灌的 2.7 倍和 25 倍，且对比雨养处理
+下的水分利用效率提高 1.23 kg/m3，增产率提高 13.1%，是一种既节水又增产的最佳膜
+下滴灌措施。Wang 等[43]研究结果表明覆膜滴灌可影响作物生物指标提高作物光合能力，
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+
+---
+
+不同水分处理进行田间试验，研究确定沙地滴灌玉米的水制度。结果表明：灌水定额为
+262.5 mm，灌水 12 次，此时玉米产量为 1011.47 kg/m3，水分利用效率为 2.64 kg/m3 灌
+水水利用效率为 5.78 kg/m3。冯艳春等[40]研究中设 4 个量级灌水定额(10、20、30、40 mm)，
+结果表明在膜下滴灌 40 mm 时玉米产量和水分利用效率显著提高。张乐等[41]研究表明
+在灌水频次为 8、灌水定额 2100 m3/hm2 时，玉米产量为 14751.45 kg/hm2，灌水水生产
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+限量补灌的灌水利用效率是常规滴灌和覆膜常规滴灌的 2.7 倍和 25 倍，且对比雨养处理
+下的水分利用效率提高 1.23 kg/m3，增产率提高 13.1%，是一种既节水又增产的最佳膜
+下滴灌措施。Wang 等[43]研究结果表明覆膜滴灌可影响作物生物指标提高作物光合能力，
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+
+---
+
+262.5 mm，灌水 12 次，此时玉米产量为 1011.47 kg/m3，水分利用效率为 2.64 kg/m3 灌
+水水利用效率为 5.78 kg/m3。冯艳春等[40]研究中设 4 个量级灌水定额(10、20、30、40 mm)，
+结果表明在膜下滴灌 40 mm 时玉米产量和水分利用效率显著提高。张乐等[41]研究表明
+在灌水频次为 8、灌水定额 2100 m3/hm2 时，玉米产量为 14751.45 kg/hm2，灌水水生产
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+限量补灌的灌水利用效率是常规滴灌和覆膜常规滴灌的 2.7 倍和 25 倍，且对比雨养处理
+下的水分利用效率提高 1.23 kg/m3，增产率提高 13.1%，是一种既节水又增产的最佳膜
+下滴灌措施。Wang 等[43]研究结果表明覆膜滴灌可影响作物生物指标提高作物光合能力，
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+
+---
+
+效率为 6.88 kg/m3 能够同时满足节水和高产的最佳灌水方案。姬景红等[42]研究表明覆膜
+限量补灌的灌水利用效率是常规滴灌和覆膜常规滴灌的 2.7 倍和 25 倍，且对比雨养处理
+下的水分利用效率提高 1.23 kg/m3，增产率提高 13.1%，是一种既节水又增产的最佳膜
+下滴灌措施。Wang 等[43]研究结果表明覆膜滴灌可影响作物生物指标提高作物光合能力，
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+米生产的最佳滴灌灌水方案。田建柯等[45]基于雨棚蒸渗桶栽试验条件下，研究灌水量和
+灌水频率对夏玉米生长、产量和水分利用的影响，结果表明 W1D3 (120% ETc，9 d)可作
+为基于试验条件下较适宜的灌水技术。陈宣伊等[46]研究适宜内蒙古中西部地区春玉米种
+植不同滴灌水量中，结果表明采用灌水定额 1275 m3/hm2 的滴灌水量可有效提高春玉米
+
+---
+
+下的水分利用效率提高 1.23 kg/m3，增产率提高 13.1%，是一种既节水又增产的最佳膜
+下滴灌措施。Wang 等[43]研究结果表明覆膜滴灌可影响作物生物指标提高作物光合能力，
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+米生产的最佳滴灌灌水方案。田建柯等[45]基于雨棚蒸渗桶栽试验条件下，研究灌水量和
+灌水频率对夏玉米生长、产量和水分利用的影响，结果表明 W1D3 (120% ETc，9 d)可作
+为基于试验条件下较适宜的灌水技术。陈宣伊等[46]研究适宜内蒙古中西部地区春玉米种
+植不同滴灌水量中，结果表明采用灌水定额 1275 m3/hm2 的滴灌水量可有效提高春玉米
+产量及水分利用效率。大量研究表明，在一定灌水量范围内，玉米产量随着灌水量增加
+
+---
+
+下滴灌措施。Wang 等[43]研究结果表明覆膜滴灌可影响作物生物指标提高作物光合能力，
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+米生产的最佳滴灌灌水方案。田建柯等[45]基于雨棚蒸渗桶栽试验条件下，研究灌水量和
+灌水频率对夏玉米生长、产量和水分利用的影响，结果表明 W1D3 (120% ETc，9 d)可作
+为基于试验条件下较适宜的灌水技术。陈宣伊等[46]研究适宜内蒙古中西部地区春玉米种
+植不同滴灌水量中，结果表明采用灌水定额 1275 m3/hm2 的滴灌水量可有效提高春玉米
+产量及水分利用效率。大量研究表明，在一定灌水量范围内，玉米产量随着灌水量增加
+
+---
+
+进而提高产量和水分利用效率，覆膜滴灌处理下玉米籽粒产量和水分利用效率显著高于
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+米生产的最佳滴灌灌水方案。田建柯等[45]基于雨棚蒸渗桶栽试验条件下，研究灌水量和
+灌水频率对夏玉米生长、产量和水分利用的影响，结果表明 W1D3 (120% ETc，9 d)可作
+为基于试验条件下较适宜的灌水技术。陈宣伊等[46]研究适宜内蒙古中西部地区春玉米种
+植不同滴灌水量中，结果表明采用灌水定额 1275 m3/hm2 的滴灌水量可有效提高春玉米
+产量及水分利用效率。大量研究表明，在一定灌水量范围内，玉米产量随着灌水量增加
+
+
+                              3
+
+---
+
+滴灌处理和雨养处理。李菊等[44]研究结果表明河西地区春玉米生长的灌水量为作物蒸腾
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+米生产的最佳滴灌灌水方案。田建柯等[45]基于雨棚蒸渗桶栽试验条件下，研究灌水量和
+灌水频率对夏玉米生长、产量和水分利用的影响，结果表明 W1D3 (120% ETc，9 d)可作
+为基于试验条件下较适宜的灌水技术。陈宣伊等[46]研究适宜内蒙古中西部地区春玉米种
+植不同滴灌水量中，结果表明采用灌水定额 1275 m3/hm2 的滴灌水量可有效提高春玉米
+产量及水分利用效率。大量研究表明，在一定灌水量范围内，玉米产量随着灌水量增加
+
+
+                              3
+
+---
+
+蒸发量(ETC)100%、滴间隔为 8 d 的处理高产且水分利用效率较高，可作为该地区春玉
+米生产的最佳滴灌灌水方案。田建柯等[45]基于雨棚蒸渗桶栽试验条件下，研究灌水量和
+灌水频率对夏玉米生长、产量和水分利用的影响，结果表明 W1D3 (120% ETc，9 d)可作
+为基于试验条件下较适宜的灌水技术。陈宣伊等[46]研究适宜内蒙古中西部地区春玉米种
+植不同滴灌水量中，结果表明采用灌水定额 1275 m3/hm2 的滴灌水量可有效提高春玉米
+产量及水分利用效率。大量研究表明，在一定灌水量范围内，玉米产量随着灌水量增加
+
+
+                              3
+
+第 1 章 绪论                                              石河子大学硕士学位论文
+
+---
+
+3
+
+第 1 章 绪论                                              石河子大学硕士学位论文
+
+
+而增加，但当灌水量大于某一临界值后，随灌水量增加作物产量增加趋势变缓甚至降低。
+
+1.2.2 作物模型研究进展
+
+   作物模型以光照、温度、水分和土壤等输入项作为驱动因子，基于土壤-作物-大气
+系统，通过设置作物品种、环境胁迫和田间管理（如耕作、灌水和施肥）等条件，模拟
+
+---
+
+而增加，但当灌水量大于某一临界值后，随灌水量增加作物产量增加趋势变缓甚至降低。
+
+1.2.2 作物模型研究进展
+
+   作物模型以光照、温度、水分和土壤等输入项作为驱动因子，基于土壤-作物-大气
+系统，通过设置作物品种、环境胁迫和田间管理（如耕作、灌水和施肥）等条件，模拟
+作物在生长周期内的光合、呼吸、蒸腾等关键生理过程，刻画作物生长发育和产量积累
+过程[47]。作物模型有助于理解作物对各种环境变化和人为因素的响应机制，可以指导农
+业生产实践，优化作物管理策略，提高作物产量和质量，确保粮食安全[48, 49]。
+   （1）作物模型分类
+   自荷兰的 DeWit 和美国的 Dumcan 相继提出模拟植被冠层光能捕获的生理生态模型
+
+---
+
+种作物生长过程的模拟，广泛用于分析各种栽培措施对区域作物产量的影响。刘建刚[63]
+结合 DSSAT 模型与农户调研结果对黄淮海农作区夏玉米的施氮管理确定当地最佳施氮
+量为 234 kg/hm2，表明适量施氮可以增产 37.7%，缩减了潜在产量与实际产量的差距。
+张艳红[64]对 DSSAT 中 CERES-Maize 模拟模型进行调试优化，建立了以均匀设计方法与
+优化理论集成 DSSAT CERES-Maize 模拟模型为基础的黄淮海夏玉米水肥优化管理技术
+体系。RUGIRA 等[65]应用 DSSAT CERES-Maize 模型鉴定设灌溉和播期对我国北方玉米
+产量的影响，并确定最优运筹处理。SHEN 等[66]采用 DSSAT 模型评价了关中平原西部
+干旱对夏玉米产量的影响。ATTIA[67]利用干旱环境下玉米产量和水分生产率的详细试验
+数据，校准和评价 DSSAT 模型，并提出灌溉调度建议。
+   作物模型的发展经历了从单一生理过程模拟到复杂农田生态系统综合分析的演变。
+以 DSSAT、WOFOST 和 APSIM 为代表的经典模型广泛应用于农业生产管理、气候变化
+
+---
+
+张艳红[64]对 DSSAT 中 CERES-Maize 模拟模型进行调试优化，建立了以均匀设计方法与
+优化理论集成 DSSAT CERES-Maize 模拟模型为基础的黄淮海夏玉米水肥优化管理技术
+体系。RUGIRA 等[65]应用 DSSAT CERES-Maize 模型鉴定设灌溉和播期对我国北方玉米
+产量的影响，并确定最优运筹处理。SHEN 等[66]采用 DSSAT 模型评价了关中平原西部
+干旱对夏玉米产量的影响。ATTIA[67]利用干旱环境下玉米产量和水分生产率的详细试验
+数据，校准和评价 DSSAT 模型，并提出灌溉调度建议。
+   作物模型的发展经历了从单一生理过程模拟到复杂农田生态系统综合分析的演变。
+以 DSSAT、WOFOST 和 APSIM 为代表的经典模型广泛应用于农业生产管理、气候变化
+评估和决策支持。然而，在干旱地区，如新疆这种典型的水资源短缺区域，滴灌作为重
+要的节水灌溉技术需要更加精准的水分管理。基于作物生长模型的灌溉决策研究，不仅
+要求对作物的生长过程进行准确模拟，还需结合智能优化算法，以提升灌溉策略的科学
+
+---
+
+干旱对夏玉米产量的影响。ATTIA[67]利用干旱环境下玉米产量和水分生产率的详细试验
+数据，校准和评价 DSSAT 模型，并提出灌溉调度建议。
+   作物模型的发展经历了从单一生理过程模拟到复杂农田生态系统综合分析的演变。
+以 DSSAT、WOFOST 和 APSIM 为代表的经典模型广泛应用于农业生产管理、气候变化
+评估和决策支持。然而，在干旱地区，如新疆这种典型的水资源短缺区域，滴灌作为重
+要的节水灌溉技术需要更加精准的水分管理。基于作物生长模型的灌溉决策研究，不仅
+要求对作物的生长过程进行准确模拟，还需结合智能优化算法，以提升灌溉策略的科学
+性和效率。以 CERES-Maize 模型为基础，集成优化算法构建智能灌溉决策系统，有望
+在稳产增效的同时显著提升水分利用效率，为新疆干旱区滴灌玉米生产提供有效的技术
+支撑。
+
+---
+
+数据，校准和评价 DSSAT 模型，并提出灌溉调度建议。
+   作物模型的发展经历了从单一生理过程模拟到复杂农田生态系统综合分析的演变。
+以 DSSAT、WOFOST 和 APSIM 为代表的经典模型广泛应用于农业生产管理、气候变化
+评估和决策支持。然而，在干旱地区，如新疆这种典型的水资源短缺区域，滴灌作为重
+要的节水灌溉技术需要更加精准的水分管理。基于作物生长模型的灌溉决策研究，不仅
+要求对作物的生长过程进行准确模拟，还需结合智能优化算法，以提升灌溉策略的科学
+性和效率。以 CERES-Maize 模型为基础，集成优化算法构建智能灌溉决策系统，有望
+在稳产增效的同时显著提升水分利用效率，为新疆干旱区滴灌玉米生产提供有效的技术
+支撑。
+
+1.2.3 智能灌溉决策
+
+---
+
+作物模型的发展经历了从单一生理过程模拟到复杂农田生态系统综合分析的演变。
+以 DSSAT、WOFOST 和 APSIM 为代表的经典模型广泛应用于农业生产管理、气候变化
+评估和决策支持。然而，在干旱地区，如新疆这种典型的水资源短缺区域，滴灌作为重
+要的节水灌溉技术需要更加精准的水分管理。基于作物生长模型的灌溉决策研究，不仅
+要求对作物的生长过程进行准确模拟，还需结合智能优化算法，以提升灌溉策略的科学
+性和效率。以 CERES-Maize 模型为基础，集成优化算法构建智能灌溉决策系统，有望
+在稳产增效的同时显著提升水分利用效率，为新疆干旱区滴灌玉米生产提供有效的技术
+支撑。
+
+1.2.3 智能灌溉决策
+
+---
+
+要求对作物的生长过程进行准确模拟，还需结合智能优化算法，以提升灌溉策略的科学
+性和效率。以 CERES-Maize 模型为基础，集成优化算法构建智能灌溉决策系统，有望
+在稳产增效的同时显著提升水分利用效率，为新疆干旱区滴灌玉米生产提供有效的技术
+支撑。
+
+1.2.3 智能灌溉决策
+
+   智能灌溉决策是精准农业发展的关键技术之一，通过科学的水资源管理，提高作物
+产量和水分利用效率[68]。研究表明，采用智能灌溉决策系统可实时根据作物需求进行精
+准灌溉，有助于节约水资源、降低农业生产成本，同时优化作物生长环境[69, 70]。然而，
+由于作物生长受到多种因素（如土壤特性、气候条件、作物生理状态等）的影响，建立
+
+---
+
+在稳产增效的同时显著提升水分利用效率，为新疆干旱区滴灌玉米生产提供有效的技术
+支撑。
+
+1.2.3 智能灌溉决策
+
+   智能灌溉决策是精准农业发展的关键技术之一，通过科学的水资源管理，提高作物
+产量和水分利用效率[68]。研究表明，采用智能灌溉决策系统可实时根据作物需求进行精
+准灌溉，有助于节约水资源、降低农业生产成本，同时优化作物生长环境[69, 70]。然而，
+由于作物生长受到多种因素（如土壤特性、气候条件、作物生理状态等）的影响，建立
+一个普适性强、决策精准的智能灌溉模型仍然面临诸多挑战。
+   目前，国内外研究者主要围绕三种智能灌溉决策方法展开研究：基于经验数据的回
+
+---
+
+支撑。
+
+1.2.3 智能灌溉决策
+
+   智能灌溉决策是精准农业发展的关键技术之一，通过科学的水资源管理，提高作物
+产量和水分利用效率[68]。研究表明，采用智能灌溉决策系统可实时根据作物需求进行精
+准灌溉，有助于节约水资源、降低农业生产成本，同时优化作物生长环境[69, 70]。然而，
+由于作物生长受到多种因素（如土壤特性、气候条件、作物生理状态等）的影响，建立
+一个普适性强、决策精准的智能灌溉模型仍然面临诸多挑战。
+   目前，国内外研究者主要围绕三种智能灌溉决策方法展开研究：基于经验数据的回
+归模型[71]、基于人工智能的智能决策模型[72]、以及基于作物生长机理的模型[73]。前三者
+
+---
+
+1.2.3 智能灌溉决策
+
+   智能灌溉决策是精准农业发展的关键技术之一，通过科学的水资源管理，提高作物
+产量和水分利用效率[68]。研究表明，采用智能灌溉决策系统可实时根据作物需求进行精
+准灌溉，有助于节约水资源、降低农业生产成本，同时优化作物生长环境[69, 70]。然而，
+由于作物生长受到多种因素（如土壤特性、气候条件、作物生理状态等）的影响，建立
+一个普适性强、决策精准的智能灌溉模型仍然面临诸多挑战。
+   目前，国内外研究者主要围绕三种智能灌溉决策方法展开研究：基于经验数据的回
+归模型[71]、基于人工智能的智能决策模型[72]、以及基于作物生长机理的模型[73]。前三者
+
+---
+
+智能灌溉决策是精准农业发展的关键技术之一，通过科学的水资源管理，提高作物
+产量和水分利用效率[68]。研究表明，采用智能灌溉决策系统可实时根据作物需求进行精
+准灌溉，有助于节约水资源、降低农业生产成本，同时优化作物生长环境[69, 70]。然而，
+由于作物生长受到多种因素（如土壤特性、气候条件、作物生理状态等）的影响，建立
+一个普适性强、决策精准的智能灌溉模型仍然面临诸多挑战。
+   目前，国内外研究者主要围绕三种智能灌溉决策方法展开研究：基于经验数据的回
+归模型[71]、基于人工智能的智能决策模型[72]、以及基于作物生长机理的模型[73]。前三者
+
+                                     5
+
+---
+
+智能灌溉决策是精准农业发展的关键技术之一，通过科学的水资源管理，提高作物
+产量和水分利用效率[68]。研究表明，采用智能灌溉决策系统可实时根据作物需求进行精
+准灌溉，有助于节约水资源、降低农业生产成本，同时优化作物生长环境[69, 70]。然而，
+由于作物生长受到多种因素（如土壤特性、气候条件、作物生理状态等）的影响，建立
+一个普适性强、决策精准的智能灌溉模型仍然面临诸多挑战。
+   目前，国内外研究者主要围绕三种智能灌溉决策方法展开研究：基于经验数据的回
+归模型[71]、基于人工智能的智能决策模型[72]、以及基于作物生长机理的模型[73]。前三者
+
+                                     5
+
+第 1 章 绪论                              石河子大学硕士学位论文
+
+---
+
+第 1 章 绪论                              石河子大学硕士学位论文
+
+
+各有优势，其中基于作物生长机理的决策模型因其扎实的理论基础和高精准性，成为当
+前智能灌溉决策的主流研究方向。
+   基于经验数据的回归模型主要通过长期田间试验数据的积累，利用多元线性回归或
+非线性回归方法建立作物需水量的预测方程，并以此为依据制定灌溉方案。例如，孙红
+严等[74]利用三年田间试验数据构建茶树需水量多元回归预测模型，并结合智能监测系统
+验证其可行性，结果表明该模型能够在保障茶叶品质的同时，实现节水增产。
+Pulido-Calvo 等[75]在西班牙南部玉米种植基地通过两季灌溉数据建立了多元线性回归模
+
+---
+
+各有优势，其中基于作物生长机理的决策模型因其扎实的理论基础和高精准性，成为当
+前智能灌溉决策的主流研究方向。
+   基于经验数据的回归模型主要通过长期田间试验数据的积累，利用多元线性回归或
+非线性回归方法建立作物需水量的预测方程，并以此为依据制定灌溉方案。例如，孙红
+严等[74]利用三年田间试验数据构建茶树需水量多元回归预测模型，并结合智能监测系统
+验证其可行性，结果表明该模型能够在保障茶叶品质的同时，实现节水增产。
+Pulido-Calvo 等[75]在西班牙南部玉米种植基地通过两季灌溉数据建立了多元线性回归模
+型，并结合智能灌溉网络进行实际指导，显著降低了水资源消耗，提高了作物水分利用
+效率。然而，该类模型的适用性较为局限，其拟合关系仅适用于特定的环境条件，当外
+
+---
+
+前智能灌溉决策的主流研究方向。
+   基于经验数据的回归模型主要通过长期田间试验数据的积累，利用多元线性回归或
+非线性回归方法建立作物需水量的预测方程，并以此为依据制定灌溉方案。例如，孙红
+严等[74]利用三年田间试验数据构建茶树需水量多元回归预测模型，并结合智能监测系统
+验证其可行性，结果表明该模型能够在保障茶叶品质的同时，实现节水增产。
+Pulido-Calvo 等[75]在西班牙南部玉米种植基地通过两季灌溉数据建立了多元线性回归模
+型，并结合智能灌溉网络进行实际指导，显著降低了水资源消耗，提高了作物水分利用
+效率。然而，该类模型的适用性较为局限，其拟合关系仅适用于特定的环境条件，当外
+部气候、土壤特性发生较大变化时，模型的准确性会受到影响。此外，由于回归模型主
+要基于历史数据，忽略了作物生理机制和水分动态变化，在实时性和泛化能力方面仍存
+在不足[76]。
+
+---
+
+基于经验数据的回归模型主要通过长期田间试验数据的积累，利用多元线性回归或
+非线性回归方法建立作物需水量的预测方程，并以此为依据制定灌溉方案。例如，孙红
+严等[74]利用三年田间试验数据构建茶树需水量多元回归预测模型，并结合智能监测系统
+验证其可行性，结果表明该模型能够在保障茶叶品质的同时，实现节水增产。
+Pulido-Calvo 等[75]在西班牙南部玉米种植基地通过两季灌溉数据建立了多元线性回归模
+型，并结合智能灌溉网络进行实际指导，显著降低了水资源消耗，提高了作物水分利用
+效率。然而，该类模型的适用性较为局限，其拟合关系仅适用于特定的环境条件，当外
+部气候、土壤特性发生较大变化时，模型的准确性会受到影响。此外，由于回归模型主
+要基于历史数据，忽略了作物生理机制和水分动态变化，在实时性和泛化能力方面仍存
+在不足[76]。
+   人工智能技术的快速发展，使其在智能灌溉决策中的应用越来越广泛。基于机器学
+
+---
+
+型，并结合智能灌溉网络进行实际指导，显著降低了水资源消耗，提高了作物水分利用
+效率。然而，该类模型的适用性较为局限，其拟合关系仅适用于特定的环境条件，当外
+部气候、土壤特性发生较大变化时，模型的准确性会受到影响。此外，由于回归模型主
+要基于历史数据，忽略了作物生理机制和水分动态变化，在实时性和泛化能力方面仍存
+在不足[76]。
+   人工智能技术的快速发展，使其在智能灌溉决策中的应用越来越广泛。基于机器学
+习、神经网络、模糊逻辑等方法，人工智能模型能够自主学习作物生长的非线性关系，
+并结合传感器数据进行动态决策，展现出较强的适应能力 [77] 。例如，李茂娜 [78] 采用
+Mamdani 型模糊逻辑建立苜蓿智能灌溉决策支持模型，能够根据土壤水分和作物生长状
+态动态调整灌溉策略，确保水资源的精准分配。沈建炜[79]利用 BP 神经网络预测蓝莓需
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+
+---
+
+要基于历史数据，忽略了作物生理机制和水分动态变化，在实时性和泛化能力方面仍存
+在不足[76]。
+   人工智能技术的快速发展，使其在智能灌溉决策中的应用越来越广泛。基于机器学
+习、神经网络、模糊逻辑等方法，人工智能模型能够自主学习作物生长的非线性关系，
+并结合传感器数据进行动态决策，展现出较强的适应能力 [77] 。例如，李茂娜 [78] 采用
+Mamdani 型模糊逻辑建立苜蓿智能灌溉决策支持模型，能够根据土壤水分和作物生长状
+态动态调整灌溉策略，确保水资源的精准分配。沈建炜[79]利用 BP 神经网络预测蓝莓需
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+
+---
+
+在不足[76]。
+   人工智能技术的快速发展，使其在智能灌溉决策中的应用越来越广泛。基于机器学
+习、神经网络、模糊逻辑等方法，人工智能模型能够自主学习作物生长的非线性关系，
+并结合传感器数据进行动态决策，展现出较强的适应能力 [77] 。例如，李茂娜 [78] 采用
+Mamdani 型模糊逻辑建立苜蓿智能灌溉决策支持模型，能够根据土壤水分和作物生长状
+态动态调整灌溉策略，确保水资源的精准分配。沈建炜[79]利用 BP 神经网络预测蓝莓需
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+
+---
+
+人工智能技术的快速发展，使其在智能灌溉决策中的应用越来越广泛。基于机器学
+习、神经网络、模糊逻辑等方法，人工智能模型能够自主学习作物生长的非线性关系，
+并结合传感器数据进行动态决策，展现出较强的适应能力 [77] 。例如，李茂娜 [78] 采用
+Mamdani 型模糊逻辑建立苜蓿智能灌溉决策支持模型，能够根据土壤水分和作物生长状
+态动态调整灌溉策略，确保水资源的精准分配。沈建炜[79]利用 BP 神经网络预测蓝莓需
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+
+---
+
+习、神经网络、模糊逻辑等方法，人工智能模型能够自主学习作物生长的非线性关系，
+并结合传感器数据进行动态决策，展现出较强的适应能力 [77] 。例如，李茂娜 [78] 采用
+Mamdani 型模糊逻辑建立苜蓿智能灌溉决策支持模型，能够根据土壤水分和作物生长状
+态动态调整灌溉策略，确保水资源的精准分配。沈建炜[79]利用 BP 神经网络预测蓝莓需
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+   基于作物生长机理的智能灌溉决策模型以土壤-作物-大气连续体（SPAC）理论为基
+
+---
+
+并结合传感器数据进行动态决策，展现出较强的适应能力 [77] 。例如，李茂娜 [78] 采用
+Mamdani 型模糊逻辑建立苜蓿智能灌溉决策支持模型，能够根据土壤水分和作物生长状
+态动态调整灌溉策略，确保水资源的精准分配。沈建炜[79]利用 BP 神经网络预测蓝莓需
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+   基于作物生长机理的智能灌溉决策模型以土壤-作物-大气连续体（SPAC）理论为基
+础，模拟作物水分吸收、蒸腾作用以及环境因素对作物生长的影响，从而制定精准的灌
+
+---
+
+水量，并结合土壤水分平衡方程建立灌溉决策模型，实验表明其最小相对误差仅为 0.28%。
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+   基于作物生长机理的智能灌溉决策模型以土壤-作物-大气连续体（SPAC）理论为基
+础，模拟作物水分吸收、蒸腾作用以及环境因素对作物生长的影响，从而制定精准的灌
+溉策略[81, 82]。这类模型通过整合作物生理特性、水分传输过程和气候因素，能够动态预
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+
+---
+
+此外，Farzam 等[80]提出基于马尔科夫决策过程（MDP）的智能灌溉模型，实验结果显
+示该模型相比传统灌溉方法可节水 40%。尽管人工智能方法在复杂环境下具有较好的适
+应性，但其依赖大量高质量数据进行训练，且模型的可解释性较差，使得农业管理者在
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+   基于作物生长机理的智能灌溉决策模型以土壤-作物-大气连续体（SPAC）理论为基
+础，模拟作物水分吸收、蒸腾作用以及环境因素对作物生长的影响，从而制定精准的灌
+溉策略[81, 82]。这类模型通过整合作物生理特性、水分传输过程和气候因素，能够动态预
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+
+---
+
+实际应用时难以完全信任其决策结果。此外，人工智能模型在小样本情况下容易出现过
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+   基于作物生长机理的智能灌溉决策模型以土壤-作物-大气连续体（SPAC）理论为基
+础，模拟作物水分吸收、蒸腾作用以及环境因素对作物生长的影响，从而制定精准的灌
+溉策略[81, 82]。这类模型通过整合作物生理特性、水分传输过程和气候因素，能够动态预
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+同气候条件下的作物种植模式进行了优化，结果表明，通过 CROPWAT 模型优化灌溉策
+略，在不降低作物产量的情况下，平均节水率达到 59%，尤其在干旱地区，灌溉优化效
+果更为显著。相比于经验回归模型和人工智能模型，基于作物生长机理的智能灌溉决策
+
+---
+
+拟合，导致预测不稳定，影响智能灌溉系统的可靠性。
+   基于作物生长机理的智能灌溉决策模型以土壤-作物-大气连续体（SPAC）理论为基
+础，模拟作物水分吸收、蒸腾作用以及环境因素对作物生长的影响，从而制定精准的灌
+溉策略[81, 82]。这类模型通过整合作物生理特性、水分传输过程和气候因素，能够动态预
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+同气候条件下的作物种植模式进行了优化，结果表明，通过 CROPWAT 模型优化灌溉策
+略，在不降低作物产量的情况下，平均节水率达到 59%，尤其在干旱地区，灌溉优化效
+果更为显著。相比于经验回归模型和人工智能模型，基于作物生长机理的智能灌溉决策
+模型能够精准预测作物需水量，动态调整灌溉策略，并适应不同环境条件[85, 86]，使其在
+
+---
+
+础，模拟作物水分吸收、蒸腾作用以及环境因素对作物生长的影响，从而制定精准的灌
+溉策略[81, 82]。这类模型通过整合作物生理特性、水分传输过程和气候因素，能够动态预
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+同气候条件下的作物种植模式进行了优化，结果表明，通过 CROPWAT 模型优化灌溉策
+略，在不降低作物产量的情况下，平均节水率达到 59%，尤其在干旱地区，灌溉优化效
+果更为显著。相比于经验回归模型和人工智能模型，基于作物生长机理的智能灌溉决策
+模型能够精准预测作物需水量，动态调整灌溉策略，并适应不同环境条件[85, 86]，使其在
+
+---
+
+溉策略[81, 82]。这类模型通过整合作物生理特性、水分传输过程和气候因素，能够动态预
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+同气候条件下的作物种植模式进行了优化，结果表明，通过 CROPWAT 模型优化灌溉策
+略，在不降低作物产量的情况下，平均节水率达到 59%，尤其在干旱地区，灌溉优化效
+果更为显著。相比于经验回归模型和人工智能模型，基于作物生长机理的智能灌溉决策
+模型能够精准预测作物需水量，动态调整灌溉策略，并适应不同环境条件[85, 86]，使其在
+
+
+                         6
+
+---
+
+测作物需水量，并据此优化灌溉时间和灌水量。例如，杜江涛等[83]利用 DSSAT 模型对
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+同气候条件下的作物种植模式进行了优化，结果表明，通过 CROPWAT 模型优化灌溉策
+略，在不降低作物产量的情况下，平均节水率达到 59%，尤其在干旱地区，灌溉优化效
+果更为显著。相比于经验回归模型和人工智能模型，基于作物生长机理的智能灌溉决策
+模型能够精准预测作物需水量，动态调整灌溉策略，并适应不同环境条件[85, 86]，使其在
+
+
+                         6
+
+---
+
+棉花进行智能灌溉管理，结果表明该模型能够精准预测产量，并优化水分利用效率，提
+高农业水资源利用效益。Negin B 等[84]利用 CROPWAT 模型结合非线性优化模型，对不
+同气候条件下的作物种植模式进行了优化，结果表明，通过 CROPWAT 模型优化灌溉策
+略，在不降低作物产量的情况下，平均节水率达到 59%，尤其在干旱地区，灌溉优化效
+果更为显著。相比于经验回归模型和人工智能模型，基于作物生长机理的智能灌溉决策
+模型能够精准预测作物需水量，动态调整灌溉策略，并适应不同环境条件[85, 86]，使其在
+
+
+                         6
+
+第 1 章 绪论                               石河子大学硕士学位论文
+
+---
+
+6
+
+第 1 章 绪论                               石河子大学硕士学位论文
+
+
+智能灌溉决策研究中具有更高的科学性、适应性和精准性，成为未来智能灌溉系统优化
+的核心方向。
+   当前，智能灌溉决策研究主要围绕经验回归模型、人工智能模型和基于作物生长机
+理的模型展开。经验回归模型依靠历史数据进行拟合，适用于特定条件但泛化能力较弱；
+人工智能模型能够自主学习作物生长规律，在复杂环境下具有较好的适应性，但受数据
+质量限制较大；相比之下，基于作物生长机理的智能灌溉决策模型整合了作物生理特性、
+
+---
+
+第 1 章 绪论                               石河子大学硕士学位论文
+
+
+智能灌溉决策研究中具有更高的科学性、适应性和精准性，成为未来智能灌溉系统优化
+的核心方向。
+   当前，智能灌溉决策研究主要围绕经验回归模型、人工智能模型和基于作物生长机
+理的模型展开。经验回归模型依靠历史数据进行拟合，适用于特定条件但泛化能力较弱；
+人工智能模型能够自主学习作物生长规律，在复杂环境下具有较好的适应性，但受数据
+质量限制较大；相比之下，基于作物生长机理的智能灌溉决策模型整合了作物生理特性、
+环境因素和水分传输过程，能够精准预测作物需水量并优化灌溉策略，具备更强的科学
+性和应用价值。随着物联网、大数据和人工智能的融合发展，基于作物生长模型的智能
+
+---
+
+智能灌溉决策研究中具有更高的科学性、适应性和精准性，成为未来智能灌溉系统优化
+的核心方向。
+   当前，智能灌溉决策研究主要围绕经验回归模型、人工智能模型和基于作物生长机
+理的模型展开。经验回归模型依靠历史数据进行拟合，适用于特定条件但泛化能力较弱；
+人工智能模型能够自主学习作物生长规律，在复杂环境下具有较好的适应性，但受数据
+质量限制较大；相比之下，基于作物生长机理的智能灌溉决策模型整合了作物生理特性、
+环境因素和水分传输过程，能够精准预测作物需水量并优化灌溉策略，具备更强的科学
+性和应用价值。随着物联网、大数据和人工智能的融合发展，基于作物生长模型的智能
+灌溉决策将进一步提升决策精准度与算法适用性，为农业水资源管理和可持续发展提供
+强有力的技术支撑。
+
+---
+
+的核心方向。
+   当前，智能灌溉决策研究主要围绕经验回归模型、人工智能模型和基于作物生长机
+理的模型展开。经验回归模型依靠历史数据进行拟合，适用于特定条件但泛化能力较弱；
+人工智能模型能够自主学习作物生长规律，在复杂环境下具有较好的适应性，但受数据
+质量限制较大；相比之下，基于作物生长机理的智能灌溉决策模型整合了作物生理特性、
+环境因素和水分传输过程，能够精准预测作物需水量并优化灌溉策略，具备更强的科学
+性和应用价值。随着物联网、大数据和人工智能的融合发展，基于作物生长模型的智能
+灌溉决策将进一步提升决策精准度与算法适用性，为农业水资源管理和可持续发展提供
+强有力的技术支撑。
+
+---
+
+理的模型展开。经验回归模型依靠历史数据进行拟合，适用于特定条件但泛化能力较弱；
+人工智能模型能够自主学习作物生长规律，在复杂环境下具有较好的适应性，但受数据
+质量限制较大；相比之下，基于作物生长机理的智能灌溉决策模型整合了作物生理特性、
+环境因素和水分传输过程，能够精准预测作物需水量并优化灌溉策略，具备更强的科学
+性和应用价值。随着物联网、大数据和人工智能的融合发展，基于作物生长模型的智能
+灌溉决策将进一步提升决策精准度与算法适用性，为农业水资源管理和可持续发展提供
+强有力的技术支撑。
+
+---
+
+1.3.1 研究内容
+
+   （1）干旱区滴灌玉米生长模型研究
+   利用 DSSAT 模型中针对玉米作物的 CERES-Maize 模型进行模拟验证，根据 2019
+年在兵团现代节水灌溉重点试验站土壤、气象、田间管理与玉米产量、最大干物质量、
+籽粒质量实测数据对模型进行调参，并通过 2019 年与 2020 年玉米生长数据验证模型精
+度，评价 CERES-Maize 模型针对新疆干旱区滴灌玉米适用性。
+   （2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+
+---
+
+（1）干旱区滴灌玉米生长模型研究
+   利用 DSSAT 模型中针对玉米作物的 CERES-Maize 模型进行模拟验证，根据 2019
+年在兵团现代节水灌溉重点试验站土壤、气象、田间管理与玉米产量、最大干物质量、
+籽粒质量实测数据对模型进行调参，并通过 2019 年与 2020 年玉米生长数据验证模型精
+度，评价 CERES-Maize 模型针对新疆干旱区滴灌玉米适用性。
+   （2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+
+---
+
+利用 DSSAT 模型中针对玉米作物的 CERES-Maize 模型进行模拟验证，根据 2019
+年在兵团现代节水灌溉重点试验站土壤、气象、田间管理与玉米产量、最大干物质量、
+籽粒质量实测数据对模型进行调参，并通过 2019 年与 2020 年玉米生长数据验证模型精
+度，评价 CERES-Maize 模型针对新疆干旱区滴灌玉米适用性。
+   （2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+   基于 Java 和 Web 语言，采用前后端分离的模式，开发具有数据汇总、数据分析、
+
+---
+
+年在兵团现代节水灌溉重点试验站土壤、气象、田间管理与玉米产量、最大干物质量、
+籽粒质量实测数据对模型进行调参，并通过 2019 年与 2020 年玉米生长数据验证模型精
+度，评价 CERES-Maize 模型针对新疆干旱区滴灌玉米适用性。
+   （2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+   基于 Java 和 Web 语言，采用前后端分离的模式，开发具有数据汇总、数据分析、
+实时决策等功能的新疆干旱区滴灌玉米智能化决策系统。通过获取灌区实时数据，结合
+
+---
+
+籽粒质量实测数据对模型进行调参，并通过 2019 年与 2020 年玉米生长数据验证模型精
+度，评价 CERES-Maize 模型针对新疆干旱区滴灌玉米适用性。
+   （2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+   基于 Java 和 Web 语言，采用前后端分离的模式，开发具有数据汇总、数据分析、
+实时决策等功能的新疆干旱区滴灌玉米智能化决策系统。通过获取灌区实时数据，结合
+智能灌溉决策算法生成的灌溉方案，实现智能灌溉决策，提升玉米产量和水分利用效率，
+
+---
+
+度，评价 CERES-Maize 模型针对新疆干旱区滴灌玉米适用性。
+   （2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+   基于 Java 和 Web 语言，采用前后端分离的模式，开发具有数据汇总、数据分析、
+实时决策等功能的新疆干旱区滴灌玉米智能化决策系统。通过获取灌区实时数据，结合
+智能灌溉决策算法生成的灌溉方案，实现智能灌溉决策，提升玉米产量和水分利用效率，
+为数字孪生灌区平台提供科学决策支持。
+
+---
+
+（2）基于生长模型的智能灌溉决策算法研究
+   综合考虑灌水量、灌溉时机等因素，以产量最大和水分利用效率最高为目标，通过
+标准 NSGA-II 算法与改进 NSGA-II 算法生成不同的灌溉决策，引入收敛性指标（IGD）
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+   基于 Java 和 Web 语言，采用前后端分离的模式，开发具有数据汇总、数据分析、
+实时决策等功能的新疆干旱区滴灌玉米智能化决策系统。通过获取灌区实时数据，结合
+智能灌溉决策算法生成的灌溉方案，实现智能灌溉决策，提升玉米产量和水分利用效率，
+为数字孪生灌区平台提供科学决策支持。
+
+---
+
+与均匀性指标（SP）对比两种算法的优化性能，并结合 TOPSIS 方法选定最优灌溉制度，
+为干旱区滴灌玉米种植提供智能化灌溉决策方案。
+   （3）新疆干旱区滴灌玉米智能灌溉决策系统研究
+   基于 Java 和 Web 语言，采用前后端分离的模式，开发具有数据汇总、数据分析、
+实时决策等功能的新疆干旱区滴灌玉米智能化决策系统。通过获取灌区实时数据，结合
+智能灌溉决策算法生成的灌溉方案，实现智能灌溉决策，提升玉米产量和水分利用效率，
+为数字孪生灌区平台提供科学决策支持。
