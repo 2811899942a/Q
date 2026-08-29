@@ -1,0 +1,110 @@
+name: Shihezi GHCNh 51356 Probe
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-ghcnh-51356-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Probe NOAA GHCNh station and yearly files
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ghcnh research/dssat_dtr/data/shihezi_real_case/ghcnh_51356_probe
+          BASE='https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly'
+          sc=$(curl -L -sS --retry 2 -w '%{http_code}' -o /tmp/ghcnh/stations.csv "$BASE/doc/ghcnh-station-list.csv")
+          echo "STATION_LIST_HTTP=$sc BYTES=$(wc -c < /tmp/ghcnh/stations.csv)"
+          grep -i '51356\|SHIHEZI' /tmp/ghcnh/stations.csv | head -20 | tee /tmp/ghcnh/station_hits.txt || true
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('/tmp/ghcnh/stations.csv').read_text(errors='replace') if Path('/tmp/ghcnh/stations.csv').exists() else ''
+          hits=[l for l in s.splitlines() if '51356' in l or 'SHIHEZI' in l.upper()]
+          ids=[]
+          for l in hits:
+              # GHCN-style station IDs are 11 chars such as CHM00051356.
+              ids += re.findall(r'\b[A-Z]{3}[A-Z0-9]{8}\b',l.upper())
+          ids=list(dict.fromkeys(ids))
+          if not ids: ids=['CHM00051356']
+          Path('/tmp/ghcnh/ids.txt').write_text('\n'.join(ids)+'\n')
+          print('CANDIDATE_IDS',ids)
+          PY
+          while read SID; do
+            for Y in 2019 2020; do
+              URL="$BASE/access/by-year/$Y/psv/GHCNh_${SID}_${Y}.psv"
+              code=$(curl -L -sS --retry 2 -w '%{http_code}' -o "/tmp/ghcnh/${SID}_${Y}.psv" "$URL")
+              echo "SID=$SID YEAR=$Y HTTP=$code BYTES=$(wc -c < /tmp/ghcnh/${SID}_${Y}.psv) URL=$URL"
+              head -3 "/tmp/ghcnh/${SID}_${Y}.psv" || true
+            done
+          done < /tmp/ghcnh/ids.txt
+          python - <<'PY'
+          from pathlib import Path
+          import csv,re,statistics,collections
+          out=Path('research/dssat_dtr/data/shihezi_real_case/ghcnh_51356_probe')
+          station_hits=Path('/tmp/ghcnh/station_hits.txt').read_text(errors='replace') if Path('/tmp/ghcnh/station_hits.txt').exists() else ''
+          ids=[x.strip() for x in Path('/tmp/ghcnh/ids.txt').read_text().splitlines() if x.strip()]
+          md=['# NOAA GHCNh Shihezi 51356 probe','',
+              'GHCNh is NOAA/NCEI\'s successor to ISD/Global Hourly. This probe searches the official station list for WMO 51356 / Shihezi, then attempts 2019 and 2020 station-year files.','',
+              '## Station-list matches','```',station_hits.rstrip() or '(none)','```','']
+          for sid in ids:
+              for year in (2019,2020):
+                  p=Path(f'/tmp/ghcnh/{sid}_{year}.psv')
+                  text=p.read_text(errors='replace') if p.exists() else ''
+                  valid=p.exists() and p.stat().st_size>500 and '|' in text[:2000]
+                  md += [f'## {sid} {year}',f'- bytes: {p.stat().st_size if p.exists() else 0}; PSV-like: {valid}.']
+                  if not valid:
+                      md += ['']
+                      continue
+                  lines=text.splitlines()
+                  md.append(f'- header: `{lines[0][:600]}`')
+                  # Generic PSV introspection; record column names and try dry-bulb/date fields by semantic names.
+                  reader=csv.DictReader(lines,delimiter='|')
+                  rows=list(reader)
+                  fields=reader.fieldnames or []
+                  md.append(f'- rows: {len(rows)}; columns: {fields}.')
+                  datec=next((c for c in fields if c and c.lower() in ('date','datetime','date_time','timestamp')),None)
+                  tc=next((c for c in fields if c and ('dry_bulb' in c.lower() or c.lower() in ('temperature','air_temperature','tmp'))),None)
+                  md.append(f'- inferred date column: {datec}; temperature column: {tc}.')
+                  if datec and tc:
+                      daily=collections.defaultdict(list)
+                      for r in rows:
+                          raw=(r.get(tc) or '').strip()
+                          try: v=float(raw)
+                          except: continue
+                          # GHCNh temperatures are expected physical values; exclude extreme sentinels defensively.
+                          if not (-80<=v<=60): continue
+                          d=(r.get(datec) or '')[:10]
+                          if d: daily[d].append(v)
+                      dd=[(d,min(v),max(v),len(v)) for d,v in sorted(daily.items())]
+                      md.append(f'- days with parsed temperature: {len(dd)}.')
+                      if dd:
+                          md.append(f'- first parsed day: {dd[0]}; last: {dd[-1]}.')
+                  md += ['']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit GHCNh probe
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/ghcnh_51356_probe
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add GHCNh Shihezi 51356 hourly probe'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
