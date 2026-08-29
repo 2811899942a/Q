@@ -1,0 +1,92 @@
+name: Guo 2025 Cultivar Template Probe
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo2025-cultivar-template-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Find official cultivar rows matching Guo initial values
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/data
+          git -C /tmp/data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/os
+          git -C /tmp/os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          mkdir -p research/dssat_dtr/data/shihezi_real_case/guo2025_cultivar_template_probe
+          python - <<'PY'
+          from pathlib import Path
+          import re, json, math
+          roots=[Path('/tmp/data'),Path('/tmp/os')]
+          files=[]
+          for root in roots:
+              files += list(root.rglob('MZCER*.CUL'))
+          print('CUL_FILES',[(str(p),p.stat().st_size) for p in files])
+          target=[300.0,0.600,850.0,850.0,8.80,45.00]
+          rows=[]
+          near=[]
+          for p in files:
+              text=p.read_text(errors='replace')
+              header=None
+              for line in text.splitlines():
+                  if line.startswith('@VAR#'):
+                      header=line
+                      continue
+                  if not line.strip() or line[0] in '*!@': continue
+                  # CERES cultivar rows: VAR#, name, EXPNO, ECO#, then six numeric coefficients.
+                  toks=line.split()
+                  nums=[]
+                  for t in toks:
+                      try: nums.append(float(t))
+                      except: pass
+                  if len(nums)<6: continue
+                  vals=nums[-6:]
+                  # normalized distance, mostly for detecting rounded/exact source rows.
+                  scales=[100,1,200,200,5,20]
+                  dist=sum(((a-b)/s)**2 for a,b,s in zip(vals,target,scales))**0.5
+                  rec={'file':str(p),'line':line,'values':vals,'distance':dist,'header':header}
+                  near.append(rec)
+                  if all(abs(a-b)<1e-6 for a,b in zip(vals,target)): rows.append(rec)
+          near=sorted(near,key=lambda x:x['distance'])[:30]
+          out=Path('research/dssat_dtr/data/shihezi_real_case/guo2025_cultivar_template_probe')
+          (out/'nearest_rows.json').write_text(json.dumps(near,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Guo 2025 cultivar-template / ecotype probe','',
+              'Target initial six coefficients from Guo Table 2-4: P1=300.0, P2=0.600, P5=850.0, G2=850, G3=8.80, PHINT=45.00.','',
+              f'- MZCER cultivar files found: {len(files)}.',
+              f'- Exact six-coefficient matches: {len(rows)}.','']
+          if rows:
+              md += ['## Exact matches']
+              for r in rows:
+                  md += [f"- `{r['file']}`",f"  - header: `{r['header']}`",f"  - row: `{r['line']}`"]
+          md += ['','## 15 nearest official rows']
+          for r in near[:15]:
+              md += [f"- distance {r['distance']:.6f}: `{r['line']}` ({r['file']})"]
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit probe
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo2025_cultivar_template_probe
+          if ! git diff --cached --quiet; then
+            git commit -m 'Probe Guo cultivar template and ecotype'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
