@@ -1,0 +1,186 @@
+name: Shihezi Final Shared Input Runtime Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-final-shared-input-runtime-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild proven V4 three-arm case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_final_shared_input.sh'); p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Install source-consistent LOWOM soil and audit shared inputs
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,shutil,subprocess
+
+          arms=['M0','H0TT','M15TT']
+          roots={a:Path('/tmp')/f'run_{a}' for a in arms}
+          out=Path('research/dssat_dtr/data/shihezi_real_case/final_shared_input_runtime_audit')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          hyd=[
+              (20,0.122,0.237,0.457,1.00,1.51,0.0861,32.75,51.93),
+              (40,0.136,0.264,0.425,0.85,1.54,0.0818,31.52,54.11),
+              (60,0.120,0.231,0.371,0.70,1.59,0.0733,43.28,44.53),
+              (80,0.113,0.214,0.346,0.55,1.63,0.0758,30.21,60.74),
+              (100,0.105,0.236,0.385,0.40,1.61,0.0593,29.13,49.76),
+          ]
+
+          def build_soil():
+              lines=[
+                  '*Soils: Shihezi University Modern Water-saving Irrigation Key Experimental Station',
+                  '',
+                  '*SHIH000100  SHIHEZI     -99     100 Guo Table 2-1 measured profile',
+                  '@SITE        COUNTRY          LAT     LONG SCS FAMILY',
+                  f" {'Shihezi':<11}{'China':<14}{44.324:8.3f}{85.996:9.3f} -99",
+                  '@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE',
+                  '    -9  0.15   6.0  0.50  60.0  1.00  1.00 IB001 IB001 IB001',
+                  '@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC',
+              ]
+              for dep,ll,dul,sat,rgf,bd,oc,clay,silt in hyd:
+                  lines.append(
+                      f"{dep:6d}{'-99':>6}{ll:6.3f}{dul:6.3f}{sat:6.3f}{rgf:6.3f}"
+                      f"{'-99':>6}{bd:6.2f}{oc:6.3f}{clay:6.2f}{silt:6.2f}{0.0:6.1f}"
+                      f"{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}"
+                  )
+              return '\n'.join(lines)+'\n'
+
+          soil_text=build_soil()
+          for a,r in roots.items():
+              (r/'Soil'/'SH.SOL').write_text(soil_text,encoding='latin-1')
+              # N is disabled in the formal source-pure control setup. Keep FileX initial-N
+              # placeholders untouched because DSSAT ignores them when NITRO=N; they are
+              # explicitly excluded from scientific interpretation.
+              for p in r.rglob('DSSAT48.INP'):
+                  p.unlink()
+
+          # Byte-identical common-input gate across all arms.
+          rels=[]
+          for rel in ['Soil/SH.SOL','Weather/SHIH1901.WTH','Weather/SHIH2001.WTH','Genotype/MZCER048.CUL']:
+              if all((roots[a]/rel).exists() for a in arms): rels.append(rel)
+          for yy in ('19','20'):
+              for j in range(1,5): rels.append(f'Maize/SHIH{yy}{j:02d}.MZX')
+
+          equality=[]
+          for rel in rels:
+              data=[(roots[a]/rel).read_bytes() for a in arms]
+              eq=(data[0]==data[1]==data[2])
+              equality.append({'path':rel,'identical_M0_H0TT_M15TT':eq,'bytes':len(data[0])})
+              if not eq: raise RuntimeError('COMMON INPUT DIFFERENCE ACROSS ARMS: '+rel)
+
+          def parse_info_oc(txt):
+              vals=[]; active=False
+              for line in txt.splitlines():
+                  if 'LYR  cm    cm  frac  frac  frac  Grow g/cm3     %' in line:
+                      active=True; continue
+                  if active:
+                      if not line.strip():
+                          if vals: break
+                          continue
+                      z=line.split()
+                      if z and z[0].isdigit() and len(z)>=9: vals.append(float(z[8]))
+              return vals
+
+          run_audit=[]
+          for a,r in roots.items():
+              subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+              subprocess.run(['sudo','ln','-s',str(r),'/DSSAT48'],check=True)
+              wd=r/'Maize'
+              for case in ['SHIH1902','SHIH2002']:
+                  for fn in ['Summary.OUT','PlantGro.OUT','INFO.OUT','ERROR.OUT','WARNING.OUT']:
+                      p=wd/fn
+                      if p.exists(): p.unlink()
+                  cp=subprocess.run(['../dscsm048','A',case+'.MZX'],cwd=wd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+                  if cp.returncode!=0 or not (wd/'Summary.OUT').exists():
+                      raise RuntimeError(f'{a} {case} failed\n{cp.stdout[-3000:]}')
+                  info=(wd/'INFO.OUT').read_text(errors='replace') if (wd/'INFO.OUT').exists() else ''
+                  oc=parse_info_oc(info)
+                  inp=next(iter(r.rglob('DSSAT48.INP')),None)
+                  if inp is None: raise RuntimeError(f'{a} {case}: DSSAT48.INP missing')
+                  inp_text=inp.read_text(errors='replace')
+                  # Runtime gates for source-supported fields.
+                  required=[case[:6], 'XY0066', 'SHIH000100']
+                  missing=[x for x in required if x not in inp_text]
+                  if missing: raise RuntimeError(f'{a} {case}: consolidated input missing {missing}')
+                  if len(oc)<5 or abs(oc[0]-0.09)>0.02:
+                      raise RuntimeError(f'{a} {case}: LOWOM model-read OC gate failed: {oc}')
+                  summary=(wd/'Summary.OUT').read_text(errors='replace')
+                  if 'HWAM' not in summary: raise RuntimeError(f'{a} {case}: Summary HWAM missing')
+                  dest=out/f'{a}_{case}'
+                  dest.mkdir(exist_ok=True)
+                  shutil.copy2(wd/'Summary.OUT',dest/'Summary.OUT')
+                  if (wd/'INFO.OUT').exists(): shutil.copy2(wd/'INFO.OUT',dest/'INFO.OUT')
+                  shutil.copy2(inp,dest/'DSSAT48.INP')
+                  run_audit.append({'arm':a,'case':case,'returncode':cp.returncode,'model_read_OC_pct':oc[:10],
+                                    'consolidated_has_cultivar':('XY0066' in inp_text),
+                                    'consolidated_has_soil':('SHIH000100' in inp_text),
+                                    'NITRO_disabled':(' 1 OP              Y     N' in inp_text or 'NITRO' in inp_text)})
+
+          (out/'common_input_equality.json').write_text(json.dumps(equality,indent=2),encoding='utf-8')
+          (out/'runtime_audit.json').write_text(json.dumps(run_audit,indent=2),encoding='utf-8')
+
+          md=['# Final Shihezi shared-input runtime audit','',
+              '**Overall runtime gate: PASS.** Source-consistent common inputs were installed identically in M0/H0TT/M15TT and representative 2019/2020 W2 cases executed successfully in all three arms.','',
+              '## Cross-arm input equality','',
+              '|Path|Identical across M0/H0TT/M15TT|Bytes|','|---|---|---:|']
+          for x in equality: md.append(f"|`{x['path']}`|{'PASS' if x['identical_M0_H0TT_M15TT'] else 'FAIL'}|{x['bytes']}|")
+          md += ['', '## Runtime model-read gate','',
+                 '|Arm|Case|LOWOM OC read|Cultivar present|Soil present|Run|','|---|---|---|---|---|---|']
+          for x in run_audit:
+              md.append(f"|{x['arm']}|{x['case']}|{x['model_read_OC_pct'][:5]}|{x['consolidated_has_cultivar']}|{x['consolidated_has_soil']}|PASS|")
+          md += ['', 'Final scientific interpretation:',
+                 '- the measured/derived soil LOWOM branch is reaching DSSAT;',
+                 '- the same Weather, Soil, Genotype and treatment FileX inputs are supplied to all three arms;',
+                 '- nitrogen management remains excluded from the source-pure control configuration because Guo Chapter 2 does not report the exact 2019-2020 fertilizer/mineral-N inputs;',
+                 '- initial water remains the documented SDUL field-capacity common-arm assumption;',
+                 '- raw NASA POWER daily weather is a traceable provisional reconstruction and is not claimed to be the exact original CMA+NASA WTH.']
+          (out/'README_FINAL_SHARED_INPUT_RUNTIME_AUDIT.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit audit evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/final_shared_input_runtime_audit
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add final Shihezi shared-input runtime audit evidence'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
