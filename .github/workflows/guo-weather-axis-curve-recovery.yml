@@ -1,0 +1,148 @@
+name: Guo Weather Axis Curve Recovery
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/guo-weather-axis-curve-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Recover numeric axes and color trajectories
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr >/dev/null
+          python -m pip install -q pymupdf opencv-python-headless numpy pillow pandas
+          OUT='research/dssat_dtr/data/shihezi_real_case/guo_weather_axis_curve_recovery'
+          mkdir -p "$OUT" /tmp/gcurve
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=56_57_49_50_53&lwsing=8c225ffe10e3586fc107e6b908e50752' -o /tmp/gcurve/guo.pdf
+          python - <<'PY'
+          import pymupdf as fitz
+          from pathlib import Path
+          doc=fitz.open('/tmp/gcurve/guo.pdf'); page=doc[18]
+          ims=page.get_images(full=True); xref=max(ims,key=lambda im:im[2]*im[3])[0]
+          ex=doc.extract_image(xref)
+          Path('/tmp/gcurve/fig.jpg').write_bytes(ex['image'])
+          PY
+          # One numeric-only OCR pass; curves are NOT OCR-derived.
+          tesseract /tmp/gcurve/fig.jpg /tmp/gcurve/ocr --psm 11 -c tessedit_char_whitelist='0123456789.-/' tsv >/dev/null 2>&1 || true
+          python - <<'PY'
+          from pathlib import Path
+          import cv2, numpy as np, csv, json, collections, math, statistics, re
+          img=cv2.imread('/tmp/gcurve/fig.jpg'); h,w=img.shape[:2]
+          hsv=cv2.cvtColor(img,cv2.COLOR_BGR2HSV); gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+          out=Path('research/dssat_dtr/data/shihezi_real_case/guo_weather_axis_curve_recovery')
+          # Previously audited plot geometry, now refined from dense black axis runs.
+          panels=[{'year':2019,'x0':312,'x1':1535,'yt_guess':152,'yb':842},
+                  {'year':2020,'x0':2053,'x1':3276,'yt_guess':136,'yb':839}]
+          # Numeric OCR tokens with coordinates.
+          ocr=[]
+          p=Path('/tmp/gcurve/ocr.tsv')
+          if p.exists():
+              rows=list(csv.DictReader(p.open(errors='replace'),delimiter='\t'))
+              for r in rows:
+                  t=(r.get('text') or '').strip()
+                  try: conf=float(r.get('conf') or -1)
+                  except: conf=-1
+                  if not t or conf<0: continue
+                  if re.fullmatch(r'[0-9./-]+',t):
+                      ocr.append({'text':t,'conf':conf,'left':int(r['left']),'top':int(r['top']),'width':int(r['width']),'height':int(r['height'])})
+          # Analyze saturated colors in plot area. Red H near 0/179, cyan H around 90-105.
+          all_curves=[]; diagnostics=[]
+          for pan in panels:
+              year,x0,x1,yb=pan['year'],pan['x0'],pan['x1'],pan['yb']
+              # Find actual upper horizontal plot border using dark row density within x-range.
+              rd=(gray[:,x0:x1+1]<80).mean(axis=1)
+              cand=[y for y in range(80,yb-100) if rd[y]>0.20]
+              yt=min(cand,key=lambda y:abs(y-pan['yt_guess'])) if cand else pan['yt_guess']
+              pan['yt']=yt
+              H=hsv[:,:,0]; S=hsv[:,:,1]; V=hsv[:,:,2]
+              masks={
+                'red': (((H<=7)|(H>=173))&(S>=100)&(V>=80)),
+                'cyan': ((H>=88)&(H<=108)&(S>=80)&(V>=80)),
+              }
+              # Per x identify line-like color pixels. Bars/filled areas are removed if connected to the plot bottom or have tall vertical span.
+              for cname,mask in masks.items():
+                  pts=[]; rawcols=0; tallcols=0
+                  for x in range(x0+3,x1-2):
+                      ys=np.where(mask[yt+2:yb-2,x])[0]+yt+2
+                      if len(ys)==0: continue
+                      rawcols+=1
+                      span=int(ys.max()-ys.min()) if len(ys)>1 else 0
+                      # Filled rainfall bars are typically tall vertical colored runs touching/near bottom.
+                      nearbottom=ys.max()>=yb-12
+                      if span>22 and nearbottom:
+                          tallcols+=1
+                          # retain only isolated non-bottom pixels above the filled run, if any
+                          gaps=np.diff(ys)
+                          cut=None
+                          big=np.where(gaps>5)[0]
+                          if len(big):
+                              groups=np.split(ys,big+1)
+                              groups=[g for g in groups if len(g)<=12 and g.max()<yb-20]
+                              if groups: ys=max(groups,key=len)
+                              else: continue
+                          else: continue
+                      # For a thin anti-aliased line choose median y.
+                      pts.append((x,float(np.median(ys)),len(ys),span,nearbottom))
+                  # Smooth continuity filter: keep points within 15 px of rolling local median, but do not bridge long gaps yet.
+                  clean=[]
+                  for i,p0 in enumerate(pts):
+                      x,y,*rest=p0
+                      neigh=[q[1] for q in pts[max(0,i-4):min(len(pts),i+5)] if abs(q[0]-x)<=8]
+                      med=float(np.median(neigh)) if neigh else y
+                      if abs(y-med)<=18: clean.append(p0)
+                  all_curves.append({'year':year,'color':cname,'plot':[x0,x1,yt,yb],'raw_columns':rawcols,'bottom_tall_columns':tallcols,
+                                     'points':[[int(x),y] for x,y,*_ in clean]})
+              # OCR tokens around panel, including margins containing y ticks and bottom x ticks.
+              tok=[t for t in ocr if x0-180<=t['left']<=x1+180 and yt-80<=t['top']<=yb+180]
+              diagnostics.append({'year':year,'plot':[x0,x1,yt,yb],'ocr_tokens':tok,
+                                  'dark_row_candidates':[(int(y),float(rd[y])) for y in sorted(range(max(0,yt-30),min(h,yb+10)),key=lambda y:rd[y],reverse=True)[:15]]})
+          # Summaries of curve geometry and relation. For each color estimate coverage and y range.
+          summary=[]
+          for c in all_curves:
+              ps=c['points']; x0,x1,yt,yb=c['plot']
+              ys=[p[1] for p in ps]
+              summary.append({'year':c['year'],'color':c['color'],'points':len(ps),'coverage_pct':100*len(ps)/(x1-x0+1),
+                              'y_min':min(ys) if ys else None,'y_max':max(ys) if ys else None,
+                              'bottom_tall_columns':c['bottom_tall_columns']})
+          (out/'curve_pixels.json').write_text(json.dumps(all_curves,ensure_ascii=False),encoding='utf-8')
+          (out/'diagnostics.json').write_text(json.dumps(diagnostics,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'numeric_ocr_tokens.json').write_text(json.dumps(ocr,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Guo Fig.2-2 numeric-axis and colored-curve recovery','',
+              'One numeric-only OCR pass was used only to identify axis digits. Curve points are obtained from the original embedded JPEG by HSV color segmentation and continuity filtering.','',
+              f'- image size: {w} x {h}',f'- numeric OCR tokens retained: {len(ocr)}','']
+          for d in diagnostics:
+              md += [f"## {d['year']} panel",f"- refined plot rect: `{d['plot']}`",f"- nearby numeric OCR: `{d['ocr_tokens']}`",'']
+          md += ['## Curve pixel summaries','', '|Year|Color|Points|Horizontal coverage %|Y min|Y max|Bottom-connected tall cols|','|---:|---|---:|---:|---:|---:|---:|']
+          for s in summary:
+              md.append(f"|{s['year']}|{s['color']}|{s['points']}|{s['coverage_pct']:.1f}|{s['y_min']}|{s['y_max']}|{s['bottom_tall_columns']}|")
+          md += ['','Interpretation rule: a temperature curve should have high horizontal coverage and low bottom-connected tall-column count; a rainfall fill/legend will show bottom connectivity or fragmented coverage.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit recovery audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/guo_weather_axis_curve_recovery
+          if ! git diff --cached --quiet; then
+            git commit -m 'Recover Guo weather numeric axes and color trajectories'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
