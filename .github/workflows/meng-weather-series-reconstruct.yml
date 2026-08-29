@@ -1,0 +1,163 @@
+name: Meng Weather Series Reconstruct
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/meng-weather-series-reconstruct.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Convert vector primitives to dated weather series
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf
+          OUT='research/dssat_dtr/data/shihezi_real_case/meng_weather_series'
+          mkdir -p "$OUT" /tmp/mseries
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132' -o /tmp/mseries/meng.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import pymupdf as fitz, collections, csv, json, math
+          from datetime import date,timedelta
+          out=Path('research/dssat_dtr/data/shihezi_real_case/meng_weather_series')
+          doc=fitz.open('/tmp/mseries/meng.pdf'); page=doc[20]
+          drawings=page.get_drawings()
+          # Find long horizontal x axes near y=427.
+          axes=[]
+          single=[]
+          for idx,d in enumerate(drawings):
+              items=d.get('items',[])
+              if d.get('type')!='s' or len(items)!=1 or items[0][0]!='l': continue
+              _,p1,p2=items[0]
+              single.append((idx,d,p1,p2))
+              if abs(p1.y-p2.y)<0.05 and 420<p1.y<432 and abs(p2.x-p1.x)>100:
+                  axes.append((idx,min(p1.x,p2.x),max(p1.x,p2.x),(p1.y+p2.y)/2))
+          axes=sorted(axes,key=lambda z:z[1])
+          if len(axes)<2: raise RuntimeError(f'Expected 2 x axes, got {axes}')
+          axes=axes[:2]
+          # Y plot limits from 2019 upper/lower long horizontal axes; both panels share scale.
+          y_bottom=sum(a[3] for a in axes)/len(axes)
+          upper=[]
+          for idx,d,p1,p2 in single:
+              if abs(p1.y-p2.y)<0.05 and 235<p1.y<255 and abs(p2.x-p1.x)>100:
+                  upper.append((idx,min(p1.x,p2.x),max(p1.x,p2.x),(p1.y+p2.y)/2))
+          y_top=min(upper,key=lambda z:abs(z[3]-245.04))[3] if upper else 245.04
+          # Tick positions: short vertical strokes ending at bottom axis.
+          ticksets=[]
+          for _,x0,x1,yb in axes:
+              ticks=[]
+              for idx,d,p1,p2 in single:
+                  if abs(p1.x-p2.x)<0.05 and min(abs(p1.y-yb),abs(p2.y-yb))<0.2 and abs(p2.y-p1.y)<=6 and x0-1<=p1.x<=x1+1:
+                      ticks.append((p1.x,idx,min(p1.y,p2.y),max(p1.y,p2.y)))
+              ticksets.append(sorted(ticks))
+          # First tick dates decoded from the vector labels: 2019 5/2; 2020 5/4. Monthly ticks follow.
+          first_dates=[date(2019,5,2),date(2020,5,4)]
+          def x_to_date(x,ticks,first):
+              # Piecewise-linear interpolation between monthly ticks; extrapolate from first/last interval.
+              xs=[t[0] for t in ticks]
+              dates=[]; d=first
+              for i in range(len(xs)):
+                  if i==0: dates.append(first)
+                  else:
+                      # month increment from first, preserving day-of-month where valid (May-Sep here).
+                      m=first.month+i; dates.append(date(first.year,m,first.day))
+              if len(xs)<2: raise RuntimeError('too few x ticks')
+              if x<=xs[0]:
+                  slope=(dates[1]-dates[0]).days/(xs[1]-xs[0]); return dates[0]+timedelta(days=round((x-xs[0])*slope))
+              for i in range(len(xs)-1):
+                  if xs[i]<=x<=xs[i+1]:
+                      frac=(x-xs[i])/(xs[i+1]-xs[i]); return dates[i]+timedelta(days=round(frac*(dates[i+1]-dates[i]).days))
+              slope=(dates[-1]-dates[-2]).days/(xs[-1]-xs[-2]); return dates[-1]+timedelta(days=round((x-xs[-1])*slope))
+          def y_to_val(y): return (y_bottom-y)/(y_bottom-y_top)*40.0
+          # Filled rectangles within either panel and anchored near y_bottom are rain bars.
+          rain=[]
+          for idx,d in enumerate(drawings):
+              if d.get('type') not in ('f','fs') or not d.get('rect'): continue
+              r=d['rect']; w=r.x1-r.x0; h=r.y1-r.y0
+              for panel,(_,x0,x1,yb) in enumerate(axes):
+                  if x0-1<=r.x0 and r.x1<=x1+1 and 0.2<w<8 and abs(r.y1-yb)<1.5 and h>0.3:
+                      dt=x_to_date((r.x0+r.x1)/2,ticksets[panel],first_dates[panel])
+                      mm=y_to_val(r.y0)
+                      rain.append({'year':first_dates[panel].year,'date':dt.isoformat(),'rain_mm':mm,'x0':r.x0,'x1':r.x1,'y0':r.y0,'y1':r.y1,'drawing_idx':idx})
+          # Multi-segment temperature paths within the graph. One year 2019 is split into 2 path objects; combine by x/date.
+          temp_points=[]
+          complex_paths=[]
+          for idx,d in enumerate(drawings):
+              items=d.get('items',[]); nline=sum(1 for it in items if it and it[0]=='l')
+              if d.get('type')!='s' or nline<5 or not d.get('rect'): continue
+              r=d['rect']
+              panel=None
+              for p,(_,x0,x1,yb) in enumerate(axes):
+                  if r.x1>=x0-2 and r.x0<=x1+2 and r.y0>=y_top-5 and r.y1<=y_bottom+5:
+                      # assign by center nearest panel
+                      cx=(r.x0+r.x1)/2
+                      if x0-5<=cx<=x1+5: panel=p; break
+              if panel is None: continue
+              complex_paths.append({'idx':idx,'panel':panel,'nline':nline,'rect':[r.x0,r.y0,r.x1,r.y1]})
+              pts=[]
+              for it in items:
+                  if not it or it[0]!='l': continue
+                  _,p1,p2=it; pts.extend([p1,p2])
+              # unique successive points by coordinate, then map to nearest day and aggregate later.
+              for p in pts:
+                  dt=x_to_date(p.x,ticksets[panel],first_dates[panel])
+                  temp_points.append((first_dates[panel].year,dt,y_to_val(p.y),p.x,p.y,idx))
+          # Aggregate path vertices to daily temperature value (median if repeated vertices from adjacent segments).
+          agg=collections.defaultdict(list)
+          for yr,dt,t,x,y,idx in temp_points: agg[(yr,dt)].append(t)
+          temp=[]
+          for (yr,dt),vals in sorted(agg.items()):
+              vals=sorted(vals); med=vals[len(vals)//2] if len(vals)%2 else (vals[len(vals)//2-1]+vals[len(vals)//2])/2
+              temp.append({'year':yr,'date':dt.isoformat(),'temperature_C':med,'n_vertices':len(vals)})
+          # Write CSVs.
+          rain=sorted(rain,key=lambda r:(r['year'],r['date']))
+          with (out/'rain_events.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rain[0]) if rain else ['year','date','rain_mm']); w.writeheader(); w.writerows(rain)
+          with (out/'temperature_daily.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(temp[0]) if temp else ['year','date','temperature_C']); w.writeheader(); w.writerows(temp)
+          summary=[]
+          thesis={2019:96.45,2020:119.88}
+          for yr in (2019,2020):
+              rr=[r for r in rain if r['year']==yr]; tt=[r for r in temp if r['year']==yr]
+              s=sum(r['rain_mm'] for r in rr)
+              summary.append({'year':yr,'rain_events':len(rr),'digitized_rain_sum_mm':s,'Guo_reported_growth_rain_mm':thesis[yr],
+                              'difference_mm':s-thesis[yr],'temp_days':len(tt),
+                              'temp_min_C':min((r['temperature_C'] for r in tt),default=None),'temp_max_C':max((r['temperature_C'] for r in tt),default=None)})
+          audit={'axes':axes,'upper_axes':upper,'y_top':y_top,'y_bottom':y_bottom,'ticks':ticksets,'first_dates':[d.isoformat() for d in first_dates],
+                 'complex_paths':complex_paths,'summary':summary}
+          (out/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Meng vector-weather reconstruction','',f'- detected x axes: `{axes}`',f'- y calibration: top={y_top:.3f}->40, bottom={y_bottom:.3f}->0',
+              f'- tick sets: `{ticksets}`',f'- complex temperature paths: `{complex_paths}`','',
+              '|Year|Rain events|Digitized rain mm|Guo reported mm|Difference mm|Temperature days|T min|T max|','|---:|---:|---:|---:|---:|---:|---:|---:|']
+          for s in summary:
+              md.append(f"|{s['year']}|{s['rain_events']}|{s['digitized_rain_sum_mm']:.2f}|{s['Guo_reported_growth_rain_mm']:.2f}|{s['difference_mm']:+.2f}|{s['temp_days']}|{s['temp_min_C']:.2f}|{s['temp_max_C']:.2f}|")
+          md += ['','The rain-sum comparison is the primary internal validation of coordinate calibration. Large mismatch means the bar/axis mapping must be revised before DSSAT use.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          print('RAIN_SAMPLE',rain[:20])
+          print('TEMP_SAMPLE',temp[:10])
+          PY
+
+      - name: Commit reconstructed series
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng_weather_series
+          if ! git diff --cached --quiet; then
+            git commit -m 'Reconstruct Shihezi same-trial weather from vector figure'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
