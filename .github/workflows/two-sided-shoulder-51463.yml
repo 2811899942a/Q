@@ -1,0 +1,46 @@
+name: Fit Urumqi 51463 two-sided hot shoulder
+
+on:
+  push:
+    branches:
+      - research/dssat-dtr-matrix
+    paths:
+      - 'research/dssat_dtr/scripts/fit_two_sided_hot_shoulder_51463.py'
+      - '.github/workflows/two-sided-shoulder-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fit-shoulder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fit two-sided shoulder model
+        run: python research/dssat_dtr/scripts/fit_two_sided_hot_shoulder_51463.py
+      - name: Show result
+        run: |
+          cat research/dssat_dtr/data/processed_51463/README_TWO_SIDED_SHOULDER.md
+          echo '--- by DTR ---'
+          cat research/dssat_dtr/data/processed_51463/two_sided_shoulder_by_dtr.csv
+          echo '--- by hour ---'
+          cat research/dssat_dtr/data/processed_51463/two_sided_shoulder_by_hour.csv
+      - name: Commit result
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_51463
+          if git diff --cached --quiet; then
+            echo 'No changes.'
+          else
+            git commit -m 'Validate Urumqi two-sided hot-shoulder narrowing'
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
