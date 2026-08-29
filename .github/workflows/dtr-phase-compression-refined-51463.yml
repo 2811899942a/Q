@@ -1,0 +1,42 @@
+name: Refine Urumqi DTR phase compression
+
+on:
+  push:
+    branches:
+      - research/dssat-dtr-matrix
+    paths:
+      - 'research/dssat_dtr/scripts/refine_dtr_phase_compression_51463.py'
+      - '.github/workflows/dtr-phase-compression-refined-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refine phase-compression search
+        run: python research/dssat_dtr/scripts/refine_dtr_phase_compression_51463.py
+      - name: Show refined result
+        run: |
+          cat research/dssat_dtr/data/processed_51463/README_DTR_PHASE_COMPRESSION_REFINED.md
+          echo '--- by DTR ---'
+          cat research/dssat_dtr/data/processed_51463/dtr_phase_compression_refined_by_dtr.csv
+      - name: Commit refined results
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_51463
+          if git diff --cached --quiet; then
+            echo 'No changes.'
+          else
+            git commit -m 'Refine Urumqi DTR phase compression'
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
