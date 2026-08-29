@@ -1,0 +1,40 @@
+name: Fit Urumqi 51463 shoulder-skew HTEMP
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/fit_shoulder_skew_htemp_51463.py'
+      - '.github/workflows/shoulder-skew-htemp-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fit-shoulder-skew:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fit shoulder-skew model
+        run: python research/dssat_dtr/scripts/fit_shoulder_skew_htemp_51463.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_SHOULDER_SKEW_HTEMP.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_SHOULDER_SKEW_HTEMP.md \
+                  research/dssat_dtr/data/processed_51463/shoulder_skew_parameters.csv \
+                  research/dssat_dtr/data/processed_51463/shoulder_skew_validation.csv \
+                  research/dssat_dtr/data/processed_51463/shoulder_skew_validation_by_dtr.csv \
+                  research/dssat_dtr/data/processed_51463/shoulder_skew_validation_by_hour.csv
+          git diff --cached --quiet || git commit -m 'Add shoulder-skew HTEMP results'
+          git push origin HEAD:research/dssat-dtr-matrix
