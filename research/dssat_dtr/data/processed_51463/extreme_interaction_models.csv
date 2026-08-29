@@ -1,0 +1,5 @@
+﻿model,features,coefficients,val_all_rmse,val_all_mae,val_all_bias,val_high_dtr_rmse,val_high_dtr_mae,val_high_dtr_bias
+DTR,dtrplus,1.60332;2.16400,2.9685,2.1526,0.0568,4.7954,3.9976,0.8416
+DTR+HOT,dtrplus+hot,1.63187;2.20355;-0.26126,2.9861,2.1563,0.0142,4.8162,4.0063,0.7295
+DTR+COLD,dtrplus+cold,1.60639;2.16645;-0.01264,2.9692,2.1527,0.0575,4.7966,3.9985,0.8457
+DTR+HOT+COLD,dtrplus+hot+cold,1.63753;2.20825;-0.26375;-0.02222,2.9874,2.1566,0.015,4.8184,4.0081,0.7357
