@@ -79,9 +79,10 @@ jobs:
           cd "$PREFIX/Maize"
           "$PREFIX/dscsm048" A UFGA8201.MZX > M0_RUN_STDOUT.txt 2>&1
           cat M0_RUN_STDOUT.txt
+          echo '===== GENERATED OUT FILES ====='
+          find . -maxdepth 1 -type f -name '*.OUT' -printf '%f\n' | sort
           test -s Summary.OUT
           test -s PlantGro.OUT
-          test -s Overview.OUT
 
       - name: Freeze M0 outputs and provenance
         shell: bash
@@ -91,7 +92,9 @@ jobs:
           DEST="$GITHUB_WORKSPACE/project/research/dssat_dtr/data/dssat485_m0_official"
           mkdir -p "$DEST"
           cd "$PREFIX/Maize"
-          cp Summary.OUT PlantGro.OUT Overview.OUT M0_RUN_STDOUT.txt "$DEST/"
+          cp Summary.OUT PlantGro.OUT M0_RUN_STDOUT.txt "$DEST/"
+          if [ -s Overview.OUT ]; then cp Overview.OUT "$DEST/"; fi
+          find . -maxdepth 1 -type f -name '*.OUT' -printf '%f\n' | sort > "$DEST/M0_OUT_FILES.txt"
           sha256sum ./*.OUT | sort > "$DEST/M0_OUT_SHA256.txt"
           {
             echo '# DSSAT v4.8.5.0 untouched M0 maize regression'
@@ -105,7 +108,7 @@ jobs:
             echo '- Official weather: `Weather/UFGA8201.WTH`'
             echo '- Run mode: `A`'
             echo
-            echo 'The upstream source was compiled from the frozen commit, installed into a clean Linux prefix, combined with the matching frozen data repository, and the official UFGA8201 maize installation test was executed. `Summary.OUT`, `PlantGro.OUT`, and `Overview.OUT` were required to exist and be non-empty.'
+            echo 'The untouched upstream source was compiled from the frozen commit, installed into a clean Linux prefix, combined with the matching frozen data repository, and the official UFGA8201 maize installation test was executed. `Summary.OUT` and `PlantGro.OUT` are the hard end-to-end acceptance outputs because the upstream data README explicitly identifies them as expected test outputs. Other `.OUT` files are inventoried and hashed but are not required to exist.'
             echo
             echo '## Toolchain'
             echo '```text'
@@ -114,7 +117,7 @@ jobs:
             echo '```'
             echo
             echo '## Output snapshot'
-            echo 'The full text snapshots of `Summary.OUT`, `PlantGro.OUT`, and `Overview.OUT` are stored beside this file. SHA-256 hashes for every generated `.OUT` file are in `M0_OUT_SHA256.txt`.'
+            echo 'The full text snapshots of `Summary.OUT` and `PlantGro.OUT` are stored beside this file. `M0_OUT_FILES.txt` inventories every generated `.OUT`; `M0_OUT_SHA256.txt` records SHA-256 hashes for every generated `.OUT` file.'
           } > "$DEST/README_M0_OFFICIAL_485.md"
 
       - name: Upload complete official output set
