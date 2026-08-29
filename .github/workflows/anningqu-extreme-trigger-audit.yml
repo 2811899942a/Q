@@ -1,0 +1,97 @@
+name: Anningqu Extreme-Temperature Trigger Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/anningqu-extreme-trigger-audit.yml'
+      - 'research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2101.WTH'
+      - 'research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2201.WTH'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Count CERES extreme-DTT and M15 high-DTR trigger days
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from datetime import date, timedelta
+          import calendar,csv
+
+          TBASE=8.0; DOPT=34.0; DTRC=14.8
+          sow=[('A',4,21,9,4),('B',4,26,9,7),('C',5,6,9,15),('D',5,16,9,27),('E',5,26,10,13)]
+
+          def read_wth(path,year):
+              out={}
+              for line in Path(path).read_text().splitlines():
+                  s=line.strip()
+                  if not s or s[0] in '*!@': continue
+                  p=s.split()
+                  if len(p)<5 or not p[0].isdigit(): continue
+                  code=p[0]; yy=int(code[:2]); doy=int(code[2:])
+                  if 2000+yy!=year: continue
+                  d=date(year,1,1)+timedelta(days=doy-1)
+                  out[d]={'srad':float(p[1]),'tmax':float(p[2]),'tmin':float(p[3]),'rain':float(p[4])}
+              return out
+
+          rows=[]; monthly={}
+          for year in (2021,2022):
+              w=read_wth(f'research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH{year%100:02d}01.WTH',year)
+              for code,sm,sd,hm,hd in sow:
+                  start=date(year,sm,sd); end=date(year,hm,hd)
+                  ds=[d for d in sorted(w) if start<=d<=end]
+                  low=[d for d in ds if w[d]['tmin']<TBASE]
+                  high=[d for d in ds if w[d]['tmax']>DOPT]
+                  ext=[d for d in ds if w[d]['tmin']<TBASE or w[d]['tmax']>DOPT]
+                  dtr=[d for d in ds if w[d]['tmax']-w[d]['tmin']>DTRC]
+                  both=[d for d in ext if w[d]['tmax']-w[d]['tmin']>DTRC]
+                  rows.append({'year':year,'sowing':code,'start':start.isoformat(),'end':end.isoformat(),'days':len(ds),
+                               'low_days':len(low),'high_days':len(high),'extreme_days':len(ext),
+                               'm15_high_dtr_days':len(dtr),'extreme_and_high_dtr':len(both),
+                               'extreme_pct':100*len(ext)/len(ds),'overlap_pct_of_extreme':100*len(both)/len(ext) if ext else 0})
+              for d,v in w.items():
+                  if date(year,4,1)<=d<=date(year,10,31):
+                      k=(year,d.month); z=monthly.setdefault(k,dict(n=0,low=0,high=0,ext=0,dtr=0,both=0))
+                      z['n']+=1
+                      lo=v['tmin']<TBASE; hi=v['tmax']>DOPT; ex=lo or hi; dr=v['tmax']-v['tmin']>DTRC
+                      z['low']+=lo; z['high']+=hi; z['ext']+=ex; z['dtr']+=dr; z['both']+=ex and dr
+
+          out=Path('research/dssat_dtr/data/anningqu/extreme_trigger_audit'); out.mkdir(parents=True,exist_ok=True)
+          with (out/'season_trigger_counts.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              wr=csv.DictWriter(f,fieldnames=list(rows[0])); wr.writeheader(); wr.writerows(rows)
+
+          md=['# Anningqu CERES extreme-DTT trigger audit','',
+              f'Frozen thresholds used by the current proxy ecotype: TBASE={TBASE:.1f} C, DOPT={DOPT:.1f} C. Frozen M15 weather trigger: DTR>{DTRC:.1f} C (with CLOUDS>0 additionally required inside source code).','',
+              'Season windows use the five public Tang et al. sowing/harvest calendars and are a trigger-frequency audit, not a phenology calibration.','',
+              '|Year|Sow|Window days|Tmin<8|Tmax>34|CERES extreme|DTR>14.8|Extreme & DTR>14.8|Extreme %|Overlap %|',
+              '|---:|:--:|---:|---:|---:|---:|---:|---:|---:|---:|']
+          for r in rows:
+              md.append(f"|{r['year']}|{r['sowing']}|{r['days']}|{r['low_days']}|{r['high_days']}|{r['extreme_days']}|{r['m15_high_dtr_days']}|{r['extreme_and_high_dtr']}|{r['extreme_pct']:.1f}|{r['overlap_pct_of_extreme']:.1f}|")
+          md += ['','## April-October monthly diagnostic','',
+                 '|Year|Month|Days|Tmin<8|Tmax>34|Extreme|DTR>14.8|Extreme & DTR>14.8|',
+                 '|---:|:---:|---:|---:|---:|---:|---:|---:|']
+          for (y,m),z in sorted(monthly.items()):
+              md.append(f"|{y}|{calendar.month_abbr[m]}|{z['n']}|{z['low']}|{z['high']}|{z['ext']}|{z['dtr']}|{z['both']}|")
+          md += ['','Interpretation: `CERES extreme` is exactly the branch where official MZ_PHENOL currently synthesizes a 24-hour sine temperature series. `Extreme & DTR>14.8` is the subset where the frozen M15 high-DTR weather correction can also alter the hourly temperature trajectory (subject to CLOUDS>0).']
+          (out/'README_EXTREME_TRIGGER_AUDIT.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+      - name: Commit trigger audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/anningqu/extreme_trigger_audit
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Anningqu extreme-temperature trigger audit'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
