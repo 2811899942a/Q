@@ -1,0 +1,5 @@
+﻿target,label,breakpoint_all_c,breakpoint_cal_c,breakpoint_val_c,cal_val_abs_diff_c,stable_within_2c,slope_below_all,slope_above_all,sse_reduction_all_pct,delta_aic_all
+morning_bias_c,Morning bias,15.0,15.3,16.5,1.2,YES,-0.1298,-0.0905,0.0254,3.272
+afternoon_bias_c,Afternoon bias,14.6,14.9,13.9,1.0,YES,0.0199,1.7337,12.3315,-372.9226
+asymmetry_gap_c,Afternoon-minus-morning bias,14.5,14.8,14.0,0.8,YES,0.1438,1.7874,11.9836,-361.3246
+daily_rmse_c,Daily RMSE,14.3,14.7,13.5,1.2,YES,0.0612,1.1047,15.1594,-467.3236
