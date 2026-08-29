@@ -1,0 +1,2 @@
+﻿n_days,n_points,n_bootstrap,official_rmse,m10_rmse,observed_improvement_pct,bootstrap_median_improvement_pct,ci2_5_improvement_pct,ci97_5_improvement_pct,ci2_5_rmse_reduction_c,ci97_5_rmse_reduction_c,prob_improvement_gt0
+123,975,10000,5.121511802637366,4.419556035297748,13.706026548218444,13.649780013962507,10.755498863651148,16.542882994089254,0.5205830841768629,0.8898127092183643,1.0
