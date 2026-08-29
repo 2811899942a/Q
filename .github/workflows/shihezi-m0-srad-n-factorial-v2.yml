@@ -60,34 +60,32 @@ jobs:
               out.append(line); j+=1
           script='\n'.join(out)+'\n'
 
-          # Preserve V1 code and change only the engineering pieces that failed.
           script=script.replace("m0_srad_n_factorial')", "m0_srad_n_factorial_v2')")
-          script=script.replace('# Shihezi M0 SRAD x nitrogen source-gap factorial',
-                                '# Shihezi M0 SRAD x nitrogen source-gap factorial V2')
+          script=script.replace('# Shihezi M0 SRAD x nitrogen source-gap factorial', '# Shihezi M0 SRAD x nitrogen source-gap factorial V2')
           script=script.replace('README_M0_SRAD_N_FACTORIAL.md','README_M0_SRAD_N_FACTORIAL_V2.md')
-          script=script.replace('CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL.md',
-                                'CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL_V2.md')
-          script=script.replace('# M0 SRAD x N factorial checkpoint',
-                                '# M0 SRAD x N factorial V2 checkpoint')
+          script=script.replace('CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL.md','CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL_V2.md')
+          script=script.replace('# M0 SRAD x N factorial checkpoint','# M0 SRAD x N factorial V2 checkpoint')
 
-          # Exact frozen V4 irrigation dates, represented in DSSAT YYDDD format.
           anchor='    def finite_n(xfile,total_n):'
-          inject="""    fert_dates={
-        2019:['19123','19165','19173','19182','19189','19196','19203','19210','19221','19235'],
-        2020:['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237'],
-    }
-
-    def finite_n(xfile,total_n):"""
+          inject=(
+              "    fert_dates={\n"
+              "        2019:['19123','19165','19173','19182','19189','19196','19203','19210','19221','19235'],\n"
+              "        2020:['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237'],\n"
+              "    }\n\n"
+              "    def finite_n(xfile,total_n):"
+          )
           if anchor not in script:
               raise RuntimeError('finite_n definition anchor missing')
           script=script.replace(anchor,inject,1)
 
           old='        dates=irrigation_dates(txt)'
-          new="""        yy=int(xfile.stem[4:6])
-        year=2000+yy
-        dates=fert_dates[year]
-        if len(dates)!=10:
-            raise RuntimeError(f'{xfile.name}: frozen V4 fertilizer-date count != 10')"""
+          new=(
+              "        yy=int(xfile.stem[4:6])\n"
+              "        year=2000+yy\n"
+              "        dates=fert_dates[year]\n"
+              "        if len(dates)!=10:\n"
+              "            raise RuntimeError(f'{xfile.name}: frozen V4 fertilizer-date count != 10')"
+          )
           if old not in script:
               raise RuntimeError('V1 irrigation_dates call anchor missing')
           script=script.replace(old,new,1)
