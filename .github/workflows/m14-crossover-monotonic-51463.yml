@@ -1,0 +1,50 @@
+name: Fit M14 calibration-crossover monotonic HTEMP
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/fit_m14_crossover_monotonic_cloud_warp_51463.py'
+      - '.github/workflows/m14-crossover-monotonic-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fit-m14:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fit M14 crossover monotonic model
+        run: python research/dssat_dtr/scripts/fit_m14_crossover_monotonic_cloud_warp_51463.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_M14_CROSSOVER_MONOTONIC.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_M14_CROSSOVER_MONOTONIC.md \
+                  research/dssat_dtr/data/processed_51463/m14_calibration_crossover.csv \
+                  research/dssat_dtr/data/processed_51463/m14_parameters.csv \
+                  research/dssat_dtr/data/processed_51463/m14_validation.csv \
+                  research/dssat_dtr/data/processed_51463/m14_by_dtr.csv \
+                  research/dssat_dtr/data/processed_51463/m14_by_hour.csv \
+                  research/dssat_dtr/data/processed_51463/m14_by_cloud_strata.csv \
+                  research/dssat_dtr/data/processed_51463/m14_by_year.csv \
+                  research/dssat_dtr/data/processed_51463/m14_shape_checks.csv
+          if git diff --cached --quiet; then
+            echo 'No result changes.'
+          else
+            git commit -m 'Add M14 crossover monotonic HTEMP results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
