@@ -1,0 +1,2 @@
+﻿source_station,source_calibration,target_station,target_validation,dtr_threshold_c,alpha_sunset,validation_shape_violations,validation_ts_caps
+51463599999,2000-2016,51463099999,2017-2024,14.8,7.809408336409373,0,10
