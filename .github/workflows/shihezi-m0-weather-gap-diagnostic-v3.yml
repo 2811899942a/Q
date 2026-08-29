@@ -1,0 +1,102 @@
+name: Shihezi M0 Weather Gap Diagnostic V3
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-weather-gap-diagnostic-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-weather-v3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_weather_v3.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run patched audited weather diagnostic
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          src=Path('.github/workflows/shihezi-m0-weather-gap-diagnostic-v2.yml').read_text().splitlines()
+          marker='      - name: Build audited physical weather scenarios and run M0'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          script='\n'.join(out)+'\n'
+
+          old="""    if len(vals)<300:\n        raise RuntimeError(f'Unexpected WTH data count {len(vals)} in {p}')"""
+          new="""    if not vals:\n        raise RuntimeError(f'No valid WTH data rows in {p}')"""
+          if old not in script:
+              raise RuntimeError('read_wth row-count anchor not found')
+          script=script.replace(old,new,1)
+
+          old2="""    if changed<300: raise RuntimeError(f'Only {changed} WTH rows changed in {p}')"""
+          new2="""    if changed == 0: raise RuntimeError(f'No WTH rows changed in {p}')"""
+          if old2 not in script:
+              raise RuntimeError('edit_wth row-count anchor not found')
+          script=script.replace(old2,new2,1)
+
+          anchor="""    b=A['BASE',year]\n    if abs(A['RAIN_MATCH',year]['sum_rain']-b['sum_rain'])<1.0:"""
+          repl="""    b=A['BASE',year]\n    for sc in scenarios:\n        if A[sc,year]['n'] != b['n']:\n            raise RuntimeError(f'WTH row-count mismatch for {sc} {year}: {A[sc,year][\"n\"]} vs BASE {b[\"n\"]}')\n    if abs(A['RAIN_MATCH',year]['sum_rain']-b['sum_rain'])<1.0:"""
+          if anchor not in script:
+              raise RuntimeError('structural row-count insertion anchor not found')
+          script=script.replace(anchor,repl,1)
+
+          # Rename checkpoint title to V3 while preserving the same canonical output directory.
+          script=script.replace('Weather-gap V2 checkpoint','Weather-gap V3 checkpoint')
+          script=script.replace('CHECKPOINT_20260829_WEATHER_GAP_V2.md','CHECKPOINT_20260829_WEATHER_GAP_V3.md')
+          script=script.replace('diagnostic V2 — audited active WTH','diagnostic V3 — audited active WTH')
+          script=script.replace('V2 is accepted for weather attribution','V3 is accepted for weather attribution')
+
+          p=Path('/tmp/run_weather_v3.sh')
+          p.write_text(script)
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Commit V3 results and checkpoint
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_weather_gap_diagnostic_v2 research/dssat_dtr/checkpoints/CHECKPOINT_20260829_WEATHER_GAP_V3.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add audited Shihezi M0 weather-gap diagnostic V3 results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
