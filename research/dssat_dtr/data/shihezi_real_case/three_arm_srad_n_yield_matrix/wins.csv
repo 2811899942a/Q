@@ -1,0 +1,6 @@
+﻿scenario,M15_better_abs_error_vs_M0_of8,M15_better_abs_error_vs_H0TT_of8
+RAW_N_OFF,4,0
+SRAD19P8_N_OFF,2,6
+RAW_N129_STAGE,1,8
+SRAD19P8_N129_STAGE,0,8
+SRAD19P8_N193_STAGE,4,8
