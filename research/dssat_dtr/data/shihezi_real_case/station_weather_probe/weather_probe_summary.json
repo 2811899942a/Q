@@ -1,0 +1,86 @@
+{
+  "station_metadata_matches": [
+    {
+      "USAF": "513560",
+      "WBAN": "99999",
+      "STATION NAME": "SHIHEZI",
+      "CTRY": "CH",
+      "STATE": "",
+      "ICAO": "",
+      "LAT": "+44.300",
+      "LON": "+086.033",
+      "ELEV(M)": "+0457.0",
+      "BEGIN": "19560820",
+      "END": "19971231"
+    }
+  ],
+  "files": {
+    "isd-history.csv": 2914601
+  },
+  "GSOD": {
+    "2019": {
+      "n_rows": 0,
+      "n_tmax": 0,
+      "n_tmin": 0,
+      "n_prcp": 0,
+      "mean_TMAX_C": null,
+      "mean_TMIN_C": null,
+      "total_PRCP_mm": null,
+      "mean_SRAD": null
+    },
+    "2020": {
+      "n_rows": 0,
+      "n_tmax": 0,
+      "n_tmin": 0,
+      "n_prcp": 0,
+      "mean_TMAX_C": null,
+      "mean_TMIN_C": null,
+      "total_PRCP_mm": null,
+      "mean_SRAD": null
+    }
+  },
+  "GHCN": {
+    "2019": {
+      "n_rows": 0,
+      "n_tmax": 0,
+      "n_tmin": 0,
+      "n_prcp": 0,
+      "mean_TMAX_C": null,
+      "mean_TMIN_C": null,
+      "total_PRCP_mm": null,
+      "mean_SRAD": null
+    },
+    "2020": {
+      "n_rows": 0,
+      "n_tmax": 0,
+      "n_tmin": 0,
+      "n_prcp": 0,
+      "mean_TMAX_C": null,
+      "mean_TMIN_C": null,
+      "total_PRCP_mm": null,
+      "mean_SRAD": null
+    }
+  },
+  "POWER": {
+    "2019": {
+      "n_rows": 124,
+      "n_tmax": 124,
+      "n_tmin": 124,
+      "n_prcp": 124,
+      "mean_TMAX_C": 31.48483870967742,
+      "mean_TMIN_C": 18.046290322580642,
+      "total_PRCP_mm": 93.41,
+      "mean_SRAD": 22.949435483870968
+    },
+    "2020": {
+      "n_rows": 123,
+      "n_tmax": 123,
+      "n_tmin": 123,
+      "n_prcp": 123,
+      "mean_TMAX_C": 31.650731707317075,
+      "mean_TMIN_C": 18.288048780487802,
+      "total_PRCP_mm": 118.84,
+      "mean_SRAD": 23.62178861788618
+    }
+  }
+}
