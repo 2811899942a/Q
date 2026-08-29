@@ -18,10 +18,16 @@ M15 behavior:
   corrected sunset anchor TS1 = max(TMIN, TS0 - ALPHA*(DTR-DTRC)*CLOUDS).
 - Night: official B=2.2 exponential form is retained but re-anchored to TS1 and
   TMIN, preserving the original decay structure.
+
+DSSAT v4.8.5.0 HMET.for contains legacy single-byte characters (for example the
+degree symbol). Latin-1 is therefore used as a lossless one-byte text mapping so
+that untouched upstream bytes are preserved exactly outside the deliberate patch.
 """
 from __future__ import annotations
 import argparse
 from pathlib import Path
+
+SOURCE_ENCODING = "latin-1"
 
 EXTERNAL_OLD = "      EXTERNAL HANG, HTEMP, VPSAT, HWIND, HRAD, FRACD, HPAR"
 EXTERNAL_NEW = """      EXTERNAL HANG, HTEMP, HTEMP_DTRCLOUD, VPSAT, HWIND, HRAD,
@@ -133,7 +139,7 @@ def main() -> None:
     ap.add_argument("source_root", type=Path)
     args = ap.parse_args()
     path = args.source_root / "Weather" / "HMET.for"
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding=SOURCE_ENCODING)
 
     if "SUBROUTINE HTEMP_DTRCLOUD" in text:
         raise SystemExit("M15 patch already present; refusing a second application")
@@ -147,14 +153,14 @@ def main() -> None:
     text = text.replace(EXTERNAL_OLD, EXTERNAL_NEW)
     text = text.replace(CALL_OLD, CALL_NEW)
     text = text.replace(MARKER, SUBROUTINE + MARKER)
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding=SOURCE_ENCODING)
 
     # Post-write structural assertions.
-    out = path.read_text(encoding="utf-8")
+    out = path.read_text(encoding=SOURCE_ENCODING)
     assert out.count("CALL HTEMP_DTRCLOUD(") == 1
     assert out.count("SUBROUTINE HTEMP_DTRCLOUD(") == 1
     assert "PARAMETER (DTRC=14.8, ALPHA=7.8094)" in out
-    print(f"Applied M15 patch to {path}")
+    print(f"Applied M15 patch to {path} using lossless {SOURCE_ENCODING} source mapping")
 
 if __name__ == "__main__":
     main()
