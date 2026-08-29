@@ -1,0 +1,140 @@
+name: Meng Weather Series Reconstruct V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/meng-weather-series-reconstruct-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Convert vector primitives to dated weather series V2
+        run: |
+          set -euo pipefail
+          python -m pip install -q pymupdf
+          OUT='research/dssat_dtr/data/shihezi_real_case/meng_weather_series_v2'
+          mkdir -p "$OUT" /tmp/mseries2
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132' -o /tmp/mseries2/meng.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import pymupdf as fitz, collections, csv, json, math
+          from datetime import date,timedelta
+          out=Path('research/dssat_dtr/data/shihezi_real_case/meng_weather_series_v2')
+          doc=fitz.open('/tmp/mseries2/meng.pdf'); page=doc[20]
+          drawings=page.get_drawings()
+          axes=[]; single=[]
+          for idx,d in enumerate(drawings):
+              items=d.get('items',[])
+              if d.get('type')!='s' or len(items)!=1 or items[0][0]!='l': continue
+              _,p1,p2=items[0]; single.append((idx,d,p1,p2))
+              if abs(p1.y-p2.y)<0.05 and 420<p1.y<432 and abs(p2.x-p1.x)>100 and abs(float(d.get('width') or 0)-0.72)<0.05:
+                  axes.append((idx,min(p1.x,p2.x),max(p1.x,p2.x),(p1.y+p2.y)/2))
+          axes=sorted(axes,key=lambda z:z[1])[:2]
+          if len(axes)!=2: raise RuntimeError(f'Expected exactly 2 x axes, got {axes}')
+          y_bottom=sum(a[3] for a in axes)/2
+          upper=[]
+          for idx,d,p1,p2 in single:
+              if abs(p1.y-p2.y)<0.05 and 235<p1.y<255 and abs(p2.x-p1.x)>100 and abs(float(d.get('width') or 0)-0.72)<0.05:
+                  upper.append((idx,min(p1.x,p2.x),max(p1.x,p2.x),(p1.y+p2.y)/2))
+          y_top=min(upper,key=lambda z:abs(z[3]-245.04))[3] if upper else 245.04
+          ticksets=[]
+          for _,x0,x1,yb in axes:
+              ticks=[]
+              for idx,d,p1,p2 in single:
+                  wid=float(d.get('width') or 0)
+                  length=abs(p2.y-p1.y)
+                  if abs(wid-0.72)<0.05 and abs(p1.x-p2.x)<0.05 and min(abs(p1.y-yb),abs(p2.y-yb))<0.2 and 2.5<=length<=4.5 and x0-1<=p1.x<=x1+1:
+                      ticks.append((p1.x,idx,min(p1.y,p2.y),max(p1.y,p2.y)))
+              # deduplicate x positions
+              uniq=[]
+              for t in sorted(ticks):
+                  if not uniq or abs(t[0]-uniq[-1][0])>0.2: uniq.append(t)
+              ticksets.append(uniq)
+          if any(len(t)<5 for t in ticksets): raise RuntimeError(f'Major ticks not recovered: {ticksets}')
+          # Use first five month-start-like major ticks only. Figure labels decode as 5/2..9/2 and 5/4..9/4.
+          ticksets=[t[:5] for t in ticksets]
+          first_dates=[date(2019,5,2),date(2020,5,4)]
+          def month_date(first,i): return date(first.year,first.month+i,first.day)
+          def x_to_date(x,ticks,first):
+              xs=[t[0] for t in ticks]; dates=[month_date(first,i) for i in range(len(xs))]
+              if x<=xs[0]:
+                  slope=(dates[1]-dates[0]).days/(xs[1]-xs[0]); return dates[0]+timedelta(days=round((x-xs[0])*slope))
+              for i in range(len(xs)-1):
+                  if xs[i]<=x<=xs[i+1]:
+                      frac=(x-xs[i])/(xs[i+1]-xs[i]); return dates[i]+timedelta(days=round(frac*(dates[i+1]-dates[i]).days))
+              slope=(dates[-1]-dates[-2]).days/(xs[-1]-xs[-2]); return dates[-1]+timedelta(days=round((x-xs[-1])*slope))
+          def y_to_val(y): return (y_bottom-y)/(y_bottom-y_top)*40.0
+          rain=[]
+          for idx,d in enumerate(drawings):
+              if d.get('type') not in ('f','fs') or not d.get('rect'): continue
+              r=d['rect']; bw=r.x1-r.x0; bh=r.y1-r.y0
+              for panel,(_,x0,x1,yb) in enumerate(axes):
+                  if x0-1<=r.x0 and r.x1<=x1+1 and 0.2<bw<8 and abs(r.y1-yb)<1.5 and bh>0.3:
+                      dt=x_to_date((r.x0+r.x1)/2,ticksets[panel],first_dates[panel])
+                      rain.append({'year':first_dates[panel].year,'date':dt.isoformat(),'rain_mm':y_to_val(r.y0),
+                                   'x_center':(r.x0+r.x1)/2,'bar_height_pdf':bh,'drawing_idx':idx})
+          # Multi-segment black line paths are daily temperature series; 2019 is split over two path objects.
+          points=[]; complex_paths=[]
+          for idx,d in enumerate(drawings):
+              items=d.get('items',[]); nline=sum(1 for it in items if it and it[0]=='l')
+              if d.get('type')!='s' or nline<5 or not d.get('rect') or abs(float(d.get('width') or 0)-0.72)>0.05: continue
+              r=d['rect']; cx=(r.x0+r.x1)/2
+              panel=0 if axes[0][1]-5<=cx<=axes[0][2]+5 else (1 if axes[1][1]-5<=cx<=axes[1][2]+5 else None)
+              if panel is None or r.y0<y_top-5 or r.y1>y_bottom+5: continue
+              complex_paths.append({'idx':idx,'panel':panel,'nline':nline,'rect':[r.x0,r.y0,r.x1,r.y1]})
+              for it in items:
+                  if not it or it[0]!='l': continue
+                  for p in (it[1],it[2]):
+                      points.append((first_dates[panel].year,x_to_date(p.x,ticksets[panel],first_dates[panel]),y_to_val(p.y)))
+          agg=collections.defaultdict(list)
+          for yr,dt,t in points: agg[(yr,dt)].append(t)
+          temp=[]
+          for (yr,dt),vals in sorted(agg.items()):
+              vals=sorted(vals); med=(vals[(len(vals)-1)//2]+vals[len(vals)//2])/2
+              temp.append({'year':yr,'date':dt.isoformat(),'temperature_C':med,'n_vertices':len(vals)})
+          rain=sorted(rain,key=lambda r:(r['year'],r['date'],r['drawing_idx']))
+          with (out/'rain_events.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rain[0])); w.writeheader(); w.writerows(rain)
+          with (out/'temperature_daily.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(temp[0])); w.writeheader(); w.writerows(temp)
+          thesis={2019:96.45,2020:119.88}; summary=[]
+          for yr in (2019,2020):
+              rr=[r for r in rain if r['year']==yr]; tt=[r for r in temp if r['year']==yr]; s=sum(r['rain_mm'] for r in rr)
+              summary.append({'year':yr,'rain_events':len(rr),'digitized_rain_sum_mm':s,'Guo_reported_growth_rain_mm':thesis[yr],
+                              'difference_mm':s-thesis[yr],'temp_days':len(tt),
+                              'temp_min_C':min((r['temperature_C'] for r in tt),default=None),'temp_max_C':max((r['temperature_C'] for r in tt),default=None)})
+          audit={'axes':axes,'y_top':y_top,'y_bottom':y_bottom,'ticks':ticksets,'first_dates':[d.isoformat() for d in first_dates],
+                 'complex_paths':complex_paths,'summary':summary}
+          (out/'audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Meng vector-weather reconstruction V2','',f'- x axes: `{axes}`',f'- y calibration: {y_top:.3f}->40, {y_bottom:.3f}->0',
+              f'- major tick sets: `{ticksets}`',f'- temperature paths: `{complex_paths}`','',
+              '|Year|Rain events|Digitized rain mm|Guo reported mm|Difference|Temp days|T min|T max|','|---:|---:|---:|---:|---:|---:|---:|---:|']
+          for s in summary: md.append(f"|{s['year']}|{s['rain_events']}|{s['digitized_rain_sum_mm']:.2f}|{s['Guo_reported_growth_rain_mm']:.2f}|{s['difference_mm']:+.2f}|{s['temp_days']}|{s['temp_min_C']:.2f}|{s['temp_max_C']:.2f}|")
+          md += ['','Rainfall-sum agreement is the internal validation gate for this vector digitization.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md)); print('RAIN',rain); print('TEMP_HEAD',temp[:15])
+          PY
+
+      - name: Commit reconstructed series V2
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng_weather_series_v2
+          if ! git diff --cached --quiet; then
+            git commit -m 'Reconstruct Shihezi weather from Meng vector figure V2'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
