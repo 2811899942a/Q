@@ -1,150 +1,133 @@
 # DSSAT-DTR Urumqi Research Handoff
 
-Last checkpoint: 2026-08-29 12:55 CST
+Last checkpoint: 2026-08-29 12:59 CST
 Branch: `research/dssat-dtr-matrix`
 Study station: NOAA `51463099999` / GHCN `CHM00051463`, Urumqi
 
-## Current task
+## Current objective
 
-Move the statistically established Urumqi HTEMP mechanism into a reproducible DSSAT source-level experiment. The user has formally chosen **DSSAT v4.8.5.0** as the sole source/data baseline. No local legacy DSSAT project is required at this stage; use official open-source DSSAT and public Urumqi crop/weather data.
+Develop a Urumqi-specific improvement to DSSAT v4.8.5.0 `HTEMP`, derived from local residual mechanisms rather than copying an existing temperature model. Use official open-source DSSAT plus public Urumqi crop/weather data; no user local DSSAT run is currently required.
 
-## Frozen DSSAT v4.8.5.0 baseline
+## Frozen software baseline — PASS
 
-Source repository: `DSSAT/dssat-csm-os`
-- tag: `v4.8.5.0`
-- frozen source commit: `0b91373806786b600d89ccfcfff78fa2f82cb26b`
+Formal source baseline:
+- `DSSAT/dssat-csm-os`
+- tag `v4.8.5.0`
+- commit `0b91373806786b600d89ccfcfff78fa2f82cb26b`
 
-Data repository: `DSSAT/dssat-csm-data`
-- tag: `v4.8.5.0`
-- frozen data commit: `79cb5db71bbca186add92a6a9695866a09c8b51d`
+Formal data baseline:
+- `DSSAT/dssat-csm-data`
+- tag `v4.8.5.0`
+- commit `79cb5db71bbca186add92a6a9695866a09c8b51d`
 
-Formal software regression case:
+Official regression case:
 - `Maize/UFGA8201.MZX`
-- weather: `Weather/UFGA8201.WTH`
+- weather `Weather/UFGA8201.WTH`
+- executable `dscsm048`
 - 6 maize treatments
-- executable: `dscsm048`
 
-Baseline lock file:
-`research/dssat_dtr/dssat485/BASELINE_LOCK.md`
+The corrected GitHub Actions workflow has now passed the complete chain:
+**exact source checkout -> compile/install -> matching official data -> UFGA8201 real execution -> `Summary.OUT`/`PlantGro.OUT` validation -> output inventory/hash -> repository snapshot**.
 
-## M0 software regression status
+Frozen M0 snapshot:
+`research/dssat_dtr/data/dssat485_m0_official/`
 
-The exact frozen DSSAT v4.8.5.0 source successfully compiled in GitHub Actions on Ubuntu 24.04 with GNU Fortran 13.3.0 and CMake. The official `UFGA8201.MZX` experiment also executed and printed all six treatment results.
+## Confirmed Urumqi mechanism
 
-First workflow run was marked failed only because the workflow additionally required `Overview.OUT`, which the run did not generate. `Summary.OUT` and `PlantGro.OUT` existed and passed. This was a test-harness criterion error, not a DSSAT model failure.
-
-The workflow has now been corrected so that:
-- `Summary.OUT` and `PlantGro.OUT` are the hard acceptance outputs;
-- all generated `.OUT` files are inventoried and hashed;
-- optional outputs such as `Overview.OUT` are copied only if they exist.
-
-Second full M0 run is currently executing. Do not declare formal M0 END-TO-END PASS until this same corrected workflow completes successfully and commits the frozen output snapshot.
-
-## Established Urumqi temperature mechanism
-
-Weather/observation base:
-- NOAA ISD `51463099999`, 2000-2024: 72,177 real sub-daily temperatures.
-- GHCN-Daily `CHM00051463`: formal daily Tmax/Tmin/DTR.
-- Original HTEMP benchmark: 55,756 matched points over 7,036 days.
-- 2017-2024 May-Sep official HTEMP RMSE: 2.9469 C.
-- 2017-2024 May-Sep DTR>=15 C official HTEMP RMSE: 5.1215 C.
-
-Formal calibration-only DTR trigger:
+Formal calibration-only trigger:
 `DTRc = 14.8 C`
 
-Mechanism:
+Observed mechanism:
 - below the threshold, official HTEMP is retained;
-- morning cold bias rises gradually but does not show a strong structural breakpoint;
-- above ~14-15 C DTR, afternoon warm bias / hot-shoulder persistence grows sharply;
-- radiation state strongly modulates the magnitude of this high-DTR error.
+- morning cold bias increases gradually with DTR but has no strong breakpoint;
+- once DTR reaches ~14-15 C, afternoon warm bias / hot-temperature persistence grows sharply;
+- radiation state strongly modulates this high-DTR error.
 
-Main-station high-DTR validation radiation strata previously showed afternoon Bias approximately:
+Main-station validation previously showed high-DTR afternoon bias of roughly:
 - low radiation: +10.14 C
-- middle radiation: +4.69 C
+- medium radiation: +4.69 C
 - high radiation: +0.84 C
 
-## M10 statistical reference prototype
+Thus the working mechanism is:
+**DTR identifies the failure regime; radiation/cloudiness controls failure severity.**
 
-M10 uses an external/internal-computable clearness proxy `Kt=SRAD/Ra` and a continuous radiation-deficit gate.
+## Statistical reference M10
 
-Frozen independent validation (2017-2024, DTR>=15 C):
-- Official RMSE: 5.1215 C
-- M10 RMSE: 4.4196 C
-- improvement: 13.71%
-- Bias: +1.2167 -> +0.4936 C
-- R2: 0.5559 -> 0.6107
+M10 (`DTR + Kt` radiative-deficit gate) remains the performance reference.
+
+Independent 2017-2024, DTR>=15 C:
+- official RMSE 5.1215 C
+- M10 RMSE 4.4196 C
+- improvement 13.71%
+- Bias +1.2167 -> +0.4936 C
+- R2 0.5559 -> 0.6107
 
 Robustness:
-- improvement in 5/5 validation years containing high-DTR observations;
-- day-block bootstrap 95% CI for RMSE improvement: 10.76%-16.54%;
-- probability of positive RMSE improvement: 100%.
+- improved 5/5 validation years containing high-DTR observations;
+- paired day-block bootstrap improvement 95% CI = 10.76%-16.54%.
 
-M10 remains the statistical performance reference but is no longer the preferred source implementation because DSSAT already exposes a simpler native radiation variable.
+## DSSAT-native CLOUDS mechanism — retained
 
-## New DSSAT-native finding: CLOUDS can replace Kt
-
-DSSAT v4.8.5.0 `Weather/SOLAR.for` already computes:
-
-`SCLEAR = 0.77 * S0D`
-
-and
-
+DSSAT v4.8.5.0 `SOLAR.for` already calculates:
 `CLOUDS = clamp(1 - SRAD/SCLEAR, 0, 1)`
 
-where `S0D` is the internally computed daily extraterrestrial irradiation. `HMET` already receives `CLOUDS`, `SRAD`, `XLAT`, `DEC`, `ISINB`, and `S0N`; only `HTEMP` currently ignores radiation state.
+`HMET` already receives `CLOUDS`; therefore the radiation mechanism can be implemented without adding a new weather input or Kt calculation.
 
-A source-native mechanism test, M12, retained:
-- the frozen DTR trigger `DTRc=14.8 C`;
-- the same normalized pre-peak and post-peak hot-shoulder bases;
-- only two amplitudes fitted on 2000-2016;
-- no new Kt threshold, no new weather variable, and no validation leakage.
+M12 used this native `CLOUDS` with the DTR trigger and obtained independent high-DTR RMSE:
+`5.1215 -> 4.4332 C`, improvement **13.44%**, R2 `0.5559 -> 0.6163`.
 
-M12 fitted coefficients:
-- `beta_pre = 21.9025 C per C-DTR-excess per unit CLOUDS`
-- `beta_post = 4.6759 C per C-DTR-excess per unit CLOUDS`
+DTR bins all improved:
+- 15-<18 C: 4.8348 -> 4.2753 C
+- 18-<20 C: 6.2900 -> 4.9198 C
+- >=20 C: 7.6018 -> 6.1418 C (sparse extreme group)
 
-M12 independent validation 2017-2024:
-- May-Sep RMSE: 2.9469 -> 2.7563 C = 6.47% improvement
-- DTR>=15 RMSE: 5.1215 -> 4.4332 C = **13.44% improvement**
-- high-DTR Bias: +1.2167 -> +0.6120 C
-- high-DTR R2: 0.5559 -> 0.6163
+This confirms that **DSSAT-native CLOUDS can replace the external Kt mechanism**.
 
-M12 retains essentially all M10 performance while using an existing DSSAT variable.
+## Critical correction: M12 additive formula is rejected for source code
 
-DTR-bin RMSE:
-- 15-<18 C: 4.8348 -> 4.2753 C (~11.6%)
-- 18-<20 C: 6.2900 -> 4.9198 C (~21.8%)
-- >=20 C: 7.6018 -> 6.1418 C (~19.2%; sparse extreme group)
+A full 24-hour physical-shape test was run before Fortran modification. Although M12 has good pointwise RMSE, the direct additive shoulder subtraction is physically invalid.
 
-Radiation/cloud strata on high-DTR validation days:
-- LowCloud: 2.7820 -> 2.7650 C (essentially unchanged)
-- MidCloud: 4.7324 -> 4.2457 C
-- HighCloud: 7.0775 -> 5.7833 C
+Validation 2017-2024 high-DTR days:
+- 130 days checked on a 0.05-h grid;
+- rise non-monotonic on 113 days;
+- fall non-monotonic on 52 days;
+- below-daily-Tmin violations on 37 days;
+- maximum Tmin undershoot >51 C;
+- active-point correction P95 ~9.43 C, maximum ~18.53 C.
 
-Key hours:
-- 14 h RMSE: 4.0302 -> 3.4102 C
-- 17 h RMSE: 3.9514 -> 3.3607 C
-- night/late-evening values are unchanged by construction.
+Therefore:
+- **retain the DTR x CLOUDS mechanism**;
+- **reject the M12 additive mathematical form**;
+- do NOT write M12 directly into `HMET.for`.
 
-## Current decision
+## Current model under test: M13 monotonic CLOUDS shape warp
 
-Promote **M12 DSSAT-native CLOUDS-gated HTEMP** as the preferred source-level candidate. Keep M10 as the statistical reference. The 0.27 percentage-point loss in high-DTR RMSE improvement (13.71% -> 13.44%) is outweighed by cleaner source integration, no new weather input, fewer derived quantities, and slightly higher validation R2.
+M13 keeps the same local mechanism but changes the mathematics to preserve physical shape.
 
-## Immediate next steps
+Rules:
+- DTR<=14.8 C: official HTEMP exactly;
+- pre-peak segment: solar noon -> modeled Tmax;
+- post-peak segment: modeled Tmax -> sunset;
+- all segment endpoint temperatures remain exact anchors;
+- normalized official segment temperature `q` is transformed by `q_new=q^p`;
+- `p = 1 + k*(DTR-DTRc)*CLOUDS`, with k>=0;
+- this construction guarantees monotonic rise/fall and prevents segment overshoot.
 
-1. Complete corrected official v4.8.5.0 M0 end-to-end workflow and freeze output hashes.
-2. After M0 PASS, patch only the v4.8.5.0 Weather temperature pathway:
-   - pass existing `CLOUDS` into `HTEMP` or apply the correction immediately after original HTEMP within `HMET`;
-   - preserve official HTEMP exactly when `DTR<=14.8 C`;
-   - apply the two anchored hot-shoulder corrections only for high-DTR daylight periods.
-3. Compile the modified source in the same GitHub Actions environment.
-4. Run source-level invariants and the official `UFGA8201.MZX` regression case. Florida is a software non-regression test, not Urumqi scientific validation.
-5. Rebuild a Urumqi maize experiment from public data (priority: Anningqu 2021-2022) and public weather/SRAD. No user local run is required unless a later platform-specific deployment is needed.
-6. Compare official v4.8.5.0 versus modified HTEMP for thermal exposure, phenology, biomass/LAI where available, and yield.
+Only `k_pre` and `k_post` are fitted on 2000-2016; 2017-2024 remains independent validation.
 
-## Stop conditions
+M13 GitHub Actions run is currently in progress.
 
-Do not resume broad temperature-formula searching. Stop and ask the user only if:
-- a public-data gap prevents a defensible Anningqu DSSAT reconstruction;
-- source integration changes unexpectedly affect non-high-DTR conditions;
-- crop propagation requires a major modeling choice rather than a technical implementation choice.
+## Immediate next step
+
+1. Read M13 independent validation and physical-shape results.
+2. Retain M13 only if it has zero physical-shape violations and a meaningful high-DTR advantage; do not chase M10/M12 RMSE at the expense of physical validity.
+3. If M13 passes, implement it in the frozen DSSAT v4.8.5.0 Weather pathway using existing `CLOUDS`.
+4. Compile the patched source in the same environment and run the official UFGA8201 regression.
+5. Then reconstruct the public Anningqu 2021-2022 maize experiment for Urumqi crop-response validation.
+
+## Stop / ask-user conditions
+
+Only stop for user input if:
+- public Anningqu data lack a parameter that cannot be defensibly reconstructed;
+- source-level M13 unexpectedly changes low-DTR conditions;
+- crop-response propagation raises a major modeling choice rather than an implementation issue.
