@@ -1,0 +1,33 @@
+name: Shihezi GHCN-Daily 51356 Recovery
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-ghcn-daily-51356.yml'
+      - 'research/dssat_dtr/shihezi/recover_ghcn_daily_51356.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Recover Shihezi WMO 51356 daily station data from GHCN-D
+        run: python research/dssat_dtr/shihezi/recover_ghcn_daily_51356.py
+      - name: Commit recovered GHCN-D data and report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/ghcn_daily_51356
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi 51356 GHCN-Daily recovery results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
