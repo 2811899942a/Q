@@ -1,0 +1,50 @@
+name: Validate Urumqi DTR phase compression
+
+on:
+  push:
+    branches:
+      - research/dssat-dtr-matrix
+    paths:
+      - 'research/dssat_dtr/scripts/test_dtr_phase_compression_51463.py'
+      - '.github/workflows/dtr-phase-compression-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Test DTR-triggered post-peak phase compression
+        run: python research/dssat_dtr/scripts/test_dtr_phase_compression_51463.py
+
+      - name: Show result
+        run: |
+          cat research/dssat_dtr/data/processed_51463/README_DTR_PHASE_COMPRESSION.md
+          echo '--- validation by DTR ---'
+          cat research/dssat_dtr/data/processed_51463/dtr_phase_compression_by_dtr.csv
+          echo '--- validation by hour ---'
+          cat research/dssat_dtr/data/processed_51463/dtr_phase_compression_by_hour.csv
+
+      - name: Commit results
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_51463
+          if git diff --cached --quiet; then
+            echo 'No result changes.'
+          else
+            git commit -m 'Validate Urumqi DTR-triggered phase compression'
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
