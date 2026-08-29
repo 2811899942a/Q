@@ -1,0 +1,35 @@
+name: Shihezi Meng 2021 Upstream Probe
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-meng2021-upstream-probe.yml'
+      - 'research/dssat_dtr/shihezi/probe_meng2021_upstream.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Install PDF text reader
+        run: python -m pip install --quiet pypdf
+      - name: Probe Meng 2021 upstream Shihezi thesis
+        run: python research/dssat_dtr/shihezi/probe_meng2021_upstream.py
+      - name: Commit bounded extracted evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng2021_probe
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Meng 2021 upstream Shihezi evidence probe'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
