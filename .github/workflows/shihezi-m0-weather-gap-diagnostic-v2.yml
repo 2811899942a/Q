@@ -1,0 +1,254 @@
+name: Shihezi M0 Weather Gap Diagnostic V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-weather-gap-diagnostic-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-weather-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_weather_v2.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Build audited physical weather scenarios and run M0
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv, hashlib, json, math, os, re, shutil, subprocess
+
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_weather_gap_diagnostic_v2')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          scenarios=['BASE','RAIN_MATCH','SRAD_19P8','WEATHER_BOTH']
+          srad_factor={2019:19.8/23.3,2020:19.8/24.2}
+          rain_factor={2019:96.45/83.3,2020:119.88/103.1}
+
+          def sha256(p):
+              return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+          def read_wth(p):
+              vals=[]
+              for raw in Path(p).read_text(encoding='latin-1').splitlines():
+                  parts=raw.split()
+                  if len(parts)>=5 and parts[0].isdigit() and len(parts[0])==5:
+                      vals.append((parts[0],float(parts[1]),float(parts[2]),float(parts[3]),float(parts[4])))
+              if len(vals)<300:
+                  raise RuntimeError(f'Unexpected WTH data count {len(vals)} in {p}')
+              return vals
+
+          def audit_wth(p):
+              vals=read_wth(p)
+              return {
+                  'path':str(p),'sha256':sha256(p),'n':len(vals),
+                  'mean_srad':sum(x[1] for x in vals)/len(vals),
+                  'sum_rain':sum(x[4] for x in vals),
+                  'first_date':vals[0][0],'last_date':vals[-1][0]
+              }
+
+          def edit_wth(p, year, use_rain=False, use_srad=False):
+              lines=Path(p).read_text(encoding='latin-1').splitlines(); changed=0; new=[]
+              for raw in lines:
+                  parts=raw.split()
+                  if len(parts)>=5 and parts[0].isdigit() and len(parts[0])==5:
+                      dt,sr,tx,tn,rn=parts[:5]
+                      sr=float(sr); tx=float(tx); tn=float(tn); rn=float(rn)
+                      if use_srad: sr*=srad_factor[year]
+                      if use_rain: rn*=rain_factor[year]
+                      # Keep DSSAT fixed-width-compatible weather layout.
+                      raw=f'{dt:>5s}{sr:6.1f}{tx:6.1f}{tn:6.1f}{rn:6.1f}'
+                      changed+=1
+                  new.append(raw)
+              if changed<300: raise RuntimeError(f'Only {changed} WTH rows changed in {p}')
+              Path(p).write_text('\n'.join(new)+'\n',encoding='latin-1')
+
+          roots={}
+          for sc in scenarios:
+              dst=Path('/tmp')/f'weather_v2_{sc}'
+              if dst.exists(): shutil.rmtree(dst)
+              # Dereference any symlinks so every scenario owns an independent physical Weather tree.
+              shutil.copytree('/tmp/run_M0',dst,symlinks=False)
+              roots[sc]=dst
+
+          for sc in scenarios:
+              if sc=='BASE': continue
+              for year in (2019,2020):
+                  p=roots[sc]/'Weather'/f'SHIH{year%100:02d}01.WTH'
+                  edit_wth(p,year,use_rain=sc in ('RAIN_MATCH','WEATHER_BOTH'),
+                           use_srad=sc in ('SRAD_19P8','WEATHER_BOTH'))
+
+          input_audit=[]
+          for sc in scenarios:
+              root=roots[sc]
+              for year in (2019,2020):
+                  q=audit_wth(root/'Weather'/f'SHIH{year%100:02d}01.WTH')
+                  q.update({'scenario':sc,'year':year})
+                  input_audit.append(q)
+
+          A={(r['scenario'],r['year']):r for r in input_audit}
+          for year in (2019,2020):
+              b=A['BASE',year]
+              if abs(A['RAIN_MATCH',year]['sum_rain']-b['sum_rain'])<1.0:
+                  raise RuntimeError(f'RAIN_MATCH input audit did not alter rainfall for {year}')
+              if abs(A['SRAD_19P8',year]['mean_srad']-b['mean_srad'])<0.5:
+                  raise RuntimeError(f'SRAD_19P8 input audit did not alter SRAD for {year}')
+              if A['WEATHER_BOTH',year]['sha256']==b['sha256']:
+                  raise RuntimeError(f'WEATHER_BOTH hash equals BASE for {year}')
+
+          rows=[]; run_status={}
+          result_root=Path('/tmp/weather_v2_results'); result_root.mkdir(exist_ok=True)
+
+          def parse_summary(path):
+              lines=Path(path).read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=lines[hi]; d=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); tail=names[idx:]
+              z=dict(zip(tail,vals[-len(tail):]))
+              return z,h,d
+
+          for sc in scenarios:
+              root=roots[sc]
+              if Path('/DSSAT48').exists() or Path('/DSSAT48').is_symlink():
+                  subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+              subprocess.run(['sudo','ln','-s',str(root),'/DSSAT48'],check=True)
+
+              # Hard path audit: the active DSSAT weather path must be this scenario's physical file.
+              for year in (2019,2020):
+                  active=Path('/DSSAT48/Weather')/f'SHIH{year%100:02d}01.WTH'
+                  owned=root/'Weather'/active.name
+                  if not os.path.samefile(active,owned):
+                      raise RuntimeError(f'Active WTH path mismatch for {sc} {year}: {active} vs {owned}')
+                  if sha256(active)!=A[sc,year]['sha256']:
+                      raise RuntimeError(f'Active WTH hash mismatch for {sc} {year}')
+
+              try:
+                  od=result_root/sc; od.mkdir(exist_ok=True)
+                  for year,yy in ((2019,'19'),(2020,'20')):
+                      for j,tr in enumerate(('W1','W2','W3','W4'),1):
+                          x=f'SHIH{yy}{j:02d}'
+                          cwd=root/'Maize'
+                          for fn in ('Summary.OUT','PlantGro.OUT','ERROR.OUT','WARNING.OUT'):
+                              p=cwd/fn
+                              if p.exists(): p.unlink()
+                          cp=subprocess.run(['../dscsm048','A',f'{x}.MZX'],cwd=cwd,
+                                            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                          (od/f'{x}.stdout').write_text(cp.stdout)
+                          if cp.returncode!=0 or not (cwd/'Summary.OUT').exists():
+                              raise RuntimeError(f'{sc} {x} failed: {cp.stdout[-2000:]}')
+                          dst=od/f'{x}_Summary.OUT'; shutil.copy2(cwd/'Summary.OUT',dst)
+                          z,h,d=parse_summary(dst)
+                          pred=float(z['HWAM']); ob=obs[year,tr]
+                          rows.append({
+                              'scenario':sc,'year':year,'treatment':tr,
+                              'obs':ob,'HWAM':pred,'error':pred-ob,'ARE_pct':abs(pred-ob)/ob*100,
+                              'SRADA':float(z['SRADA']),'PRCP':float(z['PRCP']),
+                              'ETCM':z.get('ETCM',''),'SWXM':z.get('SWXM','')
+                          })
+                  run_status[sc]='PASS'
+              except Exception as e:
+                  run_status[sc]='FAIL: '+repr(e)
+                  raise
+
+          metrics=[]
+          for sc in scenarios:
+              for year in (2019,2020):
+                  q=[r for r in rows if r['scenario']==sc and r['year']==year]
+                  es=[r['error'] for r in q]; oo=[r['obs'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/len(es)); meanobs=sum(oo)/len(oo)
+                  metrics.append({
+                      'scenario':sc,'year':year,'RMSE_kg_ha':rmse,'RRMSE_pct':rmse/meanobs*100,
+                      'MAE_kg_ha':sum(abs(e) for e in es)/len(es),'Bias_kg_ha':sum(es)/len(es),
+                      'mean_HWAM':sum(r['HWAM'] for r in q)/len(q),
+                      'mean_SRADA':sum(r['SRADA'] for r in q)/len(q),
+                      'mean_PRCP':sum(r['PRCP'] for r in q)/len(q)
+                  })
+
+          M={(r['scenario'],r['year']):r for r in metrics}
+          # Post-run propagation gate. Requested weather changes must appear in DSSAT Summary.OUT.
+          for year in (2019,2020):
+              b=M['BASE',year]
+              if abs(M['RAIN_MATCH',year]['mean_PRCP']-b['mean_PRCP'])<0.5:
+                  raise RuntimeError(f'POST-RUN FAIL: RAIN_MATCH PRCP unchanged for {year}')
+              if abs(M['SRAD_19P8',year]['mean_SRADA']-b['mean_SRADA'])<0.2:
+                  raise RuntimeError(f'POST-RUN FAIL: SRAD_19P8 SRADA unchanged for {year}')
+              if abs(M['WEATHER_BOTH',year]['mean_PRCP']-b['mean_PRCP'])<0.5 or abs(M['WEATHER_BOTH',year]['mean_SRADA']-b['mean_SRADA'])<0.2:
+                  raise RuntimeError(f'POST-RUN FAIL: WEATHER_BOTH did not propagate for {year}')
+
+          with (out/'wth_input_audit.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(input_audit[0])); w.writeheader(); w.writerows(input_audit)
+          with (out/'scenario_rows.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          with (out/'scenario_metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(metrics[0])); w.writeheader(); w.writerows(metrics)
+          (out/'run_status.json').write_text(json.dumps(run_status,indent=2),encoding='utf-8')
+
+          md=['# Shihezi M0 weather source-gap diagnostic V2 — audited active WTH','',
+              'This is a common-arm source-gap diagnostic. Genetics and M15 are untouched. Nitrogen remains disabled to isolate weather forcing.','',
+              '## Input propagation audit','',
+              '|Scenario|Year|WTH mean SRAD|WTH annual RAIN sum|SHA256 prefix|',
+              '|---|---:|---:|---:|---|']
+          for r in input_audit:
+              md.append(f"|{r['scenario']}|{r['year']}|{r['mean_srad']:.3f}|{r['sum_rain']:.2f}|{r['sha256'][:12]}|")
+          md += ['', '## DSSAT crop-period output and yield','',
+                 '|Scenario|Year|RRMSE %|Mean HWAM kg/ha|Bias kg/ha|Summary SRADA|Summary PRCP|',
+                 '|---|---:|---:|---:|---:|---:|---:|']
+          for r in metrics:
+              md.append(f"|{r['scenario']}|{r['year']}|{r['RRMSE_pct']:.3f}|{r['mean_HWAM']:.1f}|{r['Bias_kg_ha']:+.1f}|{r['mean_SRADA']:.2f}|{r['mean_PRCP']:.2f}|")
+          md += ['', '## 2020 effects relative to BASE','']
+          b=M['BASE',2020]
+          for sc in ('RAIN_MATCH','SRAD_19P8','WEATHER_BOTH'):
+              r=M[sc,2020]
+              md.append(f"- {sc}: HWAM {r['mean_HWAM']-b['mean_HWAM']:+.1f} kg/ha; RRMSE {r['RRMSE_pct']-b['RRMSE_pct']:+.3f} percentage points; SRADA {r['mean_SRADA']-b['mean_SRADA']:+.2f}; PRCP {r['mean_PRCP']-b['mean_PRCP']:+.2f} mm.")
+          md += ['', 'V2 is accepted for weather attribution only because both pre-run active-WTH audit and post-run Summary.OUT propagation gates passed.']
+          (out/'README_M0_WEATHER_GAP_V2.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_WEATHER_GAP_V2.md')
+          cp.write_text('# Weather-gap V2 checkpoint\n\n'+ '\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit V2 results and checkpoint
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_weather_gap_diagnostic_v2 research/dssat_dtr/checkpoints/CHECKPOINT_20260829_WEATHER_GAP_V2.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add audited Shihezi M0 weather-gap diagnostic V2'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
