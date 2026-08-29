@@ -1,0 +1,110 @@
+name: Shihezi NOAA 51356 Probe
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-noaa-51356-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Download and audit NOAA Shihezi 51356
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/noaa research/dssat_dtr/data/shihezi_real_case/noaa_51356_probe
+          for Y in 2019 2020; do
+            H="https://www.ncei.noaa.gov/data/global-hourly/access/${Y}/51356099999.csv"
+            G="https://www.ncei.noaa.gov/data/global-summary-of-the-day/access/${Y}/51356099999.csv"
+            hc=$(curl -L -sS --retry 2 -w '%{http_code}' -o "/tmp/noaa/hourly_${Y}.csv" "$H")
+            gc=$(curl -L -sS --retry 2 -w '%{http_code}' -o "/tmp/noaa/gsod_${Y}.csv" "$G")
+            echo "YEAR=$Y HOURLY_HTTP=$hc HBYTES=$(wc -c < /tmp/noaa/hourly_${Y}.csv) GSOD_HTTP=$gc GBYTES=$(wc -c < /tmp/noaa/gsod_${Y}.csv)"
+          done
+          python - <<'PY'
+          from pathlib import Path
+          import csv, collections, math, statistics, json
+          out=Path('research/dssat_dtr/data/shihezi_real_case/noaa_51356_probe')
+          summary=['# NOAA Shihezi 51356 probe','',
+                   'Purpose: test whether NOAA/NCEI Global Hourly exposes real subdaily temperature for WMO 51356 (Shihezi), and compare daily/growing-season aggregates with the Guo thesis.','',
+                   '**Use rule:** hourly temperature can support temperature-shape validation if coverage/QC are acceptable. GSOD precipitation remains a screening comparator only, not a truth source.','']
+          combined=[]
+          for year in (2019,2020):
+              hp=Path(f'/tmp/noaa/hourly_{year}.csv')
+              gp=Path(f'/tmp/noaa/gsod_{year}.csv')
+              # Detect valid CSV rather than trusting HTTP alone.
+              if not hp.exists() or hp.stat().st_size<200 or not hp.read_text(errors='replace').startswith('"STATION"'):
+                  summary += [f'## {year}',f'- Global Hourly unavailable or invalid ({hp.stat().st_size if hp.exists() else 0} bytes).','']
+                  continue
+              rows=list(csv.DictReader(hp.open(encoding='utf-8-sig',errors='replace')))
+              daily=collections.defaultdict(list)
+              lat=set(); lon=set(); elev=set(); names=set()
+              qcount=collections.Counter()
+              for r in rows:
+                  names.add(r.get('NAME','')); lat.add(r.get('LATITUDE','')); lon.add(r.get('LONGITUDE','')); elev.add(r.get('ELEVATION',''))
+                  raw=(r.get('TMP') or '').split(',')
+                  if not raw: continue
+                  try: v=int(raw[0])
+                  except: continue
+                  if abs(v)>=9999: continue
+                  t=v/10.0
+                  d=(r.get('DATE') or '')[:10]
+                  if d: daily[d].append(t)
+                  if len(raw)>1: qcount[raw[1]]+=1
+              days=[]
+              for d,vals in sorted(daily.items()):
+                  days.append({'date':d,'n_temp_obs':len(vals),'tmin_c':min(vals),'tmax_c':max(vals),'tmean_obs_c':sum(vals)/len(vals)})
+              with (out/f'noaa_51356_hourly_derived_daily_{year}.csv').open('w',newline='',encoding='utf-8-sig') as f:
+                  w=csv.DictWriter(f,fieldnames=['date','n_temp_obs','tmin_c','tmax_c','tmean_obs_c']); w.writeheader(); w.writerows(days)
+              growing=[x for x in days if f'{year}-05-01'<=x['date']<=f'{year}-10-31']
+              full24=sum(x['n_temp_obs']>=24 for x in growing)
+              ge8=sum(x['n_temp_obs']>=8 for x in growing)
+              summary += [f'## {year}',
+                          f'- Raw Global Hourly rows: {len(rows)}.',
+                          f'- Station name(s): {sorted(names)}.',
+                          f'- Metadata lat/lon/elev: {sorted(lat)} / {sorted(lon)} / {sorted(elev)}.',
+                          f'- Days with valid temperature: {len(days)}; May-Oct: {len(growing)}.',
+                          f'- May-Oct days with >=24 temperature reports: {full24}; with >=8: {ge8}.',
+                          f'- May-Oct median temperature reports/day: {statistics.median([x["n_temp_obs"] for x in growing]) if growing else 0}.',
+                          f'- Temperature QC code counts: {dict(qcount)}.']
+              # GSOD precipitation is only audited against thesis totals, never treated as exact truth here.
+              if gp.exists() and gp.stat().st_size>200 and gp.read_text(errors='replace').startswith('"STATION"'):
+                  gr=list(csv.DictReader(gp.open(encoding='utf-8-sig',errors='replace')))
+                  pr=[]
+                  for r in gr:
+                      d=r.get('DATE','')
+                      if not (f'{year}-05-01'<=d<=f'{year}-10-31'): continue
+                      try: v=float(r.get('PRCP',''))
+                      except: continue
+                      # Current NCEI GSOD CSV PRCP is in mm. Sentinel is typically 99.99; exclude obvious sentinel.
+                      if v>=99: continue
+                      pr.append(v)
+                  summary.append(f'- GSOD May-Oct PRCP sum (screening only): {sum(pr):.2f} mm over {len(pr)} valid daily values.')
+              thesis={2019:96.45,2020:119.88}[year]
+              summary += [f'- Guo thesis reported growing-season precipitation: {thesis:.2f} mm.','']
+              combined.extend((year,x) for x in growing)
+          (out/'README.md').write_text('\n'.join(summary)+'\n',encoding='utf-8')
+          print('\n'.join(summary))
+          PY
+
+      - name: Commit NOAA probe
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/noaa_51356_probe
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add NOAA Shihezi 51356 hourly temperature probe'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
