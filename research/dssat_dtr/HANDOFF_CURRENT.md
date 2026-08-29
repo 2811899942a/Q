@@ -1,121 +1,162 @@
 # DSSAT-DTR Urumqi Research Handoff
 
-Last checkpoint: 2026-08-29 12:22 CST
+Last checkpoint: 2026-08-29 12:31 CST
 Branch: `research/dssat-dtr-matrix`
 Study station: NOAA `51463099999` / GHCN `CHM00051463`, Urumqi
 
-## Current task
+## What is being done
 
-Develop a Urumqi-specific DSSAT `HTEMP` improvement from local residual structure. The work has moved beyond pure DTR-only curve geometry: the main-station residuals now show that **solar radiation strongly modulates the high-DTR failure regime**. The current priority is to replace the external NASA clear-sky ratio with a DSSAT-internal astronomical clearness index computed from existing `SRAD + latitude + DOY`, then build a DTR-triggered radiation-modulated correction.
+Develop a Urumqi-specific DSSAT `HTEMP` improvement from local observations rather than copying an existing improved temperature model. Formula search is now **stopped** because a statistically robust candidate has been obtained. The next stage is source-level / crop-response propagation, which requires the actual DSSAT weather/project inputs so that the radiation term is taken from the same `SRAD` used by DSSAT rather than the NASA POWER screening series.
 
 ## Confirmed baseline
 
-- NOAA ISD 51463099999, 2000-2024: 72,177 real sub-daily temperature observations.
-- GHCN-Daily CHM00051463 supplies formal Tmax/Tmin/DTR.
-- Original DSSAT `DAYLEN + HTEMP` reproduced with official `A=2.0, B=2.2, C=1.0`.
-- 55,756 observation-model pairs over 7,036 days.
-- Original HTEMP high-DTR (`DTR>=15 C`) error is large; 2017-2024 May-Sep RMSE = **5.1215 C**.
+- NOAA ISD `51463099999`, 2000-2024: **72,177** real sub-daily temperature observations.
+- GHCN-Daily `CHM00051463` supplies formal Tmax/Tmin/DTR.
+- Original DSSAT `DAYLEN + HTEMP` reproduced using official `A=2.0, B=2.2, C=1.0`.
+- **55,756** observation-model pairs over **7,036** days.
+- 2017-2024 May-Sep official DSSAT RMSE ≈ **2.9469 C**.
+- 2017-2024 May-Sep high-DTR (`DTR>=15 C`) official RMSE = **5.1215 C**.
 
-## Formal local DTR threshold
+## Local mechanism found
 
-Exploratory full-period breakpoints clustered near 14.5 C, but formal model development now avoids validation leakage.
+1. DTR-related failure is threshold-like rather than simply linear.
+2. Formal model trigger is based only on 2000-2016 calibration data:
+   - `DTRc = 14.8 C`.
+3. Below this level, official HTEMP is retained.
+4. Above it, the dominant failure is excessive hot-shoulder / afternoon thermal persistence.
+5. DTR alone is insufficient: solar-radiation state strongly controls how severe the high-DTR failure becomes.
 
-Calibration-only (2000-2016) breakpoint used for model triggering:
-- AM-PM asymmetry breakpoint ≈ **14.8 C**.
+Main-station high-DTR validation SRAD stratification showed:
+- low-radiation days: afternoon Bias ≈ **+10.14 C**;
+- middle-radiation days: ≈ **+4.69 C**;
+- high-radiation days: ≈ **+0.84 C**.
 
-Therefore the formal rule is currently:
-- `DTR <= 14.8 C`: retain official DSSAT HTEMP exactly.
-- `DTR > 14.8 C`: allow local structural correction.
+Thus the most defensible local interpretation is:
 
-## Confirmed local residual mechanism
+> DTR identifies the regime in which Parton-Logan becomes vulnerable, while radiative forcing determines the magnitude of the hot-shoulder / afternoon persistence error.
 
-- Morning cold bias increases gradually with DTR but has no strong structural breakpoint.
-- Afternoon warm bias and daily RMSE show a strong breakpoint near 14-15 C.
-- Main error is concentrated in the high-temperature shoulder / afternoon persistence rather than simply Tmax timing.
+## Radiation variable without new DSSAT inputs
 
-## Tested DTR-only structural models
+An internally computable clearness index was tested:
 
-### Fixed PL-XJ A/B/C
-- High-DTR validation improvement only ~5%.
-- Conclusion: fixed parameter regionalization insufficient.
+`Kt = SRAD / Ra`
 
-### One-sided post-peak correction
-- High-DTR RMSE: `5.1215 -> 4.8629 C` (~5.05%).
+where `Ra` is FAO-style extraterrestrial radiation from latitude + DOY. This needs only variables already available to DSSAT (`SRAD`, latitude, date).
 
-### Dynamic A
-- High-DTR RMSE: `5.1215 -> 4.9249 C` (~3.84%).
-- Combining dynamic A + post-peak caused negative bias and was not retained.
+For independent high-DTR error prediction:
+- DTR-only RMSE = 2.6093;
+- `DTR + Kt + interaction` RMSE = **1.8252**;
+- gain = **30.05%**;
+- only 2.30% worse than using an external NASA clear-sky radiation ratio.
 
-### Exploratory two-sided additive shoulder
-- Best DTR-only screening result so far.
-- High-DTR RMSE: `5.1215 -> 4.6567 C` = **9.07% improvement**.
-- Bias: `+1.2167 -> -0.0954 C`.
-- Limitation: `alpha_pre=13.333` is too large / poorly scaled; not acceptable as final formula.
+A separate hard Kt breakpoint was investigated and rejected as a physical threshold because calibration and validation breakpoints were not stable (calibration ~0.70-0.73, validation ~0.52-0.53). Radiation therefore remains a continuous modulator, not a second claimed climate threshold.
 
-### Asymmetric power curvature (formal threshold 14.8 C)
-- `k_rise=0`, `k_fall` hit search upper bound.
-- High-DTR improvement only **2.76%**.
-- Rejected.
+## Model screening history
 
-### Signed-skew basis
-- `beta_rise=1.5515`, `beta_fall=3.0784 C/C-excess`.
-- High-DTR RMSE `5.1215 -> 4.7480 C` = **7.29%**.
-- Better mathematical scaling, but does not beat 9.07% benchmark.
+- Fixed PL-XJ A/B/C regionalization: ~5% high-DTR improvement; insufficient.
+- One-sided post-peak correction: ~5.05%.
+- Dynamic A: ~3.84%.
+- Exploratory two-sided DTR-only shoulder: **9.07%**; useful benchmark but poorly scaled pre-peak coefficient.
+- Asymmetric-power curvature: 2.76%; rejected.
+- Signed-skew: 7.29%; rejected as final.
+- Three-lobe: 6.14%; rejected.
+- Whole-day shoulder contraction + skew: worsened; rejected.
+- M9 DTR + Kt linear modulation: **12.84%**, but overcorrected high-Kt days.
+- M11 nonlinear `(1-Kt)^p` gate: 12.16%; inferior to M10.
 
-### Three-lobe morning/prepeak/postpeak model
-- Morning coefficient fitted to exactly 0.
-- High-DTR RMSE `5.1215 -> 4.8070 C` = **6.14%**; R2 worsened.
-- Rejected.
+## Current accepted statistical prototype: M10
 
-### Whole-day shoulder contraction + skew
-- High-DTR RMSE worsened to **5.2338 C** (-2.19%).
-- Rejected.
+Name: **cross-validated radiative-deficit-gated HTEMP**.
 
-## New major finding: DTR x solar radiation
+Formal trigger:
 
-A separate dense Diwopu sequence first suggested that radiation modulates high-DTR HTEMP failure. This was then independently repeated on the **main station 51463099999** using its existing HTEMP residuals plus NASA POWER daily radiation at 87.6167E, 43.7833N.
+`DTR > 14.8 C`
 
-Main-station matched May-Sep days: **2,867**.
-Calibration: 2000-2016.
-Validation: 2017-2024.
-Formal DTR trigger: 14.8 C (calibration only).
+Radiation gate:
 
-Independent high-DTR daily-RMSE prediction:
+`Rdef = max(0, Kt0 - Kt) / 0.1`
 
-| Error model | High-DTR prediction RMSE | High-DTR R2 |
-|---|---:|---:|
-| DTR only | 2.6093 | -0.1292 |
-| DTR + SRAD | 2.0742 | 0.2864 |
-| DTR + CLEAR | 1.9331 | 0.3802 |
-| DTR + SRAD + interaction | 1.9042 | 0.3986 |
-| **DTR + CLEAR + interaction** | **1.7842** | **0.4720** |
-| FULL | 1.8558 | 0.4287 |
+with `Kt0` selected only within 2000-2016 by leave-one-year-out cross-validation. Current selected value:
 
-Best model improves high-DTR error prediction by **31.62%** relative to DTR-only.
-Afternoon-bias prediction improves by **33.51%**.
+`Kt0 = 0.900`
 
-High-DTR validation stratification by calibration-period SRAD tertiles:
+Important: `Kt0` is treated as a **cross-validated taper scale**, not a universal physical threshold. It reached the current search upper edge, so its exact numerical value should not be overinterpreted until the same test is repeated with the actual DSSAT WTH SRAD series.
 
-| SRAD regime | N | Mean DTR | Mean SRAD | Daily RMSE | Afternoon RMSE | Afternoon Bias |
-|---|---:|---:|---:|---:|---:|---:|
-| Low SRAD | 32 | 16.73 | 12.02 | 7.058 | 10.248 | +10.136 |
-| Mid SRAD | 58 | 16.78 | 21.72 | 4.280 | 4.871 | +4.690 |
-| High SRAD | 33 | 16.24 | 29.30 | 2.428 | 1.324 | +0.837 |
+Daytime shoulder correction:
 
-This is currently the strongest mechanism discovery in the project.
+- pre-peak basis: `Bpre = 4*v*(1-v)` from solar noon to modeled Tmax;
+- post-peak basis: `Bpost = 4*u*(1-u)` from modeled Tmax to sunset;
+- both bases are zero at their endpoints.
 
-## Current interpretation
+Current frozen parameters:
+- `beta_pre = 2.3436078691`
+- `beta_post = 0.4969689850`
 
-DTR identifies when the official Parton-Logan reconstruction enters a failure regime, but **DTR does not uniquely determine the shape error**. Under similarly high DTR, low-radiation days exhibit far stronger afternoon warm bias than high-radiation days. This suggests that the original HTEMP assumption of a fixed smooth daytime thermal trajectory is especially poor when daily thermal amplitude is large but the daily radiative forcing is weak / cloud-modulated.
+The correction is proportional to:
 
-This is attractive for DSSAT because weather files already contain `SRAD`; the final model may require no new external weather input.
+`(DTR-DTRc) * Rdef * B`
 
-## Immediate next step
+and `DTR<=14.8 C` remains effectively official DSSAT.
 
-1. Compute FAO-style extraterrestrial radiation `Ra` from latitude + DOY.
-2. Define an internal clearness index `Kt = SRAD / Ra` using only DSSAT-available variables.
-3. Test whether `DTR + Kt + DTR*Kt` reproduces the NASA CLEAR result on 2017-2024 independent validation.
-4. If yes, build a low-parameter DTR-triggered, Kt-modulated HTEMP correction and compare directly against:
-   - official DSSAT;
-   - 9.07% exploratory DTR-only shoulder benchmark.
-5. Do not modify Fortran until this statistical prototype passes independent validation with clear advantage, stable bias, and no degradation for DTR<=14.8 C.
+## M10 independent validation result
+
+2017-2024 May-Sep:
+- official RMSE: **2.9469 C**
+- M10 RMSE: **2.7526 C**
+- improvement: **6.59%**
+- R2: `0.8029 -> 0.8218`
+
+2017-2024 high-DTR (`DTR>=15 C`):
+- official RMSE: **5.1215 C**
+- M10 RMSE: **4.4196 C**
+- improvement: **13.71%**
+- Bias: `+1.2167 -> +0.4936 C`
+- R2: `0.5559 -> 0.6107`
+
+DTR-stratified validation:
+- 15-<18 C: `4.8348 -> 4.2487 C` (~12.1% improvement)
+- 18-<20 C: `6.2900 -> 4.9652 C` (~21.1%)
+- >=20 C: `7.6018 -> 6.2179 C` (~18.2%; very small sample, treat as extreme-case support only)
+
+Key solar-hour validation:
+- 14 h: `4.0302 -> 3.4072 C`
+- 17 h: `3.9514 -> 3.3391 C`
+
+Kt strata:
+- LowKt: `7.1254 -> 5.8613 C` (strong improvement)
+- MidKt: `4.4053 -> 3.9491 C` (improvement)
+- HighKt: `2.7271 -> 2.7753 C` (small ~1.8% degradation; far smaller than M9 but still a caveat)
+
+## Final frozen-parameter robustness test
+
+No M10 parameter was refitted.
+
+High-DTR validation years with observations:
+- 2020: 11.73% RMSE improvement
+- 2021: 16.70%
+- 2022: 12.57%
+- 2023: 13.83%
+- 2024: 12.63%
+
+M10 improves **5/5** validation years containing high-DTR observations.
+
+Paired day-block bootstrap on 123 high-DTR validation days / 975 points:
+- observed improvement: **13.71%**
+- bootstrap median: **13.65%**
+- 95% CI: **10.76%-16.54%**
+- absolute RMSE reduction 95% CI: **0.521-0.890 C**
+- probability that RMSE improvement >0: **100%**
+
+This satisfies the predefined stopping criterion for formula search. Further temperature-formula tuning should stop to avoid overfitting.
+
+## Next step / data now required
+
+Before modifying DSSAT Fortran and assessing phenology/yield effects, obtain the **actual DSSAT maize project/weather inputs for the Urumqi experiment** (preferred Anningqu 2021-2022 if that is the chosen validation experiment), especially:
+
+1. the exact `.WTH` file(s) used by DSSAT, including daily `SRAD`, `TMAX`, `TMIN`;
+2. experiment file(s) / management data (sowing date, cultivar, irrigation, fertilization);
+3. cultivar/ecotype coefficients currently used or calibrated;
+4. soil profile used by DSSAT;
+5. observed phenology/yield table used for calibration/validation.
+
+Reason: the M10 mechanism has been established with station temperature observations and NASA POWER SRAD used as a radiation screening/prototype series. The next scientifically valid test must compute `Kt` from the **same SRAD that DSSAT itself reads from WTH**. Once those inputs are supplied, implement M10 inside the DSSAT temperature pathway, compare official vs modified HTEMP, and quantify propagation into thermal time, phenology and yield.
