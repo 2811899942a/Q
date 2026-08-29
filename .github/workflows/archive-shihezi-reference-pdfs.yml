@@ -1,0 +1,98 @@
+name: Archive Shihezi DSSAT reference PDFs
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/archive-shihezi-reference-pdfs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Recover and verify the two public source PDFs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, requests, re
+
+          out = Path('research/dssat_dtr/references')
+          out.mkdir(parents=True, exist_ok=True)
+          ua = {'User-Agent': 'Mozilla/5.0 DSSAT-Xinjiang-reference-archive/1.0'}
+          rows = []
+
+          def save_pdf(name, content, source, expected_terms):
+              if not content.startswith(b'%PDF'):
+                  raise RuntimeError(f'{name}: response is not PDF, bytes={len(content)}, head={content[:120]!r}')
+              p = out / name
+              p.write_bytes(content)
+              sha = hashlib.sha256(content).hexdigest()
+              rows.append((name, len(content), sha, source, '; '.join(expected_terms)))
+              print(f'SAVED {name} bytes={len(content)} sha256={sha}')
+
+          # 1) Guo Lipeng 2025 master thesis, official Shihezi University open-file endpoint.
+          guo_url = 'https://lwtj.shzu.edu.cn/openfile?dbid=72&flag=free&objid=57_57_49_50_53'
+          r = requests.get(guo_url, headers=ua, timeout=90, allow_redirects=True)
+          r.raise_for_status()
+          save_pdf('Guo_Lipeng_2025_Shihezi_DSSAT_Irrigation_Decision.pdf', r.content, r.url,
+                   ['郭力澎', '20222110021', 'CERES-Maize'])
+
+          # 2) Liang Yonghui et al. 2022, official Journal of Irrigation and Drainage page.
+          page = 'https://www.ggpsxb.com/jgpxxb/ch/reader/view_abstract.aspx?file_no=20220106&flag=1'
+          s = requests.Session()
+          s.headers.update(ua)
+          hp = s.get(page, timeout=60, allow_redirects=True)
+          hp.raise_for_status()
+          candidates = [
+              'https://www.ggpsxb.com/jgpxxb/ch/reader/create_pdf.aspx?file_no=20220106&flag=1&quarter_id=1&year_id=2022',
+              'https://www.ggpsxb.com/jgpxxb/ch/reader/create_pdf.aspx?file_no=20220106&flag=1&year_id=2022&quarter_id=1',
+              'https://www.ggpsxb.com/jgpxxb/ch/reader/create_pdf.aspx?file_no=20220106&flag=1&journal_id=jgpxxb&year_id=2022',
+          ]
+          liang = None
+          diag = []
+          for u in candidates:
+              rr = s.get(u, headers={**ua, 'Referer': page}, timeout=90, allow_redirects=True)
+              diag.append(f'{rr.status_code} {len(rr.content)} {rr.url} {rr.headers.get("Content-Type", "")} head={rr.content[:80]!r}')
+              if rr.ok and rr.content.startswith(b'%PDF') and len(rr.content) > 100000:
+                  liang = rr
+                  break
+          if liang is None:
+              # The official site sometimes returns a small HTML gate. Keep diagnostics and fail loudly.
+              (out / 'LIANG_2022_PDF_RECOVERY_DIAGNOSTIC.txt').write_text('\n'.join(diag) + '\n', encoding='utf-8')
+              raise RuntimeError('Liang 2022 official PDF endpoint did not return PDF. ' + ' | '.join(diag))
+          save_pdf('Liang_Yonghui_2022_CERES_Maize_Xinjiang_Drip_Irrigation.pdf', liang.content, liang.url,
+                   ['梁永辉', 'CERES-Maize', '10.13522/j.cnki.ggps.2021337'])
+
+          md = [
+              '# Archived Shihezi DSSAT references', '',
+              'These files are archived as immutable literature inputs for the Xinjiang DSSAT temperature-method project.', '',
+              '| File | Bytes | SHA256 | Public source | Identity check |',
+              '|---|---:|---|---|---|'
+          ]
+          for name, n, sha, src, check in rows:
+              md.append(f'| `{name}` | {n} | `{sha}` | {src} | {check} |')
+          md += ['', '## Research use', '',
+                 '- Liang et al. (2022): earlier Shihezi CERES-Maize field/model reference.',
+                 '- Guo Lipeng (2025): 2019-2020 Shihezi experiment and calibrated Xinyu 66 coefficients for the real-case validation gate.', '']
+          (out / 'README_REFERENCES.md').write_text('\n'.join(md), encoding='utf-8')
+          PY
+
+      - name: Commit archived PDFs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/references
+          if ! git diff --cached --quiet; then
+            git commit -m 'Archive Shihezi DSSAT reference PDFs'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
