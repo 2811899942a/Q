@@ -1,0 +1,33 @@
+{
+  "prespec": "research/dssat_dtr/CHECKPOINT_20260829_FINAL_LOWER_BOUND_PLAN.md",
+  "thresholds_C": {
+    "T13P0": 13.0,
+    "T13P5": 13.5,
+    "T13P8": 13.8,
+    "T14P0": 14.0,
+    "T14P8": 14.8
+  },
+  "fixed_alpha_diagnostic": 7.809408336409373,
+  "refit_alpha_from_dense_2000_2016": {
+    "T13P0": 5.603868885111006,
+    "T13P5": 6.407985379809223,
+    "T13P8": 6.749813473189908,
+    "T14P0": 6.805081570269362,
+    "T14P8": 7.809408336409373
+  },
+  "target_temperature_validation": "51463099999 2017-2024",
+  "crop_scenarios": [
+    "RAW_N_OFF",
+    "SRAD19P8_N_OFF"
+  ],
+  "shared_input_gate": true,
+  "primary_candidates_C": [
+    13.5,
+    13.8,
+    14.0
+  ],
+  "negative_control_C": 13.0,
+  "historical_reference_C": 14.8,
+  "temperature_only_provisional_winner": "T13P5",
+  "temperature_only_provisional_winner_DTRc_C": 13.5
+}
