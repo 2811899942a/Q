@@ -1,0 +1,122 @@
+name: Shihezi Meteostat 51356 Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-meteostat-51356-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Download exact WMO 51356 daily data
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/meteo research/dssat_dtr/data/shihezi_real_case/meteostat_51356
+          for y in 2019 2020; do
+            url="https://data.meteostat.net/daily/${y}/51356.csv.gz"
+            echo "GET $url"
+            code=$(curl -L -sS -w '%{http_code}' -o "/tmp/meteo/${y}.csv.gz" "$url")
+            echo "HTTP=$code SIZE=$(wc -c < /tmp/meteo/${y}.csv.gz)"
+            test "$code" = "200"
+            gzip -t "/tmp/meteo/${y}.csv.gz"
+            gunzip -c "/tmp/meteo/${y}.csv.gz" > "research/dssat_dtr/data/shihezi_real_case/meteostat_51356/${y}_51356.csv"
+            head -5 "research/dssat_dtr/data/shihezi_real_case/meteostat_51356/${y}_51356.csv"
+          done
+
+      - name: Audit coverage sources and compare provisional POWER
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import csv,datetime as dt,statistics,json,collections,math
+          root=Path('research/dssat_dtr/data/shihezi_real_case/meteostat_51356')
+          allrows=[]
+          for y in (2019,2020):
+              p=root/f'{y}_51356.csv'
+              rr=list(csv.DictReader(p.open()))
+              print(y,'columns=',rr[0].keys() if rr else None,'n=',len(rr))
+              for r in rr:r['_year']=y
+              allrows+=rr
+          if not allrows: raise SystemExit('No Meteostat rows')
+
+          # Flexible column aliases used by current Meteostat timeseries dumps.
+          def pick(r,*names):
+              for n in names:
+                  if n in r and r[n] not in ('',None,'null','NaN'):
+                      return r[n]
+              return None
+          def fnum(x):
+              try:return float(x)
+              except:return None
+          norm=[]
+          for r in allrows:
+              date=pick(r,'date','time')
+              if not date: continue
+              d=dt.date.fromisoformat(date[:10])
+              norm.append({
+                  'date':d.isoformat(),'year':d.year,'doy':d.timetuple().tm_yday,
+                  'TAVG_C':fnum(pick(r,'tavg','temp')),
+                  'TMIN_C':fnum(pick(r,'tmin')),
+                  'TMAX_C':fnum(pick(r,'tmax')),
+                  'PRCP_mm':fnum(pick(r,'prcp')),
+                  'TMIN_source':pick(r,'tmin_source'),
+                  'TMAX_source':pick(r,'tmax_source'),
+                  'PRCP_source':pick(r,'prcp_source'),
+              })
+          if not norm: raise SystemExit('Could not normalize Meteostat rows')
+          fields=list(norm[0])
+          with (root/'shihezi_51356_2019_2020_normalized.csv').open('w',newline='') as f:
+              w=csv.DictWriter(f,fieldnames=fields); w.writeheader(); w.writerows(norm)
+
+          power_path=Path('research/dssat_dtr/data/shihezi_real_case/power_daily/shihezi_power_2019_2020_wth_inputs.csv')
+          P={}
+          if power_path.exists():
+              for r in csv.DictReader(power_path.open(encoding='utf-8-sig')):
+                  P[(int(r['year']),int(r['doy']))]=r
+          lines=['# Shihezi WMO 51356 Meteostat audit','',
+                 'Station target: WMO 51356 Shihezi. Meteostat direct station-year daily dumps were queried for 2019 and 2020.','']
+          lines += ['|Year|May-Aug complete Tmax/Tmin days|May-Aug PRCP days|Mean Tmax C|Mean Tmin C|PRCP total mm|Tmax sources|Tmin sources|PRCP sources|',
+                    '|---|---:|---:|---:|---:|---:|---|---|---|']
+          for y in (2019,2020):
+              q=[r for r in norm if r['year']==y and 5<=dt.date.fromisoformat(r['date']).month<=8]
+              qt=[r for r in q if r['TMAX_C'] is not None and r['TMIN_C'] is not None]
+              qp=[r for r in q if r['PRCP_mm'] is not None]
+              src=lambda k: ','.join(f'{a}:{b}' for a,b in collections.Counter((r[k] or 'NA') for r in q).most_common())
+              lines.append(f"|{y}|{len(qt)}|{len(qp)}|{statistics.mean(r['TMAX_C'] for r in qt):.2f}|{statistics.mean(r['TMIN_C'] for r in qt):.2f}|{sum(r['PRCP_mm'] for r in qp):.1f}|{src('TMAX_source')}|{src('TMIN_source')}|{src('PRCP_source')}|")
+              if P:
+                  pairs=[]
+                  for r in q:
+                      p=P.get((y,r['doy']))
+                      if p and r['TMAX_C'] is not None and r['TMIN_C'] is not None:
+                          pairs.append((r,float(p['TMAX_C']),float(p['TMIN_C']),float(p['RAIN_mm'])))
+                  if pairs:
+                      mae_tx=sum(abs(r['TMAX_C']-tx) for r,tx,tn,pr in pairs)/len(pairs)
+                      mae_tn=sum(abs(r['TMIN_C']-tn) for r,tx,tn,pr in pairs)/len(pairs)
+                      pp=[x for x in pairs if x[0]['PRCP_mm'] is not None]
+                      mae_pr=sum(abs(r['PRCP_mm']-pr) for r,tx,tn,pr in pp)/len(pp) if pp else float('nan')
+                      lines += ['',f'{y} paired May-Aug vs current NASA POWER: n={len(pairs)}, Tmax MAE={mae_tx:.2f} C, Tmin MAE={mae_tn:.2f} C, precipitation MAE={mae_pr:.2f} mm/day.']
+          (root/'README_METEOSTAT_51356.md').write_text('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
+
+      - name: Commit exact-station audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meteostat_51356
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi WMO 51356 Meteostat daily audit'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
