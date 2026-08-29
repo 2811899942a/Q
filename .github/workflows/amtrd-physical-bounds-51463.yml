@@ -1,0 +1,33 @@
+name: Validate AMTRD HTEMP physical bounds
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/validate_amtrd_physical_bounds_51463.py'
+      - '.github/workflows/amtrd-physical-bounds-51463.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/scripts/validate_amtrd_physical_bounds_51463.py
+      - run: cat research/dssat_dtr/data/processed_51463/README_AMTRD_PHYSICAL_BOUNDS.md
+      - run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/processed_51463/README_AMTRD_PHYSICAL_BOUNDS.md \
+                  research/dssat_dtr/data/processed_51463/amtrd_physical_bounds_summary.csv
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add AMTRD physical bounds validation'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
