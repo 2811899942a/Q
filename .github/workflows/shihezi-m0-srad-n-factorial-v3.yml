@@ -1,0 +1,90 @@
+name: Shihezi M0 SRAD x Nitrogen Factorial V3
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-srad-n-factorial-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 M0 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_srad_n_factorial_v3.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run V1 scientific matrix with frozen V4 fertilizer dates
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          src=Path('.github/workflows/shihezi-m0-srad-n-factorial.yml').read_text().splitlines()
+          marker='      - name: Run audited SRAD x N factorial on canonical M0'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          script='\n'.join(out)+'\n'
+
+          script=script.replace("m0_srad_n_factorial')", "m0_srad_n_factorial_v3')")
+          script=script.replace('# Shihezi M0 SRAD x nitrogen source-gap factorial', '# Shihezi M0 SRAD x nitrogen source-gap factorial V3')
+          script=script.replace('README_M0_SRAD_N_FACTORIAL.md','README_M0_SRAD_N_FACTORIAL_V3.md')
+          script=script.replace('CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL.md','CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL_V3.md')
+          script=script.replace('# M0 SRAD x N factorial checkpoint','# M0 SRAD x N factorial V3 checkpoint')
+
+          old='dates=irrigation_dates(txt)'
+          new="dates=(['19123','19165','19173','19182','19189','19196','19203','19210','19221','19235'] if xfile.stem[4:6]=='19' else ['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237'])"
+          if old not in script:
+              raise RuntimeError('single V1 irrigation date statement missing')
+          script=script.replace(old,new,1)
+
+          p=Path('/tmp/run_srad_n_factorial_v3.sh')
+          p.write_text(script)
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Commit V3 factorial result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_srad_n_factorial_v3 research/dssat_dtr/checkpoints/CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL_V3.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add robust Shihezi M0 SRAD x N factorial V3 results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
