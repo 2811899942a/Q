@@ -1,0 +1,72 @@
+name: Meng 2021 PE Yield Compare
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/meng2021-pe-yield-compare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Extract PE-yield evidence from Meng thesis
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/mengy research/dssat_dtr/data/shihezi_real_case/meng2021_pe_yield_compare
+          URL='https://lwtj.shzu.edu.cn/openfile?dbid=72&objid=57_50_49_48_50&lwsing=60931ddb25c7ab6ce77f44aadf98a132'
+          curl -L -sS --retry 2 -A 'Mozilla/5.0' "$URL" -o /tmp/mengy/full.pdf
+          pdftotext -layout /tmp/mengy/full.pdf /tmp/mengy/full.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re,json
+          lines=Path('/tmp/mengy/full.txt').read_text(errors='replace').splitlines()
+          hits=[]
+          pats=[r'W1\s*PE',r'W2\s*PE',r'W3\s*PE',r'W4\s*PE',r'W1PE',r'W2PE',r'W3PE',r'W4PE']
+          for i,l in enumerate(lines):
+              if any(re.search(p,l,re.I) for p in pats):
+                  hits.append({'line':i+1,'context':'\n'.join(lines[max(0,i-8):min(len(lines),i+9)]).strip()})
+          # Also harvest numeric-heavy contexts around likely yield section after line 1800.
+          numeric=[]
+          for i,l in enumerate(lines):
+              if i<1500: continue
+              nums=re.findall(r'\d+(?:\.\d+)?',l)
+              if len(nums)>=4 and any(float(x)>=5000 for x in nums if float(x)<100000):
+                  numeric.append({'line':i+1,'text':l.strip(),'context':'\n'.join(lines[max(0,i-3):min(len(lines),i+4)]).strip()})
+          out=Path('research/dssat_dtr/data/shihezi_real_case/meng2021_pe_yield_compare')
+          (out/'raw_hits.json').write_text(json.dumps({'treatment_hits':hits,'numeric_hits':numeric},ensure_ascii=False,indent=2),encoding='utf-8')
+          md=['# Meng 2021 PE yield evidence','',
+              'Goal: determine whether Guo 2025 W1-W4 observations are the PE subset of the Meng 2019-2020 experiment. Guo digitized targets currently used for comparison are approximately: 2019 [9250,10725,12490,12030], 2020 [9275,11100,12030,11595] kg/ha.','',
+              f'- W1PE/W2PE/W3PE/W4PE text hits: {len(hits)}.',
+              f'- numeric-heavy candidate yield contexts: {len(numeric)}.','',
+              '## Treatment-code contexts']
+          for h in hits[:120]: md += [f"### L{h['line']}",'```text',h['context'],'```','']
+          md += ['## Numeric-heavy candidate contexts']
+          for h in numeric[:160]: md += [f"### L{h['line']}",'```text',h['context'],'```','']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md[:1800]))
+          PY
+
+      - name: Commit PE-yield evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng2021_pe_yield_compare
+          if ! git diff --cached --quiet; then
+            git commit -m 'Compare Meng PE yields against Guo observations'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
