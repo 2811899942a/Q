@@ -41,13 +41,24 @@ jobs:
           cmake --install /tmp/dssat485-build
           cp -a /tmp/dssat485-data/. /tmp/dssat485-run/
           test -x /tmp/dssat485-run/dscsm048
-          /tmp/dssat485-run/dscsm048 --help > /tmp/dssat_help.txt 2>&1 || true
+          # DSSAT v4.8.5 Linux OSDefs uses the fixed standard path /DSSAT48/.
+          # Keep the isolated /tmp install but expose it through the official path.
+          sudo rm -rf /DSSAT48
+          sudo ln -s /tmp/dssat485-run /DSSAT48
+          test -f /DSSAT48/DSSATPRO.L48
 
       - name: Run official maize example UFGA8201
         run: |
           cd /tmp/dssat485-run/Maize
           rm -f Summary.OUT PlantGro.OUT Evaluate.OUT WARNING.OUT ERROR.OUT
+          set +e
           ../dscsm048 A UFGA8201.MZX > /tmp/ufga8201_stdout.txt 2>&1
+          STATUS=$?
+          set -e
+          cat /tmp/ufga8201_stdout.txt
+          echo "DSSAT_EXIT_STATUS=${STATUS}"
+          ls -lah | tail -40
+          test ${STATUS} -eq 0
           test -s Summary.OUT
           test -s PlantGro.OUT
           cp Summary.OUT /tmp/Summary_M0.OUT
@@ -79,6 +90,7 @@ jobs:
           - GNU Fortran + CMake RELEASE
           - installed executable: `dscsm048`
           - executable SHA256: `${EXE_SHA}`
+          - Linux compatibility mapping: `/DSSAT48 -> /tmp/dssat485-run`
 
           Regression smoke test:
           - official maize example: `Maize/UFGA8201.MZX`
