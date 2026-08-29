@@ -1,0 +1,31 @@
+name: Diagnose calibration high-DTR hourly bias
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/diagnose_calibration_highdtr_hourly_bias_51463.py'
+      - '.github/workflows/calibration-highdtr-hourly-bias-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python research/dssat_dtr/scripts/diagnose_calibration_highdtr_hourly_bias_51463.py
+      - run: cat research/dssat_dtr/data/processed_51463/README_CALIBRATION_HIGHDTR_HOURLY_BIAS.md
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_CALIBRATION_HIGHDTR_HOURLY_BIAS.md research/dssat_dtr/data/processed_51463/calibration_highdtr_hourly_bias.csv
+          if git diff --cached --quiet; then echo 'No changes.'; else git commit -m 'Add calibration high-DTR hourly bias profile'; git pull --rebase origin research/dssat-dtr-matrix; git push origin HEAD:research/dssat-dtr-matrix; fi
