@@ -1,0 +1,36 @@
+name: Archive Guo 2025 DSSAT reference
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/archive-guo-2025-reference.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Download Guo 2025 thesis from Shihezi University
+        run: |
+          mkdir -p research/dssat_dtr/references
+          curl -L --fail --retry 2 -A 'Mozilla/5.0' 'https://lwtj.shzu.edu.cn/openfile?dbid=72&flag=free&objid=57_57_49_50_53' -o research/dssat_dtr/references/Guo_Lipeng_2025_Shihezi_DSSAT_Irrigation_Decision.pdf
+          file research/dssat_dtr/references/Guo_Lipeng_2025_Shihezi_DSSAT_Irrigation_Decision.pdf
+          test "$(head -c 4 research/dssat_dtr/references/Guo_Lipeng_2025_Shihezi_DSSAT_Irrigation_Decision.pdf)" = '%PDF'
+      - name: Commit reference
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/references/Guo_Lipeng_2025_Shihezi_DSSAT_Irrigation_Decision.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m 'Archive Guo Lipeng 2025 DSSAT thesis PDF'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
