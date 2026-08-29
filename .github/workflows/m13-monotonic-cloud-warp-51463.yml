@@ -1,0 +1,49 @@
+name: Fit M13 monotonic CLOUDS shape-warp HTEMP
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/fit_m13_monotonic_cloud_warp_51463.py'
+      - '.github/workflows/m13-monotonic-cloud-warp-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fit-m13:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fit M13 monotonic shape warp
+        run: python research/dssat_dtr/scripts/fit_m13_monotonic_cloud_warp_51463.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_M13_MONOTONIC_CLOUD_WARP.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_M13_MONOTONIC_CLOUD_WARP.md \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_parameters.csv \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_validation.csv \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_by_dtr.csv \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_by_hour.csv \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_by_cloud_strata.csv \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_fit_grid.csv \
+                  research/dssat_dtr/data/processed_51463/m13_monotonic_shape_checks.csv
+          if git diff --cached --quiet; then
+            echo 'No result changes.'
+          else
+            git commit -m 'Add M13 monotonic CLOUDS shape-warp results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
