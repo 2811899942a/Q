@@ -8,6 +8,7 @@ This is NOT cultivar calibration or yield validation.
 Uses official DSSAT v4.8.5 UFGA8201 experiment as a syntactic template and fixed
 official cultivar IB0035. WATER and NITRO are disabled so uncertain irrigation,
 fertilizer and initial-condition details cannot confound the temperature-source test.
+The five sowing dates are the exact public Anningqu A-E dates reported by Tang et al. (2024).
 """
 from pathlib import Path
 from datetime import date, timedelta
@@ -71,7 +72,6 @@ for year in (2021,2022):
  1 {pdate}   -99  6.67  6.67     S     R    60     0     5   -99   -99   -99   -99     0                        -99'''
         x=section_replace(x,'*PLANTING DETAILS','*IRRIGATION AND WATER MANAGEMENT',planting)
 
-        # Keep parser-compatible sections but remove events; WATER/NITRO are disabled.
         irrigation='''*IRRIGATION AND WATER MANAGEMENT
 @I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME
  1     1   -99   -99   -99   -99   -99   -99 -99'''
@@ -103,7 +103,6 @@ for year in (2021,2022):
  1 RE              0     1    20
 @N HARVEST     HFRST HLAST HPCNP HPCNR
  1 HA              0 {hdate}   100     0'''
-        # replace from simulation controls to EOF/control-Z
         m=re.search(r'\*SIMULATION CONTROLS.*?(?:\x1a|\Z)',x,re.S)
         if not m: raise RuntimeError('simulation controls not found')
         x=x[:m.start()]+sim+'\n\n\x1a\n'
