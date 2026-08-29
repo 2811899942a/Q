@@ -1,0 +1,228 @@
+name: Shihezi M0 SRAD x Nitrogen Factorial
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-srad-n-factorial.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 M0 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_srad_n_factorial.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run audited SRAD x N factorial on canonical M0
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv, hashlib, json, math, re, shutil, subprocess
+
+          root=Path('/tmp/run_M0'); maize=root/'Maize'; weather=root/'Weather'
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_srad_n_factorial')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+          subprocess.run(['sudo','ln','-s',str(root),'/DSSAT48'],check=True)
+
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          srad_factor={2019:19.8/23.3,2020:19.8/24.2}
+          scenarios=[
+              ('BASE_UNLIMITED',False,None),
+              ('SRAD19P8_UNLIMITED',True,None),
+              ('BASE_N129',False,128.8),
+              ('BASE_N193',False,193.2),
+              ('SRAD19P8_N129',True,128.8),
+              ('SRAD19P8_N193',True,193.2),
+          ]
+          wths={2019:weather/'SHIH1901.WTH',2020:weather/'SHIH2001.WTH'}
+          xfiles={(y,j):maize/f'SHIH{y%100:02d}{j:02d}.MZX' for y in (2019,2020) for j in range(1,5)}
+          wth_orig={y:p.read_bytes() for y,p in wths.items()}
+          x_orig={k:p.read_bytes() for k,p in xfiles.items()}
+
+          def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+          base_wth_sha={y:sha(p) for y,p in wths.items()}
+
+          def restore():
+              for y,p in wths.items(): p.write_bytes(wth_orig[y])
+              for k,p in xfiles.items(): p.write_bytes(x_orig[k])
+
+          def edit_srad(y):
+              p=wths[y]; new=[]; n=0
+              for raw in p.read_text(encoding='latin-1').splitlines():
+                  z=raw.split()
+                  if len(z)>=5 and z[0].isdigit() and len(z[0])==5:
+                      dt,sr,tx,tn,rn=z[:5]
+                      sr=float(sr)*srad_factor[y]
+                      raw=f'{dt:>5s}{sr:6.1f}{float(tx):6.1f}{float(tn):6.1f}{float(rn):6.1f}'
+                      n+=1
+                  new.append(raw)
+              if n==0: raise RuntimeError(f'no WTH rows for {y}')
+              p.write_text('\n'.join(new)+'\n',encoding='latin-1')
+              if sha(p)==base_wth_sha[y]: raise RuntimeError(f'SRAD edit unchanged {y}')
+
+          def replace_section(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError(f'missing {start}')
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+
+          def irrigation_dates(txt):
+              m=re.search(r'\*IRRIGATION AND WATER MANAGEMENT.*?(?=\*FERTILIZERS \(INORGANIC\))',txt,re.S)
+              if not m: raise RuntimeError('irrigation section missing')
+              dates=[]
+              for ln in m.group(0).splitlines():
+                  z=ln.split()
+                  if len(z)>=3 and re.fullmatch(r'\d{5}',z[0]) and z[1].startswith('IR'):
+                      dates.append(z[0])
+              if not dates: raise RuntimeError('no irrigation dates')
+              return dates
+
+          def finite_n(xfile,total_n):
+              txt=xfile.read_text(encoding='latin-1')
+              # Link fertilizer factor to the treatment.
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'
+              new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError(f'MF=0 tail missing in {xfile.name}')
+              txt=txt.replace(old,new,1)
+              dates=irrigation_dates(txt)
+              each=total_n/len(dates)
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              for d in dates:
+                  rows.append(f' 1 {d} FE005 AP001    5 {each:6.2f}   0.0   0.0   0.0   0.0   -99 equal-split source-gap bracket')
+              txt=replace_section(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',
+                              ' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',
+                              ' 1 MA              R     R     R     N     M')
+              xfile.write_text(txt,encoding='latin-1')
+              return len(dates),each
+
+          def parse_summary(path):
+              ls=Path(path).read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(ls) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=ls[hi]; d=next(l for l in ls[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); tail=names[idx:]
+              return dict(zip(tail,vals[-len(tail):])),h,d
+
+          rows=[]; input_audit=[]; raw=[]
+          try:
+              for sc,use_srad,total_n in scenarios:
+                  restore()
+                  if use_srad:
+                      for y in (2019,2020): edit_srad(y)
+                  if total_n is not None:
+                      for k,p in xfiles.items():
+                          ne,each=finite_n(p,total_n)
+                          input_audit.append({'scenario':sc,'year':k[0],'treatment':f'W{k[1]}','nominal_N':total_n,'n_fert_events':ne,'N_per_event':each})
+
+                  wth_sha={y:sha(p) for y,p in wths.items()}
+                  for y,yy in ((2019,'19'),(2020,'20')):
+                      if use_srad and wth_sha[y]==base_wth_sha[y]: raise RuntimeError(f'{sc} {y}: SRAD hash did not change')
+                      if not use_srad and wth_sha[y]!=base_wth_sha[y]: raise RuntimeError(f'{sc} {y}: BASE WTH unexpectedly changed')
+                      for j,tr in enumerate(('W1','W2','W3','W4'),1):
+                          x=f'SHIH{yy}{j:02d}'
+                          for fn in ('Summary.OUT','PlantGro.OUT','ERROR.OUT','WARNING.OUT'):
+                              p=maize/fn
+                              if p.exists(): p.unlink()
+                          cp=subprocess.run(['../dscsm048','A',f'{x}.MZX'],cwd=maize,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                          if cp.returncode!=0 or not (maize/'Summary.OUT').exists():
+                              raise RuntimeError(f'{sc} {x} failed\n{cp.stdout[-2500:]}')
+                          z,h,d=parse_summary(maize/'Summary.OUT'); pred=float(z['HWAM']); ob=obs[y,tr]
+                          rows.append({'scenario':sc,'use_srad19p8':use_srad,'nominal_N':total_n if total_n is not None else '',
+                                       'year':y,'treatment':tr,'obs':ob,'HWAM':pred,'error':pred-ob,'ARE_pct':abs(pred-ob)/ob*100,
+                                       'SRADA':float(z['SRADA']),'PRCP':float(z['PRCP']),
+                                       'NI#M':z.get('NI#M',''),'NICM':z.get('NICM',''),'NUCM':z.get('NUCM','')})
+                          raw.append({'scenario':sc,'case':x,'header':h,'data':d})
+          finally:
+              restore()
+
+          metrics=[]
+          for sc,_,_ in scenarios:
+              for y in (2019,2020):
+                  q=[r for r in rows if r['scenario']==sc and r['year']==y]
+                  es=[r['error'] for r in q]; oo=[r['obs'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/4); mo=sum(oo)/4
+                  nicm=[float(r['NICM']) for r in q if r['NICM'] not in ('',None,'-99')]
+                  metrics.append({'scenario':sc,'year':y,'RMSE_kg_ha':rmse,'RRMSE_pct':100*rmse/mo,
+                                  'MAE_kg_ha':sum(abs(e) for e in es)/4,'Bias_kg_ha':sum(es)/4,
+                                  'mean_HWAM':sum(r['HWAM'] for r in q)/4,'mean_SRADA':sum(r['SRADA'] for r in q)/4,
+                                  'mean_PRCP':sum(r['PRCP'] for r in q)/4,'mean_NICM':sum(nicm)/len(nicm) if nicm else ''})
+
+          # Hard audits: SRAD scenarios must read ~19.8; finite-N scenarios must show NICM.
+          for m in metrics:
+              if m['scenario'].startswith('SRAD19P8') and abs(m['mean_SRADA']-19.8)>0.25:
+                  raise RuntimeError(f"{m['scenario']} {m['year']}: SRADA propagation failed {m['mean_SRADA']}")
+              if '_N' in m['scenario'] and not m['scenario'].endswith('UNLIMITED') and m['mean_NICM']=='':
+                  raise RuntimeError(f"{m['scenario']} {m['year']}: finite N not audited")
+
+          for name,data in [('treatment_rows.csv',rows),('metrics.csv',metrics),('input_audit.csv',input_audit)]:
+              if not data: continue
+              with (out/name).open('w',newline='',encoding='utf-8-sig') as f:
+                  w=csv.DictWriter(f,fieldnames=list(data[0])); w.writeheader(); w.writerows(data)
+          (out/'summary_raw_rows.json').write_text(json.dumps(raw,indent=2),encoding='utf-8')
+
+          M={(m['scenario'],m['year']):m for m in metrics}
+          md=['# Shihezi M0 SRAD x nitrogen source-gap factorial','',
+              'Diagnostic purpose: quantify interaction between the two largest proven common-input gaps without tuning any missing value against yield. SRAD target follows the thesis-scale ~19.8 MJ m-2 d-1 description; N129/N193 are the previously audited finite-N sensitivity brackets.','',
+              '|Scenario|Year|RRMSE %|Mean HWAM kg/ha|Bias kg/ha|SRADA|Mean NICM|',
+              '|---|---:|---:|---:|---:|---:|---:|']
+          for m in metrics:
+              nicm='' if m['mean_NICM']=='' else f"{float(m['mean_NICM']):.1f}"
+              md.append(f"|{m['scenario']}|{m['year']}|{m['RRMSE_pct']:.3f}|{m['mean_HWAM']:.1f}|{m['Bias_kg_ha']:+.1f}|{m['mean_SRADA']:.2f}|{nicm}|")
+          md += ['', '## 2020 interaction summary','']
+          base=M['BASE_UNLIMITED',2020]
+          for sc in [x[0] for x in scenarios[1:]]:
+              m=M[sc,2020]
+              md.append(f"- {sc}: RRMSE change vs BASE_UNLIMITED {m['RRMSE_pct']-base['RRMSE_pct']:+.3f} pp; mean HWAM change {m['mean_HWAM']-base['mean_HWAM']:+.1f} kg/ha.")
+          best=min((M[sc,2020] for sc,_,_ in scenarios),key=lambda x:x['RRMSE_pct'])
+          md += ['',f"Lowest 2020 RRMSE in this fixed diagnostic matrix: **{best['scenario']} = {best['RRMSE_pct']:.3f}%**.",
+                 '', 'This minimum is not a calibrated final model. The matrix is used only to determine whether source recovery of radiation and N availability can plausibly explain the M0 reproduction gap. Exact 2019-2020 fertilizer/initial-N inputs are still required before final three-arm accuracy validation.']
+          (out/'README_M0_SRAD_N_FACTORIAL.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL.md')
+          cp.write_text('# M0 SRAD x N factorial checkpoint\n\n'+'\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit factorial result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_srad_n_factorial research/dssat_dtr/checkpoints/CHECKPOINT_20260829_M0_SRAD_N_FACTORIAL.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi M0 SRAD x nitrogen factorial results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
