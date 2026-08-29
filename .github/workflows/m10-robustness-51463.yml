@@ -1,0 +1,44 @@
+name: Validate Urumqi 51463 M10 robustness
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - 'research/dssat_dtr/scripts/validate_m10_robustness_51463.py'
+      - '.github/workflows/m10-robustness-51463.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-m10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run frozen-parameter robustness validation
+        run: python research/dssat_dtr/scripts/validate_m10_robustness_51463.py
+      - name: Show result
+        run: cat research/dssat_dtr/data/processed_51463/README_M10_ROBUSTNESS.md
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add research/dssat_dtr/data/processed_51463/README_M10_ROBUSTNESS.md \
+                  research/dssat_dtr/data/processed_51463/m10_validation_by_year.csv \
+                  research/dssat_dtr/data/processed_51463/m10_dayblock_bootstrap_summary.csv
+          if git diff --cached --quiet; then
+            echo 'No result changes.'
+          else
+            git commit -m 'Add M10 robustness validation results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
