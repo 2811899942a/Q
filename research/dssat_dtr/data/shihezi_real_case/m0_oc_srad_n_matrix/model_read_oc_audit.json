@@ -1,0 +1,1026 @@
+[
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N129",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_BASESRAD_N193",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N129",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "LOWOM_SRAD19P8_N193",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.09,
+      0.09,
+      0.09,
+      0.08,
+      0.08,
+      0.07,
+      0.07,
+      0.08,
+      0.08,
+      0.06
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N129",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_BASESRAD_N193",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N129",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH1901",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH1902",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH1903",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH1904",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH2001",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH2002",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH2003",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  },
+  {
+    "scenario": "HIGHOM_SRAD19P8_N193",
+    "case": "SHIH2004",
+    "model_read_OC_pct": [
+      0.86,
+      0.86,
+      0.86,
+      0.82,
+      0.82,
+      0.73,
+      0.73,
+      0.76,
+      0.76,
+      0.59
+    ]
+  }
+]
