@@ -1,0 +1,187 @@
+name: Shihezi M0 Nitrogen Diagnostic MF1
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-nitrogen-diagnostic-mf1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-mf1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild identical V4 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4.sh'); p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Patch and run finite nitrogen diagnostic with MF linked
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          src=Path('.github/workflows/shihezi-m0-nitrogen-diagnostic.yml').read_text().splitlines()
+          marker='      - name: Run M0 finite nitrogen sensitivity'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          script='\n'.join(out)+'\n'
+
+          # Link fertilizer management factor level 1 to the treatment.
+          needle="    xfile.write_text(txt,encoding='latin-1')"
+          replacement="""    old_mf=' 1 1 0 1 1 1 0 0 0 0 0 0 1'\n    new_mf=' 1 1 0 1 1 1 1 0 0 0 0 0 1'\n    if old_mf not in txt:\n        raise RuntimeError('MF=0 treatment factor suffix not found')\n    txt=txt.replace(old_mf,new_mf,1)\n    xfile.write_text(txt,encoding='latin-1')"""
+          if needle not in script:
+              raise RuntimeError('finite_n write anchor not found')
+          script=script.replace(needle,replacement,1)
+
+          # Preserve applied-N diagnostic fields from Summary.OUT.
+          needle2="'NIAM':z.get('NIAM'),'NUCM':z.get('NUCM')"
+          replacement2="'NIAM':z.get('NIAM'),'NI#M':z.get('NI#M'),'NICM':z.get('NICM'),'NUCM':z.get('NUCM')"
+          if needle2 not in script:
+              raise RuntimeError('nitrogen audit anchor not found')
+          script=script.replace(needle2,replacement2,1)
+
+          p=Path('/tmp/run_n_mf1.sh')
+          p.write_text(script)
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Audit generated fertilizer linkage and write checkpoint
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv,json,re,datetime,os
+
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_nitrogen_diagnostic')
+          root=Path('/tmp/n_diag')
+          scenarios=['N64_SPLIT','N129_SPLIT','N193_SPLIT','N129_BASAL']
+
+          sections=[]
+          factor_rows=[]
+          for scen in scenarios:
+              for j in range(1,5):
+                  x=root/scen/'Maize'/f'SHIH20{j:02d}.MZX'
+                  txt=x.read_text(encoding='latin-1')
+                  m=re.search(r'\*FERTILIZERS \(INORGANIC\).*?(?=\*SIMULATION CONTROLS)',txt,re.S)
+                  if not m:
+                      raise RuntimeError(f'fertilizer section missing: {scen} W{j}')
+                  sections.append(f'===== {scen} W{j} =====\n{m.group(0).rstrip()}\n')
+                  tm=re.search(r'\*TREATMENTS.*?(?=\*CULTIVARS)',txt,re.S)
+                  if not tm:
+                      raise RuntimeError(f'treatment section missing: {scen} W{j}')
+                  data=[ln for ln in tm.group(0).splitlines() if ln.strip() and not ln.startswith(('*','@','!'))]
+                  if not data:
+                      raise RuntimeError(f'treatment data row missing: {scen} W{j}')
+                  row=data[0]
+                  if ' 1 1 0 1 1 1 1 0 0 0 0 0 1' not in row:
+                      raise RuntimeError(f'MF=1 suffix not present: {scen} W{j}: {row}')
+                  factor_rows.append(f'{scen},W{j},{row}')
+
+          (out/'fertilizer_sections_mf1.txt').write_text('\n'.join(sections)+'\n',encoding='utf-8')
+          (out/'treatment_factor_rows_mf1.txt').write_text('\n'.join(factor_rows)+'\n',encoding='utf-8')
+
+          metrics=list(csv.DictReader((out/'m0_nitrogen_metrics.csv').open(encoding='utf-8-sig')))
+          audit=json.loads((out/'nitrogen_audit.json').read_text(encoding='utf-8'))
+
+          def fnum(x):
+              try: return float(x)
+              except Exception: return None
+
+          scen_metric={r['scenario']:r for r in metrics}
+          applied={}
+          for scen in scenarios:
+              vals=[]
+              for r in audit:
+                  if r['scenario']==scen:
+                      v=fnum(r.get('NICM'))
+                      if v is not None: vals.append(v)
+              applied[scen]=sorted(set(vals))
+
+          # A valid read audit should show at least some non-null applied-N fields;
+          # different scenarios are expected to differ if Summary.OUT exposes NICM.
+          all_nicm=[v for vals in applied.values() for v in vals]
+          nicm_available=bool(all_nicm)
+          distinct_nicm=sorted(set(all_nicm))
+
+          lines=[
+              '# Shihezi M0 corrected MF=1 nitrogen diagnostic',
+              '',
+              'Status: corrected fertilizer management factor linkage executed.',
+              '',
+              '## Metrics',
+              '',
+              '|Scenario|RMSE kg/ha|RRMSE %|MAE kg/ha|Bias kg/ha|Mean HWAM kg/ha|',
+              '|---|---:|---:|---:|---:|---:|'
+          ]
+          for r in metrics:
+              lines.append(f"|{r['scenario']}|{float(r['RMSE_kg_ha']):.1f}|{float(r['RRMSE_pct']):.3f}|{float(r['MAE_kg_ha']):.1f}|{float(r['Bias_kg_ha']):+.1f}|{float(r['mean_HWAM']):.1f}|")
+          lines += ['', '## Applied-N audit', '']
+          for scen in scenarios:
+              lines.append(f'- {scen}: NICM values = {applied[scen] if applied[scen] else "not exposed/parsed"}')
+          lines += [
+              '',
+              f'- NICM field available: {nicm_available}',
+              f'- distinct NICM values across finite-N cases: {distinct_nicm}',
+              '- treatment MF=1 suffix verified in all 16 finite-N FileX cases.',
+              '- exact generated fertilizer sections saved in `fertilizer_sections_mf1.txt`.',
+              '',
+              '## Interpretation rule',
+              '',
+              'This remains a root-cause diagnostic. The 2021-2022 same-station fertilizer rate is not promoted to the formal 2019-2020 input. No M0/H0TT/M15TT predictive-accuracy claim is allowed until the M0 reproduction gate approaches the published 2020 RRMSE (~5.69%).'
+          ]
+
+          stamp=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y%m%d_%H%M')
+          cp=Path('research/dssat_dtr/checkpoints')/f'CHECKPOINT_{stamp}_MF1_NITROGEN_DIAGNOSTIC.md'
+          cp.write_text('\n'.join(lines)+'\n',encoding='utf-8')
+
+          handoff=Path('research/dssat_dtr/HANDOFF_CURRENT.md')
+          h=handoff.read_text(encoding='utf-8')
+          h += '\n\n## Latest automatic result — corrected MF=1 nitrogen diagnostic\n\n' + '\n'.join(lines[2:]) + '\n'
+          handoff.write_text(h,encoding='utf-8')
+          print('\n'.join(lines))
+          PY
+
+      - name: Commit corrected diagnostic and handoff
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_nitrogen_diagnostic research/dssat_dtr/checkpoints research/dssat_dtr/HANDOFF_CURRENT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Fix fertilizer MF linkage and rerun Shihezi M0 nitrogen diagnostic'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
