@@ -1,0 +1,3 @@
+﻿year,n_days,dense_temp_days,ghcn_fallback_days,power_temp_fallback_days,annual_rain_mm,may_oct_rain_mm,annual_mean_tmax_c,annual_mean_tmin_c,max_tmax_c,min_tmin_c,mean_srad_mj_m2_d
+2021,365,358,3,4,256.61,171.98,14.104,5.014,41.0,-26.0,15.461
+2022,365,362,3,0,201.79,98.32,14.551,5.871,40.0,-22.7,15.483
