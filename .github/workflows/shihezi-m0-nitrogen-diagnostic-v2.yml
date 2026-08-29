@@ -1,0 +1,85 @@
+name: Shihezi M0 Nitrogen Diagnostic V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-nitrogen-diagnostic-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Execute corrected MF-linked nitrogen diagnostic
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-m0-nitrogen-diagnostic.yml').read_text().splitlines()
+
+          def block(name):
+              marker='      - name: '+name
+              i=next(i for i,x in enumerate(src) if x==marker)
+              out=[]; j=i+2
+              while j < len(src) and not src[j].startswith('      - '):
+                  line=src[j]
+                  if line.startswith('          '): line=line[10:]
+                  elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+                  else: line=''
+                  out.append(line); j+=1
+              return '\n'.join(out)+'\n'
+
+          # Step 1: exact V4 rebuild.
+          p1=Path('/tmp/n_v2_rebuild.sh'); p1.write_text(block('Rebuild the identical V4 case'))
+          subprocess.run(['bash',str(p1)],check=True)
+
+          # Step 2: reuse diagnostic, but link MF=1 and write a new result directory.
+          s=block('Run M0 finite nitrogen sensitivity')
+          s=s.replace("m0_nitrogen_diagnostic');", "m0_nitrogen_diagnostic_v2');")
+          anchor="txt=xfile.read_text(encoding='latin-1')"
+          inject="""txt=xfile.read_text(encoding='latin-1')
+              # Critical V2 fix: select fertilizer management factor level 1 (MF=1).
+              old_tail='  1  1  0  1  1  1  0  0  0  0  0  0  1'
+              new_tail='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old_tail not in txt:
+                  raise RuntimeError('V4 treatment factor tail not found before MF correction')
+              txt=txt.replace(old_tail,new_tail,1)"""
+          if anchor not in s: raise RuntimeError('finite_n anchor missing')
+          s=s.replace(anchor,inject,1)
+
+          # Store the most useful applied-N fields in the audit.
+          old="'NIAM':z.get('NIAM'),'NUCM':z.get('NUCM'),'NLCM':z.get('NLCM'),'IRCM':z.get('IRCM'),'PRCM':z.get('PRCM')"
+          new="'NI#M':z.get('NI#M'),'NICM':z.get('NICM'),'NIAM':z.get('NIAM'),'NUCM':z.get('NUCM'),'NLCM':z.get('NLCM'),'IRCM':z.get('IRCM'),'PRCM':z.get('PRCM')"
+          if old not in s: raise RuntimeError('audit anchor missing')
+          s=s.replace(old,new)
+          s=s.replace('# Shihezi M0 nitrogen root-cause diagnostic','# Shihezi M0 nitrogen root-cause diagnostic V2 (MF=1)')
+          s=s.replace('m0_nitrogen_treatments.csv','m0_nitrogen_treatments_v2.csv')
+          s=s.replace('m0_nitrogen_metrics.csv','m0_nitrogen_metrics_v2.csv')
+          s=s.replace('nitrogen_audit.json','nitrogen_audit_v2.json')
+          s=s.replace('README_M0_NITROGEN_DIAGNOSTIC.md','README_M0_NITROGEN_DIAGNOSTIC_V2.md')
+          p2=Path('/tmp/n_v2_run.sh'); p2.write_text(s)
+          subprocess.run(['bash',str(p2)],check=True)
+          PY
+
+      - name: Commit V2 diagnostic
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_nitrogen_diagnostic_v2
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add corrected Shihezi M0 nitrogen diagnostic V2'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
