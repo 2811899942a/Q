@@ -1,0 +1,4 @@
+﻿split,n_days,pearson_dtr_vs_tmax_hour,median_tmax_hour_dtr_lt14.5,median_tmax_hour_dtr_ge14.5,n_dtr_ge14.5
+All,3790,0.22,14.933,14.858,166
+Calibration,2574,0.2153,14.942,14.917,106
+Validation,1216,0.2261,14.908,14.383,60
