@@ -1,0 +1,183 @@
+name: Shihezi M0 Weather Gap Diagnostic
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-weather-gap-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen Shihezi case from V4
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/v4_build.sh'); p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run source-gap attribution scenarios
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil, subprocess, re, json, math, csv, os
+
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          # Source-supported diagnostics, not yield calibration.
+          # Thesis: mean growing-season total radiation ~19.8 MJ m-2 d-1; precipitation totals 96.45/119.88 mm.
+          srad_factor={2019:19.8/23.3, 2020:19.8/24.2}
+          rain_factor={2019:96.45/83.3, 2020:119.88/103.1}
+          scenarios=['BASE','RAIN_MATCH','SRAD_19P8','WEATHER_BOTH','N_LOW_BOUND']
+          roots={}
+          for sc in scenarios:
+              dst=Path('/tmp')/f'diag_{sc}'
+              if dst.exists(): shutil.rmtree(dst)
+              shutil.copytree('/tmp/run_M0',dst,symlinks=True)
+              roots[sc]=dst
+
+          def edit_weather(root, use_rain=False, use_srad=False):
+              for yr in (2019,2020):
+                  p=root/'Weather'/f'SHIH{yr%100:02d}01.WTH'
+                  lines=p.read_text(encoding='latin-1').splitlines(); out=[]
+                  for line in lines:
+                      parts=line.split()
+                      if len(parts)==5 and parts[0].isdigit() and len(parts[0])==5:
+                          dt,sr,tx,tn,rn=parts
+                          if use_srad: sr=f'{float(sr)*srad_factor[yr]:.2f}'
+                          if use_rain: rn=f'{float(rn)*rain_factor[yr]:.2f}'
+                          line=f'{dt} {float(sr):5.2f} {float(tx):5.2f} {float(tn):5.2f} {float(rn):5.2f}'
+                      out.append(line)
+                  p.write_text('\n'.join(out)+'\n',encoding='latin-1')
+          edit_weather(roots['RAIN_MATCH'],use_rain=True)
+          edit_weather(roots['SRAD_19P8'],use_srad=True)
+          edit_weather(roots['WEATHER_BOTH'],use_rain=True,use_srad=True)
+
+          # Lower-bound diagnostic only: turn on N stress with the existing tiny initial mineral N and no unknown fertilizer.
+          # This intentionally brackets the consequence of the thesis' missing fertilizer information; it is not a candidate reconstruction.
+          for p in (roots['N_LOW_BOUND']/'Maize').glob('SHIH*.MZX'):
+              txt=p.read_text(encoding='latin-1')
+              old=' 1 OP              Y     N     N     N     N     N     N     N     M'
+              new=' 1 OP              Y     Y     N     N     N     N     N     N     M'
+              if old not in txt: raise RuntimeError('OPTIONS row not found in '+str(p))
+              p.write_text(txt.replace(old,new),encoding='latin-1')
+
+          res=Path('/tmp/diag_results'); res.mkdir(exist_ok=True)
+          run_status={}
+          for sc in scenarios:
+              root=roots[sc]
+              try:
+                  if Path('/DSSAT48').exists() or Path('/DSSAT48').is_symlink():
+                      subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+                  subprocess.run(['sudo','ln','-s',str(root),'/DSSAT48'],check=True)
+                  od=res/sc; od.mkdir(exist_ok=True)
+                  for yy in ('19','20'):
+                      for j in range(1,5):
+                          x=f'SHIH{yy}{j:02d}'
+                          cwd=root/'Maize'
+                          for f in ('Summary.OUT','PlantGro.OUT','ERROR.OUT','WARNING.OUT'):
+                              q=cwd/f
+                              if q.exists(): q.unlink()
+                          cp=subprocess.run(['../dscsm048','A',f'{x}.MZX'],cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                          (od/f'{x}.stdout').write_text(cp.stdout)
+                          if cp.returncode!=0 or not (cwd/'Summary.OUT').exists():
+                              raise RuntimeError(f'{sc} {x} failed: {cp.stdout[-2000:]}')
+                          shutil.copy2(cwd/'Summary.OUT',od/f'{x}_Summary.OUT')
+                  run_status[sc]='PASS'
+              except Exception as e:
+                  run_status[sc]='FAIL: '+repr(e)
+
+          def parse(path):
+              lines=Path(path).read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=lines[hi]; d=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); tail=names[idx:]
+              z=dict(zip(tail,vals[-len(tail):]))
+              return {k:z.get(k,'') for k in ['HWAM','CWAM','PRCM','ETCM','SWXM','TMAXA','TMINA','SRADA','PRCP']}
+
+          rows=[]
+          for sc in scenarios:
+              if run_status[sc] != 'PASS': continue
+              for year,yy in [(2019,'19'),(2020,'20')]:
+                  for j,tr in enumerate(['W1','W2','W3','W4'],1):
+                      z=parse(res/sc/f'SHIH{yy}{j:02d}_Summary.OUT')
+                      pred=float(z['HWAM']); ob=obs[(year,tr)]
+                      rows.append({'scenario':sc,'year':year,'treatment':tr,'obs':ob,'HWAM':pred,
+                                   'error':pred-ob,'ARE_pct':abs(pred-ob)/ob*100,
+                                   'SRADA':z['SRADA'],'PRCP':z['PRCP'],'ETCM':z['ETCM'],'SWXM':z['SWXM']})
+          metrics=[]
+          for sc in scenarios:
+              for yr in (2019,2020):
+                  q=[r for r in rows if r['scenario']==sc and r['year']==yr]
+                  if not q: continue
+                  es=[r['error'] for r in q]; oo=[r['obs'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/len(es)); meanobs=sum(oo)/len(oo)
+                  metrics.append({'scenario':sc,'year':yr,'RMSE_kg_ha':rmse,'RRMSE_pct':rmse/meanobs*100,
+                                  'MAE_kg_ha':sum(abs(e) for e in es)/len(es),'Bias_kg_ha':sum(es)/len(es),
+                                  'mean_HWAM':sum(r['HWAM'] for r in q)/len(q),
+                                  'mean_SRADA':sum(float(r['SRADA']) for r in q)/len(q),
+                                  'mean_PRCP':sum(float(r['PRCP']) for r in q)/len(q)})
+
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_source_gap_diagnostic'); out.mkdir(parents=True,exist_ok=True)
+          with (out/'scenario_rows.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              if rows:
+                  w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          with (out/'scenario_metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              if metrics:
+                  w=csv.DictWriter(f,fieldnames=list(metrics[0])); w.writeheader(); w.writerows(metrics)
+          (out/'run_status.json').write_text(json.dumps(run_status,indent=2),encoding='utf-8')
+
+          md=['# Shihezi M0 source-gap attribution diagnostic','',
+              'This is a reconstruction-diagnostic experiment only. No cultivar coefficient, M15 threshold, or crop-output parameter is fitted.','',
+              '- BASE: current V4 NASA POWER reconstruction, N stress disabled.','- RAIN_MATCH: precipitation multiplied by a year-specific factor so the current crop-period PRCP magnitude approaches the thesis reported 96.45/119.88 mm.','- SRAD_19P8: solar radiation multiplied by a year-specific factor so current simulated crop-period mean SRAD approaches the thesis reported ~19.8 MJ m-2 d-1.','- WEATHER_BOTH: both source-supported magnitude checks together.','- N_LOW_BOUND: N stress enabled with existing minimal initial N and no fertilizer; this is only a lower bound because fertilizer is missing from Chapter 2.','',
+              'Run status: `'+json.dumps(run_status,ensure_ascii=False)+'`','',
+              '|Scenario|Year|RRMSE %|Mean HWAM kg/ha|Bias kg/ha|Mean SRADA|Mean PRCP|','|---|---:|---:|---:|---:|---:|---:|']
+          for x in metrics:
+              md.append(f"|{x['scenario']}|{x['year']}|{x['RRMSE_pct']:.3f}|{x['mean_HWAM']:.1f}|{x['Bias_kg_ha']:.1f}|{x['mean_SRADA']:.2f}|{x['mean_PRCP']:.2f}|")
+          base20=next((x for x in metrics if x['scenario']=='BASE' and x['year']==2020),None)
+          if base20:
+              md += ['','## 2020 attribution relative to BASE','']
+              for sc in ['RAIN_MATCH','SRAD_19P8','WEATHER_BOTH','N_LOW_BOUND']:
+                  x=next((x for x in metrics if x['scenario']==sc and x['year']==2020),None)
+                  if x:
+                      md.append(f"- {sc}: mean HWAM shift {x['mean_HWAM']-base20['mean_HWAM']:+.1f} kg/ha; RRMSE shift {x['RRMSE_pct']-base20['RRMSE_pct']:+.3f} percentage points.")
+          md += ['','Interpretation rule: weather scenarios can identify whether the provisional weather magnitude is sufficient to explain the failed M0 reproduction gate. N_LOW_BOUND only tests whether the missing N-management block has enough leverage to explain the remaining discrepancy; it cannot be used as a final reconstruction.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit diagnostic results
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_source_gap_diagnostic
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi M0 source-gap attribution results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
