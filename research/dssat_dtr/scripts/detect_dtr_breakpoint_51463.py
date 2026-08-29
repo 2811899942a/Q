@@ -9,6 +9,9 @@ where c is searched from 10.0 to 18.0 C in 0.1 C increments.
 The script is mechanism-oriented: it estimates whether morning bias, afternoon bias,
 AM-PM asymmetry, and daily RMSE share a stable breakpoint, and checks stability
 between 2000-2016 and 2017-2024 May-Sep periods.
+
+The standalone workflow intentionally reuses the committed daily residual table so
+breakpoint estimation can be rerun without redownloading NOAA data or recalibrating PL-XJ.
 """
 
 from __future__ import annotations
@@ -106,9 +109,8 @@ def search(rows, target):
     n,b0,b1,sse_lin = fit_linear(rows,target)
     best["linear_sse"] = sse_lin
     best["sse_reduction_pct"] = 100.0*(sse_lin-best["sse"])/sse_lin
-    # AIC comparison using Gaussian SSE likelihood, constants omitted.
     best["aic_linear"] = n*math.log(sse_lin/n)+2*2
-    best["aic_segmented"] = n*math.log(best["sse"]/n)+2*4  # b0,b1,b2,c
+    best["aic_segmented"] = n*math.log(best["sse"]/n)+2*4
     best["delta_aic_segmented_minus_linear"] = best["aic_segmented"]-best["aic_linear"]
     return best
 
@@ -167,7 +169,6 @@ def main():
     with STAB.open("w",newline="",encoding="utf-8-sig") as f:
         w=csv.DictWriter(f,fieldnames=list(stability[0].keys())); w.writeheader(); w.writerows(stability)
 
-    # Consensus focuses on asymmetry gap and RMSE, while AM/PM components are mechanistic support.
     allmap={(r["target"],r["subset"]):r for r in out}
     c_gap=float(allmap[("asymmetry_gap_c","All_2000_2024")]["breakpoint_c"])
     c_rmse=float(allmap[("daily_rmse_c","All_2000_2024")]["breakpoint_c"])
