@@ -1,0 +1,225 @@
+name: Shihezi Real Yield V1
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-real-yield-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Build frozen DSSAT arms
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/os0
+          git -C /tmp/os0 checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/data
+          git -C /tmp/data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          for ARM in M0 H0TT M15TT; do
+            cp -a /tmp/os0 "/tmp/os_${ARM}"
+          done
+          python research/dssat_dtr/dssat485/apply_extreme_dtt_tgro_patch.py /tmp/os_H0TT
+          python research/dssat_dtr/dssat485/apply_m15_htemp_patch.py /tmp/os_M15TT
+          python research/dssat_dtr/dssat485/apply_m15_extreme_dtt_patch.py /tmp/os_M15TT
+          for ARM in M0 H0TT M15TT; do
+            cmake -S "/tmp/os_${ARM}" -B "/tmp/build_${ARM}" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX="/tmp/run_${ARM}" >/dev/null
+            cmake --build "/tmp/build_${ARM}" --parallel 2 >/dev/null
+            cmake --install "/tmp/build_${ARM}" >/dev/null
+            cp -a /tmp/data/. "/tmp/run_${ARM}/"
+          done
+
+      - name: Build Guo 2025 Shihezi inputs
+        run: |
+          set -euo pipefail
+          cat > /tmp/build_shihezi.py <<'PY'
+          from pathlib import Path
+          from datetime import date,timedelta
+          import csv,re,sys
+
+          root=Path(sys.argv[1])
+          repo=Path.cwd()
+          # ---- Cultivar: append published Guo 2025 Xinyu66 coefficients; ecotype IB0001 gives TBASE=8C in frozen CERES dataset.
+          cands=list(root.rglob('MZCER048.CUL'))
+          if not cands: raise SystemExit('MZCER048.CUL not found')
+          cul=cands[0]
+          txt=cul.read_text(encoding='latin-1')
+          newline=f"XY0066 {'Xinyu 66':<16} {'IB0001':<6} {104.7:6.1f}{1.824:6.3f}{957.2:6.1f}{671:6.0f}{15.82:6.2f}{42.97:6.2f}"
+          if 'XY0066' not in txt:
+              txt=txt.rstrip('\r\n')+'\n'+newline+'\n'
+              cul.write_text(txt,encoding='latin-1')
+          print('CUL=',cul,'ROW=',newline)
+
+          # ---- Soil: Guo Table 2-1 measured fields only; unavailable support fields stay -99.
+          soil='''*Soils: Shihezi University Modern Water-saving Irrigation Key Experimental Station\n\n*SHIH000100  SHIHEZI     -99     100 Guo2025 measured 0-100 cm profile\n@SITE        COUNTRY          LAT     LONG SCS FAMILY\n Shihezi     China          44.3244  85.9964 -99\n@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE\n    -99  0.15  6.00  0.50  60.0  1.00  1.00 IB001 IB001 IB001\n@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC\n    20   -99 0.122 0.237 0.457  1.00   -99  1.51   -99 32.75 51.93   0.0   -99   -99   -99   -99   -99\n    40   -99 0.136 0.264 0.425  0.85   -99  1.54   -99 31.52 54.11   0.0   -99   -99   -99   -99   -99\n    60   -99 0.120 0.231 0.371  0.70   -99  1.59   -99 43.28 44.53   0.0   -99   -99   -99   -99   -99\n    80   -99 0.113 0.214 0.346  0.55   -99  1.63   -99 30.21 60.74   0.0   -99   -99   -99   -99   -99\n   100   -99 0.105 0.236 0.385  0.40   -99  1.61   -99 29.13 49.76   0.0   -99   -99   -99   -99   -99\n'''
+          (root/'Soil'/'SH.SOL').write_text(soil,encoding='latin-1')
+
+          # ---- Weather: provisional NASA POWER because Guo states NASA + national station but exact WTH is not published.
+          rows=list(csv.DictReader(open(repo/'research/dssat_dtr/data/shihezi_real_case/power_daily/shihezi_power_2019_2020_wth_inputs.csv',encoding='utf-8-sig')))
+          for yr in (2019,2020):
+              rr=[r for r in rows if int(r['year'])==yr]
+              wh=['*WEATHER DATA : Shihezi Guo2025 provisional NASA POWER reconstruction','',
+                  '@ INSI      LAT     LONG  ELEV   TAV   AMP REFHT WNDHT',
+                  '  SHIH   44.3244   85.9964   412   9.0  40.0  2.00  3.00',
+                  '@DATE  SRAD  TMAX  TMIN  RAIN']
+              for r in rr:
+                  wh.append(f"{yr%100:02d}{int(r['doy']):03d} {float(r['SRAD_MJ_m2_d']):5.1f} {float(r['TMAX_C']):5.1f} {float(r['TMIN_C']):5.1f} {float(r['RAIN_mm']):5.1f}")
+              (root/'Weather'/f'SHIH{yr%100:02d}01.WTH').write_text('\n'.join(wh)+'\n',encoding='latin-1')
+
+          template=(root/'Maize'/'UFGA8201.MZX').read_text(encoding='latin-1')
+          def yydoy(d): return f'{d.year%100:02d}{d.timetuple().tm_yday:03d}'
+          def repl(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError('section missing '+start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+          levels={'W1':[48.75,32.5,32.5,32.5,73.125,73.125,73.125,36.563,36.563,48.75],
+                  'W2':[52.5,35,35,35,78.75,78.75,78.75,39.375,39.375,52.5],
+                  'W3':[56.25,37.5,37.5,37.5,84.375,84.375,84.375,42.188,42.188,56.25],
+                  'W4':[60,40,40,40,90,90,90,45,45,60]}
+          dates={2019:[(5,3),(6,14),(6,22),(7,1),(7,8),(7,15),(7,22),(7,29),(8,9),(8,23)],
+                 2020:[(5,5),(6,15),(6,23),(7,2),(7,9),(7,16),(7,23),(7,30),(8,10),(8,24)]}
+          for yr in (2019,2020):
+            pd=date(yr,5,3 if yr==2019 else 5)
+            sd=pd-timedelta(days=1); hd=date(yr,10,25)
+            for j,(tr,vals) in enumerate(levels.items(),1):
+              name=f'SHR{yr%100:02d}{j:02d}'
+              x=template
+              x=re.sub(r'^\*EXP\.DETAILS:.*$',f'*EXP.DETAILS: {name}MZ GUO2025 SHIHEZI {yr} {tr}',x,count=1,flags=re.M)
+              treat='''*TREATMENTS                        -------------FACTOR LEVELS------------\n@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM\n  1 1 0 0 GUO2025 XINYU66 REAL       1  1  0  1  1  1  0  0  0  0  0  0  1'''
+              x=repl(x,'*TREATMENTS','*CULTIVARS',treat)
+              x=repl(x,'*CULTIVARS','*FIELDS','''*CULTIVARS\n@C CR INGENO CNAME\n 1 MZ XY0066 Xinyu 66 Guo2025''')
+              x=repl(x,'*FIELDS','*INITIAL CONDITIONS','''*FIELDS\n@L ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX  SLDP  ID_SOIL    FLNAME\n 1 SHIH0001 SHIH       -99     0 DR000     0     0 00000 -99    100  SHIH000100 Shihezi Guo2025\n@L ...........XCRD ...........YCRD .....ELEV .............AREA .SLEN .FLWR .SLAS FLHST FHDUR\n 1          44.3244        85.9964       412                 0     0     0     0   -99   -99''')
+              # Unknown initial soil water: DUL is used as a transparent common-arm reconstruction assumption. Nitrogen is disabled.
+              init=f'''*INITIAL CONDITIONS\n@C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME\n 1    MZ {yydoy(sd)}   100     0     1     1   -99     0     0     0     0     0 Guo2025 DUL assumption\n@C  ICBL  SH2O  SNH4  SNO3\n 1    20  .237    1.0    1.0\n 1    40  .264    1.0    1.0\n 1    60  .231    1.0    1.0\n 1    80  .214    1.0    1.0\n 1   100  .236    1.0    1.0'''
+              x=repl(x,'*INITIAL CONDITIONS','*PLANTING DETAILS',init)
+              # PPOP=8.89 plants/m2 derived from Guo 25-cm plant spacing and mean 45-cm row spacing; no arm-specific fitting.
+              plant=f'''*PLANTING DETAILS\n@P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME\n 1 {yydoy(pd)}   -99  8.89  8.89     S     R    45     0     4   -99   -99   -99   -99     0                        Guo2025 derived density'''
+              x=repl(x,'*PLANTING DETAILS','*IRRIGATION AND WATER MANAGEMENT',plant)
+              ir=['*IRRIGATION AND WATER MANAGEMENT','@I  EFIR  IDEP  ITHR  IEPT  IOFF  IAME  IAMT IRNAME',' 1     1   -99   -99   -99   -99   -99   -99 Guo2025 fixed irrigation','@I IDATE  IROP IRVAL']
+              for (mo,da),v in zip(dates[yr],vals): ir.append(f' 1 {yydoy(date(yr,mo,da))} IR001 {v:6.2f}')
+              x=repl(x,'*IRRIGATION AND WATER MANAGEMENT','*FERTILIZERS (INORGANIC)','\n'.join(ir))
+              x=repl(x,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','''*FERTILIZERS (INORGANIC)\n@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME''')
+              sim=f'''*SIMULATION CONTROLS\n@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL\n 1 GE              1     1     S {yydoy(sd)}  2150 GUO2025 {yr} {tr}\n@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2\n 1 OP              Y     N     N     N     N     N     N     N     M\n@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL\n 1 ME              M     M     E     R     S     R     R     1     G     R     2\n@N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS\n 1 MA              R     R     N     N     M\n@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT\n 1 OU              N     Y     Y     1     Y     N     Y     N     N     N     Y     N     Y     A\n\n@  AUTOMATIC MANAGEMENT\n@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN\n 1 PL          {yydoy(pd)} {yydoy(pd)}    40   100    30    40     5\n@N IRRIGATION  IMDEP ITHRL ITHRU IROFF IMETH IRAMT IREFF\n 1 IR             30    50   100 GS000 IR001    10     1\n@N NITROGEN    NMDEP NMTHR NAMNT NCODE NAOFF\n 1 NI             30    50    25 FE001 GS000\n@N RESIDUES    RIPCN RTIME RIDEP\n 1 RE              0     1    20\n@N HARVEST     HFRST HLAST HPCNP HPCNR\n 1 HA              0 {yydoy(hd)}   100     0'''
+              m=re.search(r'\*SIMULATION CONTROLS.*?(?:\x1a|\Z)',x,re.S)
+              if not m: raise RuntimeError('simulation controls missing')
+              x=x[:m.start()]+sim+'\n\n\x1a\n'
+              (root/'Maize'/f'{name}.MZX').write_text(x,encoding='latin-1')
+          PY
+          for ARM in M0 H0TT M15TT; do python /tmp/build_shihezi.py "/tmp/run_${ARM}"; done
+
+      - name: Run all real-case arms
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/results
+          for ARM in M0 H0TT M15TT; do
+            R="/tmp/run_${ARM}"
+            sudo rm -rf /DSSAT48; sudo ln -s "$R" /DSSAT48
+            mkdir -p "/tmp/results/${ARM}"
+            cd "$R/Maize"
+            for Y in 19 20; do
+              for J in 01 02 03 04; do
+                X="SHR${Y}${J}"
+                rm -f Summary.OUT PlantGro.OUT ERROR.OUT WARNING.OUT
+                ../dscsm048 A "${X}.MZX" > "/tmp/results/${ARM}/${X}.stdout" 2>&1 || { cat "/tmp/results/${ARM}/${X}.stdout"; cat ERROR.OUT 2>/dev/null || true; exit 1; }
+                test -s Summary.OUT || { cat "/tmp/results/${ARM}/${X}.stdout"; cat ERROR.OUT 2>/dev/null || true; exit 1; }
+                cp Summary.OUT "/tmp/results/${ARM}/${X}_Summary.OUT"
+              done
+            done
+          done
+
+      - name: Parse yield accuracy and make decision
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv,re,math,statistics
+          out=Path('research/dssat_dtr/data/shihezi_real_case/real_yield_v1'); out.mkdir(parents=True,exist_ok=True)
+          # Approximate observed economic yields digitized from Guo (2025) Fig.2-4A high-resolution embedded raster.
+          # Values are kg/ha; uncertainty is about +/-100 kg/ha, so sub-100 kg/ha arm differences are treated as not robust.
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          published_rr={2019:6.52,2020:5.69}
+          def parse(path):
+            lines=Path(path).read_text(errors='replace').splitlines()
+            hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+            h=lines[hi]; d=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+            names=h.split(); names=names[1:] if names and names[0]=='@' else names
+            vals=d.split()
+            if len(names)==len(vals): return dict(zip(names,vals))
+            starts=[m.start() for m in re.finditer(r'\S+',h)]; raw=[m.group() for m in re.finditer(r'\S+',h)]
+            if raw[0]=='@': raw=raw[1:]; starts=starts[1:]
+            z={}
+            for j,n in enumerate(raw): z[n]=d[starts[j]:(starts[j+1] if j+1<len(starts) else len(d))].strip()
+            return z
+          rows=[]
+          for arm in ['M0','H0TT','M15TT']:
+            for year,yy in [(2019,'19'),(2020,'20')]:
+              for j,tr in enumerate(['W1','W2','W3','W4'],1):
+                s=parse(f'/tmp/results/{arm}/SHR{yy}{j:02d}_Summary.OUT')
+                pred=float(s['HWAM']); ob=obs[(year,tr)]
+                rows.append({'arm':arm,'year':year,'treatment':tr,'observed_yield_kg_ha':ob,'simulated_HWAM_kg_ha':pred,
+                             'error_kg_ha':pred-ob,'ARE_pct':abs(pred-ob)/ob*100,'MDAT':s.get('MDAT',''),'CWAM':s.get('CWAM','')})
+          with (out/'shihezi_real_yield_three_arm.csv').open('w',newline='',encoding='utf-8-sig') as f:
+            w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          stats=[]
+          for arm in ['M0','H0TT','M15TT']:
+            for yr in [2019,2020]:
+              q=[r for r in rows if r['arm']==arm and r['year']==yr]; es=[r['error_kg_ha'] for r in q]; oo=[r['observed_yield_kg_ha'] for r in q]
+              rmse=math.sqrt(sum(e*e for e in es)/len(es)); mae=sum(abs(e) for e in es)/len(es); bias=sum(es)/len(es); rrmse=rmse/(sum(oo)/len(oo))*100
+              stats.append({'arm':arm,'year':yr,'RMSE_kg_ha':rmse,'RRMSE_pct':rrmse,'MAE_kg_ha':mae,'Bias_kg_ha':bias,'published_M0_RRMSE_pct':published_rr[yr] if arm=='M0' else ''})
+          with (out/'shihezi_real_yield_metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+            w=csv.DictWriter(f,fieldnames=list(stats[0])); w.writeheader(); w.writerows(stats)
+          S={(x['arm'],x['year']):x for x in stats}
+          gate=abs(S['M0',2020]['RRMSE_pct']-published_rr[2020])<=3.0
+          imp_h=(S['M0',2020]['RRMSE_pct']-S['H0TT',2020]['RRMSE_pct'])/S['M0',2020]['RRMSE_pct']*100
+          imp_m=(S['M0',2020]['RRMSE_pct']-S['M15TT',2020]['RRMSE_pct'])/S['M0',2020]['RRMSE_pct']*100
+          local=(S['H0TT',2020]['RRMSE_pct']-S['M15TT',2020]['RRMSE_pct'])/S['H0TT',2020]['RRMSE_pct']*100
+          robust=max(abs(r['simulated_HWAM_kg_ha']-next(x['simulated_HWAM_kg_ha'] for x in rows if x['year']==r['year'] and x['treatment']==r['treatment'] and x['arm']=='M0')) for r in rows if r['arm']!='M0')>=100
+          md=['# Shihezi real-yield three-arm validation V1','',
+              '**Scope:** first real Xinyu66 yield validation using Guo (2025) 2019 calibration / 2020 independent validation framework. Cultivar coefficients are frozen. No arm-specific crop calibration.','',
+              '**Important reconstruction status:** daily weather is provisional NASA POWER at the field coordinate; exact original CMA+NASA WTH, fertilizer, initial soil water and raw tabular yields were not published. Nitrogen was therefore disabled for all arms and initial water was set to DUL identically. Observed yield targets were digitized from Fig.2-4A (about +/-100 kg/ha). This V1 is a causal accuracy screen, not yet publication-grade replication.','',
+              '|Arm|Year|RMSE kg/ha|RRMSE %|MAE kg/ha|Bias kg/ha|Published original RRMSE %|',
+              '|---|---:|---:|---:|---:|---:|---:|']
+          for x in stats: md.append(f"|{x['arm']}|{x['year']}|{x['RMSE_kg_ha']:.1f}|{x['RRMSE_pct']:.3f}|{x['MAE_kg_ha']:.1f}|{x['Bias_kg_ha']:.1f}|{x['published_M0_RRMSE_pct']}|")
+          md += ['', '## 2020 independent-validation decision','',
+                 f"- M0 reproduction gate (within 3 percentage points of published 5.69% RRMSE): **{'PASS' if gate else 'FAIL'}**.",
+                 f"- H0TT relative RRMSE change vs M0: **{imp_h:+.3f}% improvement** (positive = better).",
+                 f"- M15TT relative RRMSE change vs M0: **{imp_m:+.3f}% improvement**.",
+                 f"- Local M15 contribution vs H0TT: **{local:+.3f}% improvement**.",
+                 f"- Maximum arm-induced yield shift reaches the ~100 kg/ha digitization-resolution threshold: **{'YES' if robust else 'NO'}**.",'']
+          if not gate:
+            md += ['**Scientific classification: INCONCLUSIVE FOR FINAL ACCURACY.** The reconstructed original model does not reproduce the published baseline closely enough, so no strong accuracy claim is allowed. Arm directions are retained only as a screening result.']
+          elif imp_m>0 and robust:
+            md += ['**Scientific classification: PROVISIONAL REAL-YIELD IMPROVEMENT.** M15TT improves the independent-year yield metric and the arm signal is larger than the digitization uncertainty; exact original weather/observations are still required for publication-grade confirmation.']
+          elif imp_m>0:
+            md += ['**Scientific classification: NUMERICAL IMPROVEMENT BUT BELOW OBSERVATION-DIGITIZATION RESOLUTION.** Do not claim practical yield improvement yet.']
+          else:
+            md += ['**Scientific classification: NO REAL-YIELD ACCURACY ADVANTAGE IN THIS V1 RECONSTRUCTION.** Do not retune M15 against yield; retain the physical hourly-temperature improvement and reassess only with exact original weather/observations.']
+          (out/'README_REAL_YIELD_V1.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit real-yield result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/real_yield_v1
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi Xinyu66 real-yield three-arm validation'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
