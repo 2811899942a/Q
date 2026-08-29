@@ -1,0 +1,22 @@
+{
+  "prespec": "research/dssat_dtr/CHECKPOINT_20260829_EXTREME_DTR_PRESPEC.md",
+  "temperature_source": "research/dssat_dtr/data/processed_51463/m15_dense_transfer_by_dtr.csv",
+  "weather_source": "research/dssat_dtr/data/shihezi_real_case/power_daily/shihezi_power_2019_2020_wth_inputs.csv",
+  "arms": [
+    "H0TT",
+    "M15_FULL",
+    "M15_18PLUS",
+    "M15_20PLUS"
+  ],
+  "scenarios": [
+    "RAW_N_OFF",
+    "SRAD19P8_N_OFF"
+  ],
+  "frozen_DTRc_C": 14.8,
+  "frozen_alpha": 7.8094,
+  "diagnostic_gate_C": {
+    "M15_18PLUS": 18.0,
+    "M15_20PLUS": 20.0
+  },
+  "shared_input_gate": true
+}
