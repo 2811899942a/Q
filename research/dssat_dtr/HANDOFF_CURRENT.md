@@ -1,6 +1,6 @@
 # DSSAT-DTR Urumqi Research Handoff
 
-Last checkpoint: 2026-08-29 13:18 CST
+Last checkpoint: 2026-08-29 15:44 CST
 Branch: `research/dssat-dtr-matrix`
 Study: Urumqi DSSAT v4.8.5.0 HTEMP improvement
 
@@ -150,35 +150,43 @@ Frozen M15 source snapshot:
 
 UFGA8201 M15 outputs are not byte-identical to M0. Phenological dates shown in Summary remain unchanged in the regression case, while small biomass/yield/water/N differences confirm that the new temperature pathway is actually active. Florida is software propagation QA, not Urumqi scientific validation.
 
-## 9. Crop propagation stage — STARTED
+## 9. Anningqu Stage A controlled crop propagation — FULL SOFTWARE PASS, ZERO CORE RESPONSE
 
-Public-data reconstruction file:
-`research/dssat_dtr/anningqu/ANINGQU_PUBLIC_RECONSTRUCTION.md`
+Formal workflow: `.github/workflows/anningqu-stageA-final.yml`, run `33240724580`.
+After correcting DSSAT v4.8.5 fixed-width experiment and soil formats, all 20 real simulations PASS:
+- 10 public Anningqu scenarios = 2021/2022 x five sowing dates;
+- each scenario run with frozen M0 and M15;
+- identical WTH/soil/management/cultivar within each pair;
+- official proxy maize cultivar IB0035;
+- `WATER=N`, `NITRO=N` to isolate the potential-growth temperature pathway.
 
-Primary public experiment:
-Tang et al. 2024, Sustainability 16(11):4571, DOI 10.3390/su16114571.
-Anningqu, Urumqi, 87.49E/43.95N, ~590 m, 2021-2022.
+Final Stage A output:
+`research/dssat_dtr/data/anningqu/stageA_propagation/anningqu_stageA_m0_m15.csv`
 
-Known directly from the public paper:
-- six hybrids: KWS3376, Xinyu65, KWS9384, Huamei No.1, Xinyu102, Heyu187;
-- five sowing dates: Apr21, Apr26, May6, May16, May26;
-- six irrigation levels (Water1..Water6) and eight watering stages;
-- nominal totals: 5400, 4455, 3510, 2565, 1620, 675 m3/ha;
-- field spacing: rows 0.6 m, plants 0.25 m, three replications;
-- observed DTT/DTA/DTS/ASI, growth/yield components and final grain yield;
-- Xinyu65 is the preferred first cultivar for reconstruction.
+Critical result:
+- scenarios with any M0-M15 reported core crop-output change: **0/10**;
+- HWAM, CWAM, HIAM and LAIX are identical for all ten paired scenarios;
+- parsed ADAT/MDAT fields are also unchanged, although date-column parsing itself needs cleanup before publication use.
 
-Public same-area soil sources already found:
-- long-term Anningqu gray-desert-soil experiment with pH, nutrient layers, bulk density ~1.25 g/cm3;
-- 2022 Anningqu maize study near the same station with pH 8.10, OM 16.90 g/kg, nitrate N 34.84 mg/kg, Olsen P 14.03 mg/kg, available K 401.05 mg/kg.
+Independent thermal-activation check showed that M15 was not simply inactive:
+- 2021 crop windows: roughly 7-15 M15 trigger days per scenario; maximum hourly correction about 3.93 C;
+- 2022 crop windows: about 1 trigger day per scenario; maximum correction about 0.56 C.
 
-## Immediate next work
+Scientific interpretation:
+**Under CERES-Maize potential-growth settings with water and N stress disabled, the M15-modified hourly HTEMP pathway does not propagate into the reported core phenology / biomass / grain-yield outputs.** This is an important negative mechanistic result and prevents falsely claiming crop improvement from the weather-layer gain alone. It does NOT invalidate M15's demonstrated hourly-temperature improvement.
 
-1. Extract quantitative Xinyu65 phenology/yield observations from Tang 2024 figures/tables.
-2. Search public sources for fertilizer management and a defensible full soil hydraulic profile.
-3. Build 2021-2022 DSSAT WTH from public daily TMAX/TMIN/RAIN/SRAD; M0 and M15 must use the exact same WTH.
-4. Search for published CERES-Maize coefficients for Xinyu65; if unavailable, estimate one frozen cultivar parameter set from public phenology/yield data without separately tuning M0 and M15.
-5. Build and execute the Anningqu M0-vs-M15 crop-response experiment in GitHub Actions.
+The official Florida regression previously showed small M0-M15 biomass/yield/water/N differences under its full process configuration, indicating that the modified hourly-temperature path can affect other DSSAT process chains.
+
+## 10. Current decision rule — DO NOT INVENT M17
+
+Do not continue empirical temperature-formula tuning. M15 remains frozen.
+
+Immediate next work:
+1. audit DSSAT v4.8.5 source call chain from `HMET -> TAIRHR/TGRO` into CERES-Maize, soil water, ET, soil temperature, N and stress modules;
+2. identify exactly which process(es) consume the M15-modified hourly temperatures;
+3. only if the source audit supports it, run Anningqu Stage A2 with water/N process pathways enabled using one defensible common management setup for M0 and M15;
+4. seek a clear process response (ET / soil water / stress / biomass / yield) that scales with 2021 strong activation and remains near-neutral in 2022 weak activation;
+5. only after a propagation pathway is proven, compare with Tang 2024 observations. Crop accuracy is valid only if `|M15-observed| < |M0-observed|`; output change alone is not evidence of improvement.
 
 ## User-input / stop conditions
 
