@@ -1,0 +1,139 @@
+name: Shihezi GHCN Weather Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-ghcn-weather-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Find nearest GHCN stations and extract 2019-2020 daily data
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ghcn research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit
+          curl -fsSL https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt -o /tmp/ghcn/stations.txt
+          python - <<'PY'
+          from pathlib import Path
+          import math, json, urllib.request
+
+          lat0,lon0=44.324444,85.996389
+          st=[]
+          for line in Path('/tmp/ghcn/stations.txt').read_text(errors='replace').splitlines():
+              try:
+                  sid=line[:11].strip(); lat=float(line[12:20]); lon=float(line[21:30]); elev=float(line[31:37]); name=line[41:71].strip()
+              except: continue
+              if not sid.startswith('CH'): continue
+              dy=(lat-lat0)*111.0; dx=(lon-lon0)*111.0*math.cos(math.radians(lat0)); dist=(dx*dx+dy*dy)**0.5
+              st.append((dist,sid,lat,lon,elev,name))
+          st.sort()
+          print('NEAREST_CHINA_STATIONS')
+          for x in st[:20]: print(x)
+          Path('research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit/nearest_stations.json').write_text(json.dumps([
+              dict(distance_km=x[0],id=x[1],lat=x[2],lon=x[3],elev=x[4],name=x[5]) for x in st[:20]],ensure_ascii=False,indent=2))
+
+          def download(sid):
+              u=f'https://www.ncei.noaa.gov/pub/data/ghcn/daily/all/{sid}.dly'
+              p=Path('/tmp/ghcn')/(sid+'.dly')
+              try: urllib.request.urlretrieve(u,p); return p
+              except Exception as e: print('DOWNLOAD_FAIL',sid,e); return None
+          # Parse fixed-width GHCN .dly. Values: TMAX/TMIN 0.1 C, PRCP 0.1 mm.
+          def parse(p):
+              d={}
+              for line in p.read_text(errors='replace').splitlines():
+                  sid=line[:11]; y=int(line[11:15]); mo=int(line[15:17]); elem=line[17:21]
+                  if y not in (2019,2020) or elem not in ('TMAX','TMIN','PRCP'): continue
+                  for day in range(1,32):
+                      a=21+(day-1)*8; raw=line[a:a+5]
+                      try: v=int(raw)
+                      except: continue
+                      q=line[a+6:a+7] if len(line)>=a+7 else ''
+                      if v==-9999 or q.strip(): continue
+                      d.setdefault((y,mo,day),{})[elem]=v/10.0
+              return d
+          scored=[]
+          for x in st[:20]:
+              p=download(x[1])
+              if not p: continue
+              d=parse(p)
+              nfull=sum(all(k in v for k in ('TMAX','TMIN','PRCP')) for v in d.values())
+              nt=sum(all(k in v for k in ('TMAX','TMIN')) for v in d.values())
+              scored.append((nfull,nt,len(d),x,p,d))
+              print('COVERAGE',x[1],x[5],'dist_km',round(x[0],1),'full',nfull,'temp',nt,'dates',len(d))
+          scored.sort(key=lambda z:(z[0],z[1],-z[4].stat().st_size),reverse=True)
+          if not scored: raise SystemExit('No station data downloaded')
+          best=scored[0]; x=best[3]; d=best[5]
+          print('BEST',x,'coverage',best[:3])
+          # Prefer geography among stations with useful full coverage.
+          useful=[z for z in scored if z[0]>=500]
+          if useful: best=min(useful,key=lambda z:z[3][0]); x=best[3]; d=best[5]
+          print('SELECTED',x,'coverage',best[:3])
+          rows=[]
+          for dt,v in sorted(d.items()):
+              if all(k in v for k in ('TMAX','TMIN','PRCP')):
+                  rows.append((dt,*[v[k] for k in ('TMAX','TMIN','PRCP')]))
+          import csv
+          op=Path('research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit/selected_2019_2020.csv')
+          with op.open('w',newline='') as f:
+              w=csv.writer(f); w.writerow(['year','month','day','TMAX_C','TMIN_C','PRCP_mm'])
+              for (y,m,dd),a,b,c in rows:w.writerow([y,m,dd,a,b,c])
+          meta=dict(id=x[1],name=x[5],lat=x[2],lon=x[3],elev=x[4],distance_km=x[0],full_days=len(rows),temp_days=best[1])
+          Path('research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit/selected_station.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2))
+          print('SELECTED_META',meta)
+          PY
+
+      - name: Compare selected station with current NASA POWER reconstruction
+        run: |
+          python - <<'PY'
+          import csv,datetime as dt,statistics,json
+          from pathlib import Path
+          g=list(csv.DictReader(open('research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit/selected_2019_2020.csv')))
+          p=list(csv.DictReader(open('research/dssat_dtr/data/shihezi_real_case/power_daily/shihezi_power_2019_2020_wth_inputs.csv',encoding='utf-8-sig')))
+          G={(int(r['year']),dt.date(int(r['year']),int(r['month']),int(r['day'])).timetuple().tm_yday):r for r in g}
+          P={(int(r['year']),int(r['doy'])):r for r in p}
+          lines=['# Shihezi GHCN national-station proxy audit','']
+          meta=json.loads(Path('research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit/selected_station.json').read_text())
+          lines += [f"Selected station: `{meta['id']}` {meta['name']}; distance {meta['distance_km']:.1f} km; coordinates {meta['lat']}, {meta['lon']}; elevation {meta['elev']} m.",'']
+          lines += ['|Year|Source|Mean Tmax C|Mean Tmin C|Total PRCP mm|May-Aug complete days|','|---|---|---:|---:|---:|---:|']
+          for y in (2019,2020):
+              for src,D in [('GHCN',G),('POWER',P)]:
+                  q=[]
+                  for (yy,doy),r in D.items():
+                      if yy!=y: continue
+                      dd=dt.date(y,1,1)+dt.timedelta(days=doy-1)
+                      if 5<=dd.month<=8:q.append(r)
+                  if src=='GHCN': tx=[float(r['TMAX_C']) for r in q]; tn=[float(r['TMIN_C']) for r in q]; pr=[float(r['PRCP_mm']) for r in q]
+                  else: tx=[float(r['TMAX_C']) for r in q]; tn=[float(r['TMIN_C']) for r in q]; pr=[float(r['RAIN_mm']) for r in q]
+                  lines.append(f'|{y}|{src}|{statistics.mean(tx):.2f}|{statistics.mean(tn):.2f}|{sum(pr):.1f}|{len(q)}|')
+          common=set(G)&set(P)
+          for y in (2019,2020):
+              q=[k for k in common if k[0]==y and 5<= (dt.date(y,1,1)+dt.timedelta(days=k[1]-1)).month <=8]
+              def mae(a,b):return sum(abs(a-b) for a,b in zip(a,b))/len(q)
+              tx=[(float(G[k]['TMAX_C']),float(P[k]['TMAX_C'])) for k in q]; tn=[(float(G[k]['TMIN_C']),float(P[k]['TMIN_C'])) for k in q]; pr=[(float(G[k]['PRCP_mm']),float(P[k]['RAIN_mm'])) for k in q]
+              lines += ['',f'{y} May-Aug paired days: {len(q)}; MAE GHCN-vs-POWER Tmax={mae(*zip(*tx)):.2f} C, Tmin={mae(*zip(*tn)):.2f} C, PRCP={mae(*zip(*pr)):.2f} mm/day.']
+          Path('research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit/README_GHCN_AUDIT.md').write_text('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
+
+      - name: Commit audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/ghcn_weather_audit
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi GHCN weather audit'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
