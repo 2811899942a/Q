@@ -1,0 +1,33 @@
+name: Shihezi NASA POWER Daily Recovery
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-power-daily.yml'
+      - 'research/dssat_dtr/shihezi/recover_nasa_power_daily.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Recover daily NASA POWER weather
+        run: python research/dssat_dtr/shihezi/recover_nasa_power_daily.py
+      - name: Commit recovered weather
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/power_daily
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi NASA POWER daily reconstruction'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
