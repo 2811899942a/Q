@@ -1,0 +1,167 @@
+name: Shihezi M0 Nitrogen Diagnostic
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-m0-nitrogen-diagnostic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild the identical V4 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4.sh'); p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run M0 finite nitrogen sensitivity
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,re,subprocess,csv,math,json
+          from datetime import date
+
+          base=Path('/tmp/run_M0')
+          obs={'W1':9275,'W2':11100,'W3':12030,'W4':11595}
+          scenarios={
+            'UNLIMITED':('unlimited',None),
+            'N64_SPLIT':('split',64.4),
+            'N129_SPLIT':('split',128.8),
+            'N193_SPLIT':('split',193.2),
+            'N129_BASAL':('basal',128.8),
+          }
+          fert_dates=[date(2020,5,6),date(2020,6,15),date(2020,6,23),date(2020,7,2),date(2020,7,9),date(2020,7,16),date(2020,7,23),date(2020,7,30),date(2020,8,10),date(2020,8,24)]
+          def yydoy(d): return f'{d.year%100:02d}{d.timetuple().tm_yday:03d}'
+          def replace_section(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError('missing section '+start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+          def set_sloc(sol):
+              s=sol.read_text(encoding='latin-1')
+              # Convert Guo organic matter g/kg to organic-C percent using OM%/1.724.
+              vals=[(1.51,0.0861,32.75),(1.54,0.0818,31.52),(1.59,0.0733,43.28),(1.63,0.0758,30.21),(1.61,0.0593,29.13)]
+              lines=s.splitlines(); out=[]
+              in_layers=False
+              k=0
+              for line in lines:
+                  if line.startswith('@  SLB'): in_layers=True; out.append(line); continue
+                  if in_layers and line.strip() and not line.startswith(('@','*')) and k<5:
+                      toks=line.split()
+                      # SLB SLMH SLLL SDUL SSAT SRGF SSKS SBDM SLOC SLCL ...
+                      if len(toks)>=17:
+                          toks[8]=f'{vals[k][1]:.4f}'
+                          # free-spaced numeric rows are accepted by the frozen reader; preserve all fields.
+                          line=' '.join(toks)
+                          k+=1
+                  out.append(line)
+              if k!=5: raise RuntimeError(f'failed SLOC conversion rows={k}')
+              sol.write_text('\n'.join(out)+'\n',encoding='latin-1')
+          def finite_n(xfile,mode,total_n):
+              txt=xfile.read_text(encoding='latin-1')
+              if mode=='split':
+                  each=total_n/len(fert_dates)
+                  rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+                  for d in fert_dates:
+                      rows.append(f' 1 {yydoy(d)} FE005 AP001   5.0 {each:5.2f}   0.0   0.0   0.0   0.0   -99 Diagnostic split urea')
+              else:
+                  rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME',
+                        f' 1 {yydoy(date(2020,5,6))} FE005 AP001   5.0 {total_n:5.1f}   0.0   0.0   0.0   0.0   -99 Diagnostic basal urea']
+              txt=replace_section(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              # NITRO N -> Y while keeping WATER=Y.
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',
+                              ' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              # FERTI N -> R, leave RESID N.
+              txt=txt.replace(' 1 MA              R     R     N     N     M',
+                              ' 1 MA              R     R     R     N     M')
+              xfile.write_text(txt,encoding='latin-1')
+          def parse_hw(path):
+              lines=path.read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=lines[hi]; d=next(l for l in lines[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM')
+              tail_names=names[idx:]; tail_vals=vals[-len(tail_names):]
+              z=dict(zip(tail_names,tail_vals)); return float(z['HWAM']),z
+
+          root=Path('/tmp/n_diag'); root.mkdir()
+          rows=[]; audit=[]
+          for scen,(mode,total_n) in scenarios.items():
+              r=root/scen
+              shutil.copytree(base,r)
+              if total_n is not None:
+                  set_sloc(r/'Soil'/'SH.SOL')
+                  for j in range(1,5): finite_n(r/'Maize'/f'SHIH20{j:02d}.MZX',mode,total_n)
+              sudo=['sudo','rm','-rf','/DSSAT48']; subprocess.run(sudo,check=True)
+              subprocess.run(['sudo','ln','-s',str(r),'/DSSAT48'],check=True)
+              for j,tr in enumerate(['W1','W2','W3','W4'],1):
+                  x=f'SHIH20{j:02d}'; wd=r/'Maize'
+                  for fn in ['Summary.OUT','PlantGro.OUT','ERROR.OUT','WARNING.OUT']:
+                      p=wd/fn
+                      if p.exists(): p.unlink()
+                  cp=subprocess.run([str(r/'dscsm048'),'A',f'{x}.MZX'],cwd=wd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+                  if cp.returncode!=0 or not (wd/'Summary.OUT').exists():
+                      raise RuntimeError(f'{scen} {x} failed rc={cp.returncode}\n{cp.stdout}\n'+((wd/'ERROR.OUT').read_text(errors='replace') if (wd/'ERROR.OUT').exists() else ''))
+                  pred,z=parse_hw(wd/'Summary.OUT'); ob=obs[tr]
+                  rows.append({'scenario':scen,'N_kg_ha':('unlimited' if total_n is None else total_n),'mode':mode,'treatment':tr,'observed':ob,'HWAM':pred,'error':pred-ob,'ARE_pct':abs(pred-ob)/ob*100})
+                  audit.append({'scenario':scen,'treatment':tr,'HWAM':pred,'CWAM':z.get('CWAM'),'NIAM':z.get('NIAM'),'NUCM':z.get('NUCM'),'NLCM':z.get('NLCM'),'IRCM':z.get('IRCM'),'PRCM':z.get('PRCM')})
+          out=Path('research/dssat_dtr/data/shihezi_real_case/m0_nitrogen_diagnostic'); out.mkdir(parents=True,exist_ok=True)
+          with (out/'m0_nitrogen_treatments.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          metrics=[]
+          for scen in scenarios:
+              q=[r for r in rows if r['scenario']==scen]; es=[r['error'] for r in q]; oo=[r['observed'] for r in q]
+              rmse=math.sqrt(sum(e*e for e in es)/len(es)); meanobs=sum(oo)/len(oo)
+              metrics.append({'scenario':scen,'RMSE_kg_ha':rmse,'RRMSE_pct':rmse/meanobs*100,'MAE_kg_ha':sum(abs(e) for e in es)/len(es),'Bias_kg_ha':sum(es)/len(es),'mean_HWAM':sum(r['HWAM'] for r in q)/len(q)})
+          with (out/'m0_nitrogen_metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(metrics[0])); w.writeheader(); w.writerows(metrics)
+          (out/'nitrogen_audit.json').write_text(json.dumps(audit,indent=2),encoding='utf-8')
+          md=['# Shihezi M0 nitrogen root-cause diagnostic','',
+              '**Purpose:** sensitivity/root-cause screen only. Finite-N schedules are NOT claimed to be the exact Guo 2019–2020 fertilizer management. Xinyu66 genetics, weather, irrigation and other V4 assumptions are unchanged.','',
+              '|Scenario|RMSE kg/ha|RRMSE %|MAE kg/ha|Bias kg/ha|Mean HWAM kg/ha|','|---|---:|---:|---:|---:|---:|']
+          for m in metrics: md.append(f"|{m['scenario']}|{m['RMSE_kg_ha']:.1f}|{m['RRMSE_pct']:.3f}|{m['MAE_kg_ha']:.1f}|{m['Bias_kg_ha']:.1f}|{m['mean_HWAM']:.1f}|")
+          finite=[m for m in metrics if m['scenario']!='UNLIMITED']; best=min(finite,key=lambda x:x['RRMSE_pct'])
+          base_m=next(m for m in metrics if m['scenario']=='UNLIMITED')
+          reduction=(base_m['RRMSE_pct']-best['RRMSE_pct'])/base_m['RRMSE_pct']*100
+          md += ['',f"Best finite-N diagnostic: **{best['scenario']}**, RRMSE {best['RRMSE_pct']:.3f}% versus unlimited-N {base_m['RRMSE_pct']:.3f}% (relative reduction {reduction:.2f}%).",'',
+                 'Interpretation rule: if finite N materially moves M0 toward the published 5.69% RRMSE, nitrogen representation remains a priority reconstruction variable. If it does not, nitrogen is not sufficient to explain the V4 mismatch. No modified-temperature accuracy claim follows from this diagnostic.']
+          (out/'README_M0_NITROGEN_DIAGNOSTIC.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit nitrogen diagnostic
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/m0_nitrogen_diagnostic
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Shihezi M0 nitrogen root-cause diagnostic'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
