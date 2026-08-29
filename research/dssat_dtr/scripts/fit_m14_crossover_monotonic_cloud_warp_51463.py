@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""M14: calibration-crossover monotonic DTR x CLOUDS HTEMP shape warp.
+"""M14: robust calibration-crossover monotonic DTR x CLOUDS HTEMP shape warp.
 
 M13 was physically valid but started the pre-peak shape change at solar noon,
-although observed calibration residuals change from cold to warm bias earlier.
-M14 derives a single crossover time H0 from 2000-2016 high-DTR observations only,
-then leaves all temperatures before H0 untouched.
+although calibration residuals indicate the cold-to-warm transition occurs earlier.
+M14 derives a single crossover time H0 from 2000-2016 high-DTR observations only.
+Because the sparse three-hourly checkpoints contain strong outliers, the crossover
+is defined from supported hourly-bin MEDIAN residuals, with interpolation between
+the mean actual solar times of the two bracketing bins. Validation years never
+participate in H0 or coefficient selection.
 
 For H0 < h < modeled Tmax:
     q = (T_PL - T_PL(H0)) / (TMAX - T_PL(H0))
@@ -41,16 +44,17 @@ def derive_h0(cal):
  for r in cal:
   if float(r['formal_dtr_c'])<=DTRC:continue
   h=int(math.floor(float(r['solar_hour'])))
-  if 6<=h<=13:bins[h].append(float(r['error_c']))
+  if 6<=h<=13:bins[h].append((float(r['solar_hour']),float(r['error_c'])))
  rows=[]
  for h in sorted(bins):
-  if len(bins[h])>=15:rows.append({'hour_bin':h,'n':len(bins[h]),'mean_bias':mean(bins[h]),'median_hour':h+.5})
- # Find latest negative-to-positive adjacent supported bins; interpolation is based only on calibration mean bias.
+  vals=bins[h]
+  if len(vals)>=15:
+   rows.append({'hour_bin':h,'n':len(vals),'mean_actual_solar_hour':mean([x[0] for x in vals]),'mean_bias':mean([x[1] for x in vals]),'median_bias':statistics.median([x[1] for x in vals])})
  candidates=[]
  for a,b in zip(rows,rows[1:]):
-  if a['mean_bias']<=0. and b['mean_bias']>0.:
-   x0=a['median_hour'];x1=b['median_hour'];y0=a['mean_bias'];y1=b['mean_bias'];h0=x0+(0.-y0)*(x1-x0)/(y1-y0);candidates.append((h0,a,b))
- if not candidates:raise RuntimeError('No supported calibration negative-to-positive residual crossover found')
+  if a['median_bias']<=0. and b['median_bias']>0.:
+   x0=a['mean_actual_solar_hour'];x1=b['mean_actual_solar_hour'];y0=a['median_bias'];y1=b['median_bias'];h0=x0+(0.-y0)*(x1-x0)/(y1-y0);candidates.append((h0,a,b))
+ if not candidates:raise RuntimeError('No supported calibration median-residual negative-to-positive crossover found')
  h0,a,b=candidates[-1]
  return h0,rows,a,b
 def branch(r,h0):
@@ -78,7 +82,7 @@ def fit(rows,h0,which):
   if br==which:prep.append((q,lo,hi,(float(r['formal_dtr_c'])-DTRC)*r['clouds'],float(r['obs_c'])))
  best=None
  for i in range(4001):
-  k=i*.005 # 0..20
+  k=i*.005
   s=0.
   for q,lo,hi,e,o in prep:
    pr=lo+(hi-lo)*(q**(1.+k*e));s+=(pr-o)**2
@@ -105,9 +109,9 @@ def main():
    if int(r['month']) not in [5,6,7,8,9] or r['solar_date'] not in srad:continue
    date=datetime.strptime(r['solar_date'],'%Y-%m-%d').date();dl,su,sd,cl=dssat_solar(date,srad[r['solar_date']]);r['year']=date.year;r['dayl']=dl;r['snup']=su;r['sndn']=sd;r['clouds']=cl;rows.append(r)
  cal=[r for r in rows if r['year']<=2016];val=[r for r in rows if r['year']>=2017]
- h0,crossrows,ca,cb=derive_h0(cal);write(CROSS,crossrows,['hour_bin','n','mean_bias','median_hour'])
+ h0,crossrows,ca,cb=derive_h0(cal);write(CROSS,crossrows,['hour_bin','n','mean_actual_solar_hour','mean_bias','median_bias'])
  bp=fit(cal,h0,'pre');bq=fit(cal,h0,'post');kp=bp[1];kq=bq[1];hitp=abs(kp-20.)<1e-12;hitq=abs(kq-20.)<1e-12
- write(PARAM,[{'dtr_threshold_c':DTRC,'crossover_solar_hour':h0,'cross_left_bin':ca['hour_bin'],'cross_left_bias':ca['mean_bias'],'cross_right_bin':cb['hour_bin'],'cross_right_bias':cb['mean_bias'],'k_pre':kp,'k_post':kq,'n_pre':bp[2],'n_post':bq[2],'pre_hit_upper_bound':hitp,'post_hit_upper_bound':hitq}],['dtr_threshold_c','crossover_solar_hour','cross_left_bin','cross_left_bias','cross_right_bin','cross_right_bias','k_pre','k_post','n_pre','n_post','pre_hit_upper_bound','post_hit_upper_bound'])
+ write(PARAM,[{'dtr_threshold_c':DTRC,'crossover_solar_hour':h0,'cross_left_bin':ca['hour_bin'],'cross_left_median_bias':ca['median_bias'],'cross_right_bin':cb['hour_bin'],'cross_right_median_bias':cb['median_bias'],'k_pre':kp,'k_post':kq,'n_pre':bp[2],'n_post':bq[2],'pre_hit_upper_bound':hitp,'post_hit_upper_bound':hitq}],['dtr_threshold_c','crossover_solar_hour','cross_left_bin','cross_left_median_bias','cross_right_bin','cross_right_median_bias','k_pre','k_post','n_pre','n_post','pre_hit_upper_bound','post_hit_upper_bound'])
  models=[('M0_OFFICIAL',lambda r:float(r['pred_c'])),('M14_CROSSOVER_MONOTONIC',lambda r:transform(r,h0,kp,kq))];groups=[('May-Sep',val),('DTR<14.8',[r for r in val if float(r['formal_dtr_c'])<DTRC]),('DTR>=15',[r for r in val if float(r['formal_dtr_c'])>=15]),('DTR>=18',[r for r in val if float(r['formal_dtr_c'])>=18])]
  rec=[]
  for name,pf in models:
@@ -127,7 +131,6 @@ def main():
   rs=[r for r in val if float(r['formal_dtr_c'])>=15 and lo<=r['clouds']<hi]
   for name,pf in models:m=metric(rs,pf);m.update({'model':name,'cloud_group':label,'n_days':len(set(r['solar_date'] for r in rs))});cr.append(m)
  write(DTR_OUT,[{k:r[k] for k in ['model','dtr_bin','n','rmse','mae','mbe','r2']} for r in dr],['model','dtr_bin','n','rmse','mae','mbe','r2']);write(HOUR_OUT,[{k:r[k] for k in ['model','solar_hour','n','rmse','mae','mbe','r2']} for r in hr],['model','solar_hour','n','rmse','mae','mbe','r2']);write(CLOUD_OUT,[{k:r[k] for k in ['model','cloud_group','n_days','n','rmse','mae','mbe','r2']} for r in cr],['model','cloud_group','n_days','n','rmse','mae','mbe','r2']);write(YEAR_OUT,[{k:r[k] for k in ['model','year','n_days','n','rmse','mae','mbe','r2']} for r in yr],['model','year','n_days','n','rmse','mae','mbe','r2'])
- # complete-curve invariant check
  meta={}
  for r in rows:meta.setdefault(r['solar_date'],r)
  checks=[]
@@ -139,5 +142,5 @@ def main():
   rise=[z for z in vals if su+C<=z[0]<=mx];fall=[z for z in vals if mx<=z[0]<=sd];rd=[rise[i+1][1]-rise[i][1] for i in range(len(rise)-1)];fd=[fall[i+1][1]-fall[i][1] for i in range(len(fall)-1)];checks.append({'solar_date':ds,'year':r['year'],'rise_monotonic':'YES' if min(rd)>=-1e-8 else 'NO','fall_monotonic':'YES' if max(fd)<=1e-8 else 'NO','below_tmin_c':max(0.,tn-min(x[1] for x in vals)),'above_tmax_c':max(0.,max(x[1] for x in vals)-tx)})
  write(SHAPE,checks,['solar_date','year','rise_monotonic','fall_monotonic','below_tmin_c','above_tmax_c']);vc=[r for r in checks if r['year']>=2017];bad=sum(r['rise_monotonic']=='NO' or r['fall_monotonic']=='NO' or r['below_tmin_c']>1e-6 or r['above_tmax_c']>1e-6 for r in vc)
  mm={(r['model'],r['group']):r for r in rec};o=mm[('M0_OFFICIAL','DTR>=15')];n=mm[('M14_CROSSOVER_MONOTONIC','DTR>=15')];oa=mm[('M0_OFFICIAL','May-Sep')];na=mm[('M14_CROSSOVER_MONOTONIC','May-Sep')];imp=100*(o['rmse']-n['rmse'])/o['rmse'];impa=100*(oa['rmse']-na['rmse'])/oa['rmse'];decision='SOURCE_CANDIDATE' if bad==0 and imp>=8 and not hitp and not hitq else 'REVIEW_REQUIRED'
- text=f'''# M14 calibration-crossover monotonic CLOUDS HTEMP\n\n- Formal DTR trigger: **>{DTRC:.1f} C**\n- Calibration-only residual crossover H0: **{h0:.3f} solar hour**\n- Crossing bracket: hour bins {ca['hour_bin']} (bias {ca['mean_bias']:.3f} C) -> {cb['hour_bin']} (bias {cb['mean_bias']:.3f} C)\n- k_pre = **{kp:.4f}**, k_post = **{kq:.4f}**\n- upper-bound hits: pre={hitp}, post={hitq}\n- validation full-curve physical violations: **{bad}/{len(vc)}**\n\n## Independent validation 2017-2024\n| Scope | Official RMSE | M14 RMSE | Improvement | Official Bias | M14 Bias | Official R2 | M14 R2 |\n|---|---:|---:|---:|---:|---:|---:|---:|\n| May-Sep | {oa['rmse']:.4f} | {na['rmse']:.4f} | {impa:.2f}% | {oa['mbe']:.4f} | {na['mbe']:.4f} | {oa['r2']:.4f} | {na['r2']:.4f} |\n| DTR>=15 C | {o['rmse']:.4f} | {n['rmse']:.4f} | {imp:.2f}% | {o['mbe']:.4f} | {n['mbe']:.4f} | {o['r2']:.4f} | {n['r2']:.4f} |\n\nReference: M13 physically valid but only 4.28% high-DTR improvement; M10 statistical reference 13.71%.\n\nAutomated decision: **{decision}**.\n''';README.write_text(text,encoding='utf-8');print(text)
+ text=f'''# M14 robust calibration-crossover monotonic CLOUDS HTEMP\n\n- Formal DTR trigger: **>{DTRC:.1f} C**\n- Calibration-only median-residual crossover H0: **{h0:.3f} solar hour**\n- Robust crossing bracket: hour bins {ca['hour_bin']} (median Bias {ca['median_bias']:.3f} C) -> {cb['hour_bin']} (median Bias {cb['median_bias']:.3f} C)\n- k_pre = **{kp:.4f}**, k_post = **{kq:.4f}**\n- upper-bound hits: pre={hitp}, post={hitq}\n- validation full-curve physical violations: **{bad}/{len(vc)}**\n\n## Independent validation 2017-2024\n| Scope | Official RMSE | M14 RMSE | Improvement | Official Bias | M14 Bias | Official R2 | M14 R2 |\n|---|---:|---:|---:|---:|---:|---:|---:|\n| May-Sep | {oa['rmse']:.4f} | {na['rmse']:.4f} | {impa:.2f}% | {oa['mbe']:.4f} | {na['mbe']:.4f} | {oa['r2']:.4f} | {na['r2']:.4f} |\n| DTR>=15 C | {o['rmse']:.4f} | {n['rmse']:.4f} | {imp:.2f}% | {o['mbe']:.4f} | {n['mbe']:.4f} | {o['r2']:.4f} | {n['r2']:.4f} |\n\nReference: M13 physically valid but only 4.28% high-DTR improvement; M10 statistical reference 13.71%.\n\nAutomated decision: **{decision}**.\n''';README.write_text(text,encoding='utf-8');print(text)
 if __name__=='__main__':main()
