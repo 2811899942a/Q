@@ -1,0 +1,55 @@
+name: Shihezi Genotype Format Diagnostic
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-genotype-format-diagnostic.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+      - name: Build frozen DSSAT and inspect MZCER048 cultivar format
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make >/dev/null
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/os
+          git -C /tmp/os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/data
+          git -C /tmp/data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          cmake -S /tmp/os -B /tmp/build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/run >/dev/null
+          cmake --build /tmp/build --parallel 2 >/dev/null
+          cmake --install /tmp/build >/dev/null
+          cp -a /tmp/data/. /tmp/run/
+          python - <<'PY'
+          from pathlib import Path
+          files=list(Path('/tmp/run').rglob('MZCER048.CUL'))
+          print('CUL_FILES=',[str(x) for x in files])
+          if not files: raise SystemExit('MZCER048.CUL not found')
+          p=files[0]
+          lines=p.read_text(encoding='latin-1').splitlines()
+          print('CUL_PATH=',p)
+          print('--- FIRST 20 LINES ---')
+          for i,l in enumerate(lines[:20],1): print(f'{i:03d} len={len(l):3d} repr={l!r}')
+          print('--- TARGET/REFERENCE ROWS ---')
+          hits=[]
+          for i,l in enumerate(lines,1):
+              if any(k.lower() in l.lower() for k in ['IB0035','IB0001','McCurdy','PIONEER','990002']):
+                  hits.append((i,l))
+          for i,l in hits[:30]:
+              print(f'{i:03d} len={len(l):3d} repr={l!r}')
+              print('      1234567890'*8)
+              for a,b in [(0,6),(6,7),(7,23),(23,24),(24,30),(30,31),(31,37),(37,43),(43,49),(49,55),(55,61),(61,67),(67,80)]:
+                  print(f'      [{a+1:02d}:{b:02d}] {l[a:b]!r}')
+          print('--- HEADER FIELD ROWS ---')
+          for i,l in enumerate(lines,1):
+              if l.startswith('@'):
+                  print(f'{i:03d} len={len(l):3d} repr={l!r}')
+          PY
