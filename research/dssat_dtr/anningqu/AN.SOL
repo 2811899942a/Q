@@ -1,6 +1,6 @@
 *Soils: Anningqu, Urumqi, China
 
-*ANQH000060  ANNINGQU GRAY DESERT SOIL - MEASURED 0-60 CM
+*ANQH000060  ANNINGQU    -99      60 Anningqu gray desert soil - measured 0-60 cm
 @SITE        COUNTRY          LAT     LONG SCS FAMILY
  Anningqu    China          43.950   87.490 Gray desert soil; public same-station profile
 @ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
@@ -10,7 +10,7 @@
     40   -99 0.100 0.286 0.429  0.85   -99  1.43 0.828 13.05 45.71   0.0   -99  8.00   -99   -99   -99
     60   -99 0.100 0.288 0.432  0.70   -99  1.44 0.564 12.38 42.98   0.0   -99  8.00   -99   -99   -99
 
-*ANQH000120  ANNINGQU GRAY DESERT SOIL - 60 CM MEASURED + DEEP EXTENSION
+*ANQH000120  ANNINGQU    -99     120 Anningqu gray desert soil - 60 cm measured + deep extension
 @SITE        COUNTRY          LAT     LONG SCS FAMILY
  Anningqu    China          43.950   87.490 Gray desert soil; 60-120 cm explicitly extrapolated
 @ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
