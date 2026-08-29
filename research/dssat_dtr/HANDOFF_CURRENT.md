@@ -1,6 +1,6 @@
 # DSSAT-DTR Xinjiang Research Handoff
 
-Last material checkpoint: 2026-08-29 19:59 CST
+Last material checkpoint: 2026-08-29 20:05 CST
 Branch: `research/dssat-dtr-matrix`
 Study: DSSAT v4.8.5 CERES-Maize hourly-temperature / extreme-day thermal-time improvement
 
@@ -112,7 +112,7 @@ All 24 simulations completed: 3 arms x 2 years x 4 treatments.
 
 2020 provisional contrasts:
 - H0TT vs M0 relative RRMSE reduction: 10.461%
-- M15TT vs M0 relative RRMSE reduction: 6.250%
+- M15TT vs M0 relative reduction: 6.250%
 - M15TT vs H0TT: 4.703% worse locally
 - maximum arm-induced HWAM shift: 934 kg/ha
 
@@ -143,8 +143,6 @@ V4 Summary.OUT reports approximately:
 - 2019 SRADA 23.3, PRCP 83.3 mm
 - 2020 SRADA 24.2, PRCP 103.1 mm
 
-Thus V4 is systematically higher-radiation and lower-rain than the published experiment description.
-
 Source-recovered Guo Fig.2-2 temperature series is available under:
 `research/dssat_dtr/data/shihezi_real_case/guo_weather_daily_v1/`
 
@@ -154,7 +152,7 @@ Current dominant unresolved common-arm inputs:
 3. exact initial soil-water profile;
 4. raw numerical observed yields (current targets digitized from figure, ~+/-100 kg/ha uncertainty).
 
-## 9. Nitrogen root-cause diagnostic — first run invalid as rate response
+## 9. Nitrogen diagnostics
 
 Same station / same Xinyu66 later experiment (2021-2022) reports a management clue:
 - urea 280 kg/ha at 46% N = 128.8 kg N/ha
@@ -164,42 +162,65 @@ Same station / same Xinyu66 later experiment (2021-2022) reports a management cl
 
 This later schedule is diagnostic evidence only, not accepted as the exact 2019/2020 input.
 
-First M0-only N diagnostic intended to compare:
-- UNLIMITED (`NITRO=N`)
-- N64_SPLIT
-- N129_SPLIT
-- N193_SPLIT
-- N129_BASAL
+### First N run — invalid rate response
 
-Initial result showed every finite-N scenario at the same ~4.73 t/ha and was classified engineering-inconclusive.
+The first finite-N run produced a common ~4.73 t/ha because the treatment row had `MF=0`. The fertilizer block was present but not linked to the treatment. This run is retained only as an engineering failure diagnosis.
 
-### Exact cause found
-The treatment factor row still had:
-`CU FL SA IC MP MI MF MR MC MT ME MH SM = 1 1 0 1 1 1 0 0 0 0 0 0 1`
+### Corrected V2 — VALID sensitivity/root-cause diagnostic
 
-`MF=0`, so the generated `*FERTILIZERS` factor level 1 was not linked to the treatment. `NITRO=Y` was active, but the intended fertilizer scenarios were not selected.
+The corrected V2 uses `MF=1`, `NITRO=Y`, `FERTI=R`. DSSAT confirms different applied-N totals:
+- N64_SPLIT: NI#M=9, NICM ~54 kg N/ha
+- N129_SPLIT: NI#M=9, NICM ~117 kg N/ha
+- N193_SPLIT: NI#M=9, NICM ~171 kg N/ha
+- N129_BASAL: NI#M=1, NICM ~129 kg N/ha
 
-Therefore the common ~4.73 t/ha result represents severe N stress with effectively no selected fertilizer and cannot be interpreted as an N-rate response.
+2020 M0 results:
 
-## 10. Immediate next action
+| Scenario | RMSE kg/ha | RRMSE % | MAE kg/ha | Bias kg/ha | Mean HWAM kg/ha |
+|---|---:|---:|---:|---:|---:|
+| UNLIMITED | 6684.8 | 60.771 | 6603.0 | +6603.0 | 17603.0 |
+| N64_SPLIT | 3818.0 | 34.709 | 3709.2 | -3709.2 | 7290.8 |
+| N129_SPLIT | 2737.9 | 24.890 | 2600.2 | -2600.2 | 8399.8 |
+| N193_SPLIT | 1860.0 | 16.909 | 1598.2 | -1598.2 | 9401.8 |
+| N129_BASAL | 2684.4 | 24.403 | 2513.2 | -2513.2 | 8486.8 |
 
-Correct the nitrogen diagnostic only:
-1. set treatment `MF=1` for finite-N scenarios;
-2. keep `NITRO=Y`, `FERTI=R`;
-3. preserve UNLIMITED V4 baseline unchanged;
-4. save exact generated fertilizer sections;
-5. record `NI#M`, `NICM`, `NUCM`, N-loss/stress fields and HWAM;
-6. verify DSSAT actually reports different applied-N totals for N64/N129/N193;
-7. only then interpret nitrogen leverage on the M0 yield gap.
+Best finite-N diagnostic: N193_SPLIT, 16.909% RRMSE versus 60.771% in the unlimited-N reconstruction, a 72.17% relative reduction.
 
-After the corrected diagnostic:
-- if a defensible finite-N range brings M0 substantially toward the published 2020 baseline, continue recovering exact 2019/2020 fertilizer management before any three-arm accuracy claim;
-- if nitrogen cannot explain the gap, return priority to exact WTH / initial-water reconstruction or select another public real case with complete DSSAT inputs.
+Interpretation: nitrogen representation explains a large portion of the M0 discrepancy. N193_SPLIT remains a diagnostic bracket because exact 2019-2020 fertilizer management has not yet been recovered. The remaining 16.909% still misses the published 5.69% baseline substantially.
 
-## 11. Hard scientific rules
+## 10. Weather source-gap diagnostic V1 — withdrawn from attribution
+
+An existing M0 weather diagnostic attempted to adjust source-supported magnitudes for precipitation and solar radiation. It returned identical HWAM and identical post-run `Summary.OUT` weather diagnostics for BASE, RAIN_MATCH, SRAD_19P8 and WEATHER_BOTH:
+- 2019 SRADA=23.30, PRCP=83.30
+- 2020 SRADA=24.20, PRCP=103.10
+
+Because requested weather changes did not appear in `Summary.OUT`, this result cannot be interpreted as crop insensitivity to rainfall or radiation. The WTH edits did not propagate into the actual DSSAT run path or were bypassed.
+
+RAIN_MATCH / SRAD_19P8 / WEATHER_BOTH V1 are therefore withdrawn from scientific attribution.
+
+## 11. Immediate next action
+
+### Priority A — weather diagnostic V2 with hard audit
+1. create independent physical M0 scenario roots;
+2. link the scenario root to `/DSSAT48`;
+3. edit the exact active `/DSSAT48/Weather/SHIH1901.WTH` and `SHIH2001.WTH`;
+4. save file hashes plus directly parsed pre-run SRAD mean and RAIN total;
+5. run M0;
+6. require post-run `Summary.OUT` SRADA/PRCP to change consistently;
+7. fail the workflow if a requested weather scenario is identical to BASE after the input audit.
+
+### Priority B — same-trial management recovery
+Continue Meng/Guo 2019-2020 source recovery for:
+- exact fertilizer products, total rates, dates and split fractions;
+- initial soil-water profile near planting;
+- exact national-station + NASA weather combination if available.
+
+Only source-supported common-arm inputs may enter a formal V6 reconstruction. Diagnostic values may continue to bracket sensitivity, but cannot be chosen by yield fit.
+
+## 12. Hard scientific rules
 
 - Do not retune M15 (`DTRc=14.8 C`, `alpha=7.8094`).
-- Do not retune Xinyu66 coefficients against the validation yield.
+- Do not retune Xinyu66 coefficients against validation yield.
 - Do not describe V4 H0TT/M15TT percentage reductions as final real-yield accuracy gains while M0 reproduction fails.
 - All common-arm reconstruction changes must be source-supported or explicitly labeled diagnostic.
 - After every material result, failure, method switch or major decision, write a GitHub checkpoint and update this handoff before continuing.
