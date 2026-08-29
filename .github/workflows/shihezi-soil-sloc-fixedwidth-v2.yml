@@ -1,0 +1,143 @@
+name: Shihezi Soil SLOC Fixed Width V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-soil-sloc-fixedwidth-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild proven V4 base
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4.sh'); p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run fixed-width LOWOM HIGHOM W2 N129
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,re,subprocess,json
+          from datetime import date
+
+          base=Path('/tmp/run_M0')
+          vals={'LOWOM':[0.0861,0.0818,0.0733,0.0758,0.0593], 'HIGHOM':[0.8614,0.8179,0.7332,0.7581,0.5928]}
+          fert_dates=[date(2020,5,6),date(2020,6,15),date(2020,6,23),date(2020,7,2),date(2020,7,9),date(2020,7,16),date(2020,7,23),date(2020,7,30),date(2020,8,10),date(2020,8,24)]
+          def yydoy(d): return f'{d.year%100:02d}{d.timetuple().tm_yday:03d}'
+          def repl(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError(start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+          def fixed_sloc(sol,slocs):
+              lines=sol.read_text(encoding='latin-1').splitlines(); out=[]; in_layers=False; k=0
+              for line in lines:
+                  if line.startswith('@  SLB'):
+                      in_layers=True; out.append(line); continue
+                  if in_layers and line.strip() and not line.startswith(('@','*')) and k<5:
+                      if len(line)<102: raise RuntimeError(f'soil layer row too short {len(line)} {line!r}')
+                      before=line
+                      # DSSAT SOL layer fields are six characters wide. SLOC is field 9 -> [48:54].
+                      line=line[:48]+f'{slocs[k]:6.3f}'+line[54:]
+                      assert len(line)==len(before), (len(line),len(before))
+                      assert line[:48]==before[:48] and line[54:]==before[54:]
+                      k+=1
+                  out.append(line)
+              if k!=5: raise RuntimeError(f'edited {k} soil rows')
+              sol.write_text('\n'.join(out)+'\n',encoding='latin-1')
+          def setup_n(xfile):
+              txt=xfile.read_text(encoding='latin-1')
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'; new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError('MF')
+              txt=txt.replace(old,new,1)
+              each=128.8/10
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              for d in fert_dates: rows.append(f' 1 {yydoy(d)} FE005 AP001   5.0 {each:5.2f}   0.0   0.0   0.0   0.0   -99 Fixed-width SLOC audit')
+              txt=repl(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',' 1 MA              R     R     R     N     M')
+              txt=txt.replace(' 1 OU              N     Y     Y     1     Y     N     Y     N     N     N     Y     N     Y     A',' 1 OU              N     Y     Y     1     Y     N     Y     Y     N     N     Y     N     Y     A')
+              xfile.write_text(txt,encoding='latin-1')
+          def parse_summary(path):
+              ls=path.read_text(errors='replace').splitlines(); hi=next(i for i,l in enumerate(ls) if l.startswith('@') and 'HWAM' in l)
+              h=ls[hi]; d=next(l for l in ls[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); return dict(zip(names[idx:],vals[-len(names[idx:]):]))
+          def info_oc(txt):
+              # Parse rows from INFO.OUT section: LYR DS DLAYR LL DUL SAT Root BD OC...
+              out=[]; active=False
+              for line in txt.splitlines():
+                  if 'LYR  cm    cm  frac  frac  frac  Grow g/cm3     %' in line:
+                      active=True; continue
+                  if active:
+                      if not line.strip(): break
+                      t=line.split()
+                      if t and t[0].isdigit() and len(t)>=9:
+                          out.append({'layer':int(t[0]),'depth_cm':float(t[1]),'OC_pct':float(t[8])})
+              return out
+
+          out=Path('research/dssat_dtr/data/shihezi_real_case/soil_sloc_fixedwidth_v2'); out.mkdir(parents=True,exist_ok=True)
+          result={}
+          for name,slocs in vals.items():
+              r=Path('/tmp')/f'slocfw_{name}'; shutil.copytree(base,r)
+              fixed_sloc(r/'Soil'/'SH.SOL',slocs); setup_n(r/'Maize'/'SHIH2002.MZX')
+              shutil.copy2(r/'Soil'/'SH.SOL',out/f'{name}_SH.SOL')
+              subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True); subprocess.run(['sudo','ln','-s',str(r),'/DSSAT48'],check=True)
+              wd=r/'Maize'
+              for p in wd.glob('*.OUT'): p.unlink()
+              cp=subprocess.run([str(r/'dscsm048'),'A','SHIH2002.MZX'],cwd=wd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              if cp.returncode!=0: raise RuntimeError(name+'\n'+cp.stdout)
+              z=parse_summary(wd/'Summary.OUT'); info=(wd/'INFO.OUT').read_text(errors='replace')
+              oc=info_oc(info)
+              result[name]={'intended_SLOC_pct':slocs,'model_read_OC':oc,'summary':{k:z.get(k) for k in ['HWAM','NI#M','NICM','NUCM','NLCM','NMINC']}}
+              shutil.copy2(wd/'INFO.OUT',out/f'{name}_INFO.OUT'); shutil.copy2(wd/'Summary.OUT',out/f'{name}_Summary.OUT')
+              for fn in ['SoilNi.OUT','PlantN.OUT','SoilNBalSum.OUT']:
+                  p=wd/fn
+                  if p.exists(): shutil.copy2(p,out/f'{name}_{fn}')
+          (out/'audit.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
+          lo=float(result['LOWOM']['summary']['HWAM']); hi=float(result['HIGHOM']['summary']['HWAM'])
+          md=['# Shihezi fixed-width SLOC propagation audit V2','',
+              f"- LOWOM intended SLOC: `{vals['LOWOM']}`; model-read OC: `{result['LOWOM']['model_read_OC']}`; HWAM={lo:.0f} kg/ha.",
+              f"- HIGHOM intended SLOC: `{vals['HIGHOM']}`; model-read OC: `{result['HIGHOM']['model_read_OC']}`; HWAM={hi:.0f} kg/ha.",
+              f"- HIGHOM-LOWOM HWAM = **{hi-lo:+.0f} kg/ha**.",'',
+              'Acceptance rule: model-read OC must visibly differ in the intended direction. Only then is the yield/N response a valid OM sensitivity result.']
+          (out/'README_FIXEDWIDTH_SLOC_V2.md').write_text('\n'.join(md)+'\n',encoding='utf-8'); print('\n'.join(md))
+          PY
+
+      - name: Commit fixed-width SLOC result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/soil_sloc_fixedwidth_v2
+          if ! git diff --cached --quiet; then
+            git commit -m 'Validate fixed-width Shihezi SLOC propagation'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
