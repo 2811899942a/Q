@@ -1,0 +1,171 @@
+===== /tmp/run_M0/DSSATPRO.L48 =====
+DDB // /tmp/run_M0
+DTB // /tmp/run_M0
+DTE // /tmp/run_M0
+DTO // /tmp/run_M0
+DAT // /tmp/run_M0
+DPT // /tmp/run_M0
+DIM // /tmp/run_M0
+DTP // /tmp/run_M0
+DPF // /tmp/run_M0
+DFO // /tmp/run_M0
+DIS // /tmp/run_M0
+DDW // /tmp/run_M0
+DWG // /tmp/run_M0
+DWC // /tmp/run_M0
+DDS // /tmp/run_M0
+DTS // /tmp/run_M0
+DDG // /tmp/run_M0
+DCG // /tmp/run_M0/TOOLS/GENCALC GENCALC2.EXE
+DGL // /tmp/run_M0/TOOLS/GLUE GLUE.BAT
+DPM // /tmp/run_M0
+DDE // /tmp/run_M0
+TOG // /tmp/run_M0/TOOLS/GBUILD GBUILD.EXE
+MAL // /tmp/run_M0 dscsm048 PRFRM048
+MBA // /tmp/run_M0 dscsm048 CSCER048
+MBH // /tmp/run_M0 dscsm048 PRFRM048
+MBM // /tmp/run_M0 dscsm048 PRFRM048
+MBN // /tmp/run_M0 dscsm048 CRGRO048
+MBR // /tmp/run_M0 dscsm048 PRFRM048
+MBS // /tmp/run_M0 dscsm048 BSCER048
+MCB // /tmp/run_M0 dscsm048 CRGRO048
+MCH // /tmp/run_M0 dscsm048 CRGRO048
+MCN // /tmp/run_M0 dscsm048 CRGRO048
+MCO // /tmp/run_M0 dscsm048 CRGRO048
+MCP // /tmp/run_M0 dscsm048 CRGRO048
+MCS // /tmp/run_M0 dscsm048 CSYCA048
+MFA // /tmp/run_M0 dscsm048 CRGRO048
+MFB // /tmp/run_M0 dscsm048 CRGRO048
+MGB // /tmp/run_M0 dscsm048 CRGRO048
+MGG // /tmp/run_M0 dscsm048 PRFRM048
+MLT // /tmp/run_M0 dscsm048 CRGRO048
+MML // /tmp/run_M0 dscsm048 MLCER048
+MMZ // /tmp/run_M0 dscsm048 MZCER048
+MNP // /tmp/run_M0 dscsm048 CRGRO048
+MPI // /tmp/run_M0 dscsm048 PIALO048
+MPN // /tmp/run_M0 dscsm048 CRGRO048
+MPP // /tmp/run_M0 dscsm048 CRGRO048
+MPR // /tmp/run_M0 dscsm048 CRGRO048
+MPT // /tmp/run_M0 dscsm048 PTSUB048
+MRI // /tmp/run_M0 dscsm048 RICER048
+MSB // /tmp/run_M0 dscsm048 CRGRO048
+MSC // /tmp/run_M0 dscsm048 SCCAN048
+MSF // /tmp/run_M0 dscsm048 CRGRO048
+MSG // /tmp/run_M0 dscsm048 SGCER048
+MSI // /tmp/run_M0
+MSU // /tmp/run_M0 dscsm048 CRGRO048
+MSW // /tmp/run_M0 dscsm048 SWCER048
+MTF // /tmp/run_M0 dscsm048 TFAPS048
+MTM // /tmp/run_M0 dscsm048 CRGRO048
+MTN // /tmp/run_M0 dscsm048 TNARO048
+MTR // /tmp/run_M0 dscsm048 TRARO048
+MVB // /tmp/run_M0 dscsm048 CRGRO048
+MWH // /tmp/run_M0 dscsm048 CSCER048
+MOT // /tmp/run_M0
+MU1 // /tmp/run_M0
+MU2 // /tmp/run_M0
+MIO // /tmp/run_M0
+MLO // /tmp/run_M0
+MGR // /tmp/run_M0
+NSH // /tmp/run_M0
+ASP // /tmp/run_M0
+ASS // /tmp/run_M0 dscsm048
+ASA // /tmp/run_M0 VARAN2.EXE
+AGR // /tmp/run_M0
+AQS // /tmp/run_M0 dscsm048
+AQA // /tmp/run_M0 SUSTAIN2.EXE
+ASX // /tmp/run_M0
+APS // /tmp/run_M0 dscsm048
+APV // /tmp/run_M0
+APM // /tmp/run_M0
+APA // /tmp/run_M0 VARAN2.EXE
+APJ // /tmp/run_M0
+APF // /tmp/run_M0
+APP // /tmp/run_M0
+APK // /tmp/run_M0 DISC9801.EXE
+STD // /tmp/run_M0/StandardData
+WED // /tmp/run_M0/Weather
+WGD // /tmp/run_M0/Weather/Gen
+CLD // /tmp/run_M0/Weather/Climate
+WMD // /tmp/run_M0/Weather/Month
+SLD // /tmp/run_M0/Soil
+CRD // /tmp/run_M0/Genotype
+FID // /tmp/run_M0/Background
+ALD // /tmp/run_M0/Alfalfa
+GCD // /tmp/run_M0/GCWork
+GUD // /tmp/run_M0/GLWork
+BAD // /tmp/run_M0/Barley
+BHD // /tmp/run_M0/Bahia
+BMD // /tmp/run_M0/Bermudagrass
+BND // /tmp/run_M0/Drybean
+BRD // /tmp/run_M0/Brachiaria
+BSD // /tmp/run_M0/Sugarbeet
+CBD // /tmp/run_M0/Cabbage
+CHD // /tmp/run_M0/Chickpea
+CND // /tmp/run_M0/Canola
+COD // /tmp/run_M0/Cotton
+CPD // /tmp/run_M0/Cowpea
+CSD // /tmp/run_M0/Cassava
+FAD // /tmp/run_M0/Fallow
+FBD // /tmp/run_M0/Fababean
+GBD // /tmp/run_M0/GreenBean
+GGD // /tmp/run_M0/Guineagrass
+LTD // /tmp/run_M0/Lentil
+MLD // /tmp/run_M0/PearlMillet
+MZD // /tmp/run_M0/Maize
+NPD // /tmp/run_M0/Napier
+PED // /tmp/run_M0/Pea
+PID // /tmp/run_M0/Pineapple
+PND // /tmp/run_M0/Peanut
+POD // /tmp/run_M0/PerennialPeanut
+PPD // /tmp/run_M0/Pigeonpea
+PRD // /tmp/run_M0/BellPepper
+PTD // /tmp/run_M0/Potato
+RID // /tmp/run_M0/Rice
+SBD // /tmp/run_M0/Soybean
+SCD // /tmp/run_M0/Sugarcane
+SFD // /tmp/run_M0/Safflower
+SGD // /tmp/run_M0/Sorghum
+SID // /tmp/run_M0
+SUD // /tmp/run_M0/Sunflower
+SWD // /tmp/run_M0/SweetCorn
+TFD // /tmp/run_M0/Teff
+TMD // /tmp/run_M0/Tomato
+TND // /tmp/run_M0/Tanier
+TRD // /tmp/run_M0/Taro
+VBD // /tmp/run_M0/Velvetbean
+WHD // /tmp/run_M0/Wheat
+U1D // /tmp/run_M0/CROP1
+U2D // /tmp/run_M0/CROP2
+ASD // /tmp/run_M0/Seasonal
+AQD // /tmp/run_M0/Sequence
+APD // /tmp/run_M0/Spatial
+PSD // /tmp/run_M0/Pest
+ECD // /tmp/run_M0/Economic
+MQU // /tmp/run_M0 dscsm048 CRGRO048
+QUD // /tmp/run_M0/Quinoa
+ACC // /tmp/run_M0 dscsm048
+CCD // /tmp/run_M0/ClimateChange
+AYF // /tmp/run_M0 dscsm048
+YFD // /tmp/run_M0/YieldForecast
+SRD // /tmp/run_M0/Strawberry
+MSR // /tmp/run_M0 dscsm048 CRGRO048
+CID // /tmp/run_M0/Chia
+MCI // /tmp/run_M0 dscsm048 CRGRO048
+MPE // /tmp/run_M0 dscsm048 CRGRO048
+MPO // /tmp/run_M0 dscsm048 PRFRM048
+MSS // /tmp/run_M0 dscsm048 CRGRO048
+SSD // /tmp/run_M0/Sesame
+MBC // /tmp/run_M0 dscsm048 CRGRO048
+BCD // /tmp/run_M0/Carinata
+MGY // /tmp/run_M0 dscsm048 CRGRO048
+GYD // /tmp/run_M0/Guar
+MBG // /tmp/run_M0 dscsm048 CRGRO048
+BGD // /tmp/run_M0/BambaraGroundnut
+MAM // /tmp/run_M0 dscsm048 CRGRO048
+AMD // /tmp/run_M0/Amaranth
+===== /tmp/run_M0/DSSATPRO.v48 =====
+WED C: \DSSAT48\Weather
+WGD C: \DSSAT48\WEATHER\GEN
+CLD C: \DSSAT48\WEATHER\CLIMATE
+WMD C: \DSSAT48\WEATHER\MONTH
