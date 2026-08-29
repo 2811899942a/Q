@@ -1,0 +1,422 @@
+[
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0011 EV-8443_TG           . IB0001 300.0 0.600 850.0 850.0  8.80 45.00",
+    "values": [
+      300.0,
+      0.6,
+      850.0,
+      850.0,
+      8.8,
+      45.0
+    ],
+    "distance": 0.0,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "GF0501 Yield 10%longer      . IB0004 285.0 0.500 810.0 840.0  8.19 38.90",
+    "values": [
+      285.0,
+      0.5,
+      810.0,
+      840.0,
+      8.19,
+      38.9
+    ],
+    "distance": 0.4276786176558282,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0003 Mokwa 87TZPB-SR      . IB0001 305.0 0.600 765.0 810.0  8.00 45.00",
+    "values": [
+      305.0,
+      0.6,
+      765.0,
+      810.0,
+      8.0,
+      45.0
+    ],
+    "distance": 0.4987233702163956,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0001 OBA SUPER 2          . IB0001 270.0 0.600 780.0 840.0  7.80 45.00",
+    "values": [
+      270.0,
+      0.6,
+      780.0,
+      840.0,
+      7.8,
+      45.0
+    ],
+    "distance": 0.5049752469181039,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "GF0201 Baseline 10%longer   . IB0001 285.0 0.500 810.0 800.0  7.80 38.90",
+    "values": [
+      285.0,
+      0.5,
+      810.0,
+      800.0,
+      7.8,
+      38.9
+    ],
+    "distance": 0.5177113095152549,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "PC0005 2750-2800 GDD        . IB0001 260.0 0.750 850.0 800.0  8.50 49.00",
+    "values": [
+      260.0,
+      0.75,
+      850.0,
+      800.0,
+      8.5,
+      49.0
+    ],
+    "distance": 0.5372150407425318,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0002 EV8728-SR            . IB0001 265.0 0.600 800.0 900.0  7.20 45.00",
+    "values": [
+      265.0,
+      0.6,
+      800.0,
+      900.0,
+      7.2,
+      45.0
+    ],
+    "distance": 0.5915234568468102,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0055 MCCURDY 6714         . IB0001 265.0 0.300 825.0 907.9  9.80 38.90",
+    "values": [
+      265.0,
+      0.3,
+      825.0,
+      907.9,
+      9.8,
+      38.9
+    ],
+    "distance": 0.6670534086563084,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB1067 PIO 3394             . IB0001 240.0 0.500 900.0 820.0  8.50 48.00",
+    "values": [
+      240.0,
+      0.5,
+      900.0,
+      820.0,
+      8.5,
+      48.0
+    ],
+    "distance": 0.6936137253543935,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "PC0004 2700-2750 GDD        . IB0001 240.0 0.750 850.0 800.0  8.50 49.00",
+    "values": [
+      240.0,
+      0.75,
+      850.0,
+      800.0,
+      8.5,
+      49.0
+    ],
+    "distance": 0.6989992846920517,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "ZA0001 Prisma (FAO 700)     . IB0001 280.0 0.400 850.0 750.0  6.80 38.90",
+    "values": [
+      280.0,
+      0.4,
+      850.0,
+      750.0,
+      6.8,
+      38.9
+    ],
+    "distance": 0.7635607375972131,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0058 NC+59                . IB0001 280.0 0.300 750.0 907.5 10.00 38.90",
+    "values": [
+      280.0,
+      0.3,
+      750.0,
+      907.5,
+      10.0,
+      38.9
+    ],
+    "distance": 0.7831227553838542,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0004 SPL (semi-prol)      . IB0001 270.0 0.600 740.0 920.0  7.40 41.00",
+    "values": [
+      270.0,
+      0.6,
+      740.0,
+      920.0,
+      7.4,
+      41.0
+    ],
+    "distance": 0.7958643100428615,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB1066 PIO 3489             . IB0001 225.0 0.600 895.0 875.0  8.80 48.00",
+    "values": [
+      225.0,
+      0.6,
+      895.0,
+      875.0,
+      8.8,
+      48.0
+    ],
+    "distance": 0.8070006195784486,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB1168 DEKALB 591           . IB0001 225.0 0.400 895.0 880.0  8.00 48.00",
+    "values": [
+      225.0,
+      0.4,
+      895.0,
+      880.0,
+      8.0,
+      48.0
+    ],
+    "distance": 0.8507202830543069,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "GF0301 Yield norm cycle     . IB0004 250.0 0.500 730.0 840.0  8.19 38.90",
+    "values": [
+      250.0,
+      0.5,
+      730.0,
+      840.0,
+      8.19,
+      38.9
+    ],
+    "distance": 0.8546396901618835,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB1069 PIO 3563             . IB0001 216.0 0.600 830.0 860.0  8.80 48.00",
+    "values": [
+      216.0,
+      0.6,
+      830.0,
+      860.0,
+      8.8,
+      48.0
+    ],
+    "distance": 0.8605811989580064,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0005 TZB-SR (open p)      . IB0001 290.0 0.600 775.0 990.0  6.80 45.00",
+    "values": [
+      290.0,
+      0.6,
+      775.0,
+      990.0,
+      6.8,
+      45.0
+    ],
+    "distance": 0.8947765084086641,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "GF0001 Base Garst808-wh403  . IB0001 250.0 0.500 730.0 800.0  7.80 38.90",
+    "values": [
+      250.0,
+      0.5,
+      730.0,
+      800.0,
+      7.8,
+      38.9
+    ],
+    "distance": 0.9030642280591121,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB1065 PIO 33Y09            . IB0001 245.0 0.500 905.0 780.0  6.00 48.00",
+    "values": [
+      245.0,
+      0.5,
+      905.0,
+      780.0,
+      6.0,
+      48.0
+    ],
+    "distance": 0.9201766134824337,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0049 NEB 611              . IB0001 260.0 0.300 720.0 907.5  9.00 38.90",
+    "values": [
+      260.0,
+      0.3,
+      720.0,
+      907.5,
+      9.0,
+      38.9
+    ],
+    "distance": 0.9218358042514947,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IF0008 AG-KADUNA            . IB0001 220.0 0.600 780.0 845.0  8.00 40.00",
+    "values": [
+      220.0,
+      0.6,
+      780.0,
+      845.0,
+      8.0,
+      40.0
+    ],
+    "distance": 0.9226185560674575,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0168 PIO 3475 orig        . IB0001 220.0 0.700 850.0 907.0  9.90 38.90",
+    "values": [
+      220.0,
+      0.7,
+      850.0,
+      907.0,
+      9.9,
+      38.9
+    ],
+    "distance": 0.9341573743219074,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0042 B73 X MO17           . IB0001 220.0 0.520 880.0 803.0 10.00 38.90",
+    "values": [
+      220.0,
+      0.52,
+      880.0,
+      803.0,
+      10.0,
+      38.9
+    ],
+    "distance": 0.9352807065261209,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0041 Garst 8808           . IB0001 220.0 0.400 780.0 858.0  8.50 38.90",
+    "values": [
+      220.0,
+      0.4,
+      780.0,
+      858.0,
+      8.5,
+      38.9
+    ],
+    "distance": 0.9490653296796803,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "PC0003 2650-2700 GDD        . IB0001 212.0 0.750 850.0 800.0  8.50 49.00",
+    "values": [
+      212.0,
+      0.75,
+      850.0,
+      800.0,
+      8.5,
+      49.0
+    ],
+    "distance": 0.950263121456368,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0035 McCurdy 84aa         . IB0001 259.0 1.193 947.1 924.3 8.168 43.00 ",
+    "values": [
+      259.0,
+      1.193,
+      947.1,
+      924.3,
+      8.168,
+      43.0
+    ],
+    "distance": 0.958878751459224,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0038 Garst 8555           . IB0001 215.0 0.400 890.0 880.0  9.00 38.90",
+    "values": [
+      215.0,
+      0.4,
+      890.0,
+      880.0,
+      9.0,
+      38.9
+    ],
+    "distance": 0.9589708024752369,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB1068 DEKALB 521           . IB0001 215.0 0.400 795.0 890.0  8.00 48.00",
+    "values": [
+      215.0,
+      0.4,
+      795.0,
+      890.0,
+      8.0,
+      48.0
+    ],
+    "distance": 0.962405839550031,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  },
+  {
+    "file": "/tmp/os/Data/Genotype/MZCER048.CUL",
+    "line": "IB0062 B56*C131A            . IB0001 318.0 0.500 700.0 885.5  6.40 38.90",
+    "values": [
+      318.0,
+      0.5,
+      700.0,
+      885.5,
+      6.4,
+      38.9
+    ],
+    "distance": 0.9797097784548239,
+    "header": "@VAR#  VRNAME.......... EXPNO   ECO#    P1    P2    P5    G2    G3 PHINT"
+  }
+]
