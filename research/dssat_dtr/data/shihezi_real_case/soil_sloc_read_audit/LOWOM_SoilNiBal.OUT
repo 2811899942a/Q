@@ -1,0 +1,39 @@
+*SOIL INORGANIC N BALANCE
+
+*DSSAT Cropping System Model Ver. 4.8.5.000 -HEAD  AUG 29, 2026 12:13:41
+
+*RUN   1        : GUO2025 XINYU66 REAL      MZCER048 SHIH2002    1
+ MODEL          : MZCER048 - Maize
+ EXPERIMENT     : SHIH2002 MZ GUO2025 SHIHEZI 2020 W2
+ DATA PATH      :
+ TREATMENT  1   : GUO2025 XINYU66 REAL      MZCER048
+  
+
+
+!SOIL INORGANIC N BALANCE                         Initial               Final
+!                                                Year/Doy            Year/Doy
+!                                                2020/125            2020/232
+!                                               (kg[N]/ha)          (kg[N]/ha)
+! Soil N state variables:
+!   Soil NO3                                        15.76                7.15
+!   Soil NH4                                        15.76                2.57
+!   Soil Urea                                        0.00                0.00
+!   Soil N gases                                     0.00                0.14
+!   Unreleased fert N                                                    0.00
+
+! N additions:
+!   Fertilizer N                                   117.00
+!   Mineralized N                                   85.08
+
+! N subtractions:
+!   N immobilized                                                        0.00
+!   N leached                                                            6.31
+!   N loss to tile drainage                                              0.00
+!   N Uptake From Soil                                                 151.49
+!   NH3 loss                                                            65.68
+!   N2O loss                                                             0.08
+!   N2 loss                                                              0.08
+!   NO loss                                                              0.10
+
+!   Total N balance                                233.60              233.60
+!   Balance                                                             0.000

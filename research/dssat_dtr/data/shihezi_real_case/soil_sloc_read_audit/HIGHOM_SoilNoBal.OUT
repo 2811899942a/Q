@@ -1,0 +1,29 @@
+*SOIL ORGANIC N BALANCE
+
+*DSSAT Cropping System Model Ver. 4.8.5.000 -HEAD  AUG 29, 2026 12:13:41
+
+*RUN   1        : GUO2025 XINYU66 REAL      MZCER048 SHIH2002    1
+ MODEL          : MZCER048 - Maize
+ EXPERIMENT     : SHIH2002 MZ GUO2025 SHIHEZI 2020 W2
+ DATA PATH      :
+ TREATMENT  1   : GUO2025 XINYU66 REAL      MZCER048
+  
+
+
+!                                        INITIAL Year/Doy      FINAL Year/Doy
+!                                                2020/125            2020/232
+!SOIL N BALANCE                                 -----------kg N/ha-----------
+
+!   Soil Humus N                                 21323.01            21240.21
+!   Soil Litter N                                    0.90                5.70
+!   N in Surface Residue                             0.00                0.00
+
+!   Added to / Removed from Soil:
+!   N in Harvest Residues from Previous Crop         0.00
+!   N from Organic Applications                      0.00
+!   N from senesced plant matter                     7.09
+!   N immobilized                                    0.00
+!   N mineralized                                                       85.08
+
+!   Total N balance                              21331.00            21331.00
+!   Balance                                                             0.002

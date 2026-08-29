@@ -1,0 +1,41 @@
+*WARNING DETAIL FILE
+
+******************************************************************************
+
+*DSSAT Cropping System Model Ver. 4.8.5.000 -HEAD  AUG 29, 2026 12:13:41
+
+*RUN   1        : GUO2025 XINYU66 REAL      MZCER048 SHIH2002    1
+ MODEL          : MZCER048 - Maize
+ EXPERIMENT     : SHIH2002 MZ GUO2025 SHIHEZI 2020 W2
+ DATA PATH      :
+ TREATMENT  1   : GUO2025 XINYU66 REAL      MZCER048
+  
+
+ IPSOIL  YEAR DOY =    0   0
+ Error in soil file on line      1                                             
+ Model will continue to search for a valid soil profile.                       
+
+ IPSOIL  YEAR DOY =    0   0
+ Saturated hydraulic conductivity equal to zero for one or more soil layers.   
+ Data will be treated as missing.                                              
+
+ SOILDYN  YEAR DOY = 2020 125
+ Organic C data in one or more soil layers are zero or missing.                
+ A minimum value of OC in this layer  will be estimated using soil texture.    
+       Depth  Clay  Silt    OC                                                 
+ Layer  (cm)   (%)   (%)   (%)                                                 
+     1     5  32.8  51.9  1.34 (estimated)                                     
+     2    15  32.8  51.9  1.34 (estimated)                                     
+     3    20  32.8  51.9  1.34 (estimated)                                     
+     4    30  31.5  54.1  1.35 (estimated)                                     
+     5    40  31.5  54.1  1.35 (estimated)                                     
+     6    50  43.3  44.5  1.39 (estimated)                                     
+     7    60  43.3  44.5  1.39 (estimated)                                     
+     8    70  30.2  60.7  1.43 (estimated)                                     
+     9    80  30.2  60.7  1.43 (estimated)                                     
+    10   100  29.1  49.8  1.25 (estimated)                                     
+
+ IPWTH   YEAR DOY = 2020 125
+ Value of TAMP, amplitude of soil temperature function, is missing.            
+ A default value of  5.0°C is being used for this simulation,                 
+ which may produce inaccurate results.                                         
