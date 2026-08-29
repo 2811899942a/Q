@@ -1,0 +1,295 @@
+name: Shihezi Initial N Model Read Audit V2
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-initial-n-model-read-audit-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit-and-diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Rebuild frozen V4 M0 case
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+          src=Path('.github/workflows/shihezi-real-yield-v4.yml').read_text().splitlines()
+          marker='      - name: Build and run frozen three-arm real-yield cases'
+          i=next(i for i,x in enumerate(src) if x==marker)
+          out=[]; j=i+2
+          while j < len(src) and not src[j].startswith('      - '):
+              line=src[j]
+              if line.startswith('          '): line=line[10:]
+              elif line.strip(): raise RuntimeError('unexpected YAML: '+line)
+              else: line=''
+              out.append(line); j+=1
+          p=Path('/tmp/rebuild_v4_for_initial_n_v2.sh')
+          p.write_text('\n'.join(out)+'\n')
+          subprocess.run(['bash',str(p)],check=True)
+          PY
+
+      - name: Run strict fixed-column model-read gate and full sensitivity
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import csv,json,math,re,shutil,subprocess
+
+          root=Path('/tmp/run_M0')
+          maize=root/'Maize'; weather=root/'Weather'; soil=root/'Soil'/'SH.SOL'
+          out=Path('research/dssat_dtr/data/shihezi_real_case/initial_n_model_read_audit_v2')
+          if out.exists(): shutil.rmtree(out)
+          out.mkdir(parents=True)
+
+          subprocess.run(['sudo','rm','-rf','/DSSAT48'],check=True)
+          subprocess.run(['sudo','ln','-s',str(root),'/DSSAT48'],check=True)
+
+          obs={(2019,'W1'):9250,(2019,'W2'):10725,(2019,'W3'):12490,(2019,'W4'):12030,
+               (2020,'W1'):9275,(2020,'W2'):11100,(2020,'W3'):12030,(2020,'W4'):11595}
+          targets=[30,60,90,120,150]
+          soil_mass_kg_ha=15.76e6
+          wths={2019:weather/'SHIH1901.WTH',2020:weather/'SHIH2001.WTH'}
+          xfiles={(y,j):maize/f'SHIH{y%100:02d}{j:02d}.MZX' for y in (2019,2020) for j in range(1,5)}
+          wth_orig={y:p.read_bytes() for y,p in wths.items()}
+          x_orig={k:p.read_bytes() for k,p in xfiles.items()}
+          soil_orig=soil.read_bytes()
+
+          srad_factor={2019:19.8/23.3,2020:19.8/24.2}
+          fert_dates={
+              2019:['19123','19165','19173','19182','19189','19196','19203','19210','19221','19235'],
+              2020:['20126','20167','20175','20184','20191','20198','20205','20212','20223','20237'],
+          }
+          highom=[0.8614,0.8179,0.7332,0.7581,0.5928]
+          hyd=[
+              (20,0.122,0.237,0.457,1.00,1.51,32.75,51.93),
+              (40,0.136,0.264,0.425,0.85,1.54,31.52,54.11),
+              (60,0.120,0.231,0.371,0.70,1.59,43.28,44.53),
+              (80,0.113,0.214,0.346,0.55,1.63,30.21,60.74),
+              (100,0.105,0.236,0.385,0.40,1.61,29.13,49.76),
+          ]
+
+          def restore_all():
+              soil.write_bytes(soil_orig)
+              for y,p in wths.items(): p.write_bytes(wth_orig[y])
+              for k,p in xfiles.items(): p.write_bytes(x_orig[k])
+
+          def build_soil(vals):
+              lines=[
+                  '*Soils: Shihezi University Modern Water-saving Irrigation Key Experimental Station','',
+                  '*SHIH000100  SHIHEZI     -99     100 Guo measured 0-100 cm profile',
+                  '@SITE        COUNTRY          LAT     LONG SCS FAMILY',
+                  f" {'Shihezi':<11}{'China':<14}{44.324:8.3f}{85.996:9.3f} -99",
+                  '@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE',
+                  '    -9  0.15   6.0  0.50  60.0  1.00  1.00 IB001 IB001 IB001',
+                  '@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SADC',
+              ]
+              for (dep,ll,dul,sat,rgf,bd,clay,silt),oc in zip(hyd,vals):
+                  lines.append(
+                      f"{dep:6d}{'-99':>6}{ll:6.3f}{dul:6.3f}{sat:6.3f}{rgf:6.3f}"
+                      f"{'-99':>6}{bd:6.2f}{oc:6.3f}{clay:6.2f}{silt:6.2f}{0.0:6.1f}"
+                      f"{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}{'-99':>6}"
+                  )
+              return '\n'.join(lines)+'\n'
+
+          def edit_srad(y):
+              p=wths[y]; lines=[]; n=0
+              for raw in p.read_text(encoding='latin-1').splitlines():
+                  z=raw.split()
+                  if len(z)>=5 and z[0].isdigit() and len(z[0])==5:
+                      dt,sr,tx,tn,rn=z[:5]
+                      raw=f'{dt:>5s}{float(sr)*srad_factor[y]:6.1f}{float(tx):6.1f}{float(tn):6.1f}{float(rn):6.1f}'
+                      n+=1
+                  lines.append(raw)
+              if n==0: raise RuntimeError(f'{y}: no WTH rows changed')
+              p.write_text('\n'.join(lines)+'\n',encoding='latin-1')
+
+          def replace_section(txt,start,end,body):
+              m=re.search(re.escape(start)+r'.*?(?='+re.escape(end)+r')',txt,re.S)
+              if not m: raise RuntimeError('missing '+start)
+              return txt[:m.start()]+body.rstrip()+'\n\n'+txt[m.end():]
+
+          def set_fertilizer_n193(txt,y):
+              old='  1  1  0  1  1  1  0  0  0  0  0  0  1'
+              new='  1  1  0  1  1  1  1  0  0  0  0  0  1'
+              if old not in txt: raise RuntimeError('MF=0 treatment factor missing')
+              txt=txt.replace(old,new,1)
+              each=193.2/10.0
+              rows=['*FERTILIZERS (INORGANIC)','@F FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD FERNAME']
+              for d in fert_dates[y]:
+                  rows.append(f' 1 {d} FE005 AP001   5.0 {each:6.2f}   0.0   0.0   0.0   0.0   -99 Initial-N V2')
+              txt=replace_section(txt,'*FERTILIZERS (INORGANIC)','*SIMULATION CONTROLS','\n'.join(rows))
+              txt=txt.replace(' 1 OP              Y     N     N     N     N     N     N     N     M',' 1 OP              Y     Y     N     N     N     N     N     N     M')
+              txt=txt.replace(' 1 MA              R     R     N     N     M',' 1 MA              R     R     R     N     M')
+              return txt
+
+          def fmt_water(water):
+              s=f'{water:.3f}'
+              if s.startswith('0'):
+                  s=s[1:]
+              return s
+
+          def set_initial_fixed(txt,v):
+              lines=txt.splitlines(); out_lines=[]; active=False; changed=0; block=[]
+              for line in lines:
+                  if line.startswith('@C') and 'ICBL' in line and 'SH2O' in line:
+                      active=True; out_lines.append(line); block.append(line); continue
+                  if active and line.startswith('*'):
+                      active=False
+                  if active and line.strip() and not line.startswith(('@','!','*')):
+                      z=line.split()
+                      if len(z)>=5 and z[0].isdigit():
+                          factor=int(float(z[0])); depth=int(round(float(z[1]))); water=float(z[2])
+                          ws=fmt_water(water)
+                          # Exact DSSAT fixed-column structure used by the frozen V4 FileX:
+                          # factor(2), ICBL(6), SH2O(6), SNH4(7), SNO3(7)
+                          line=f'{factor:2d}{depth:6d}{ws:>6s}{v:7.2f}{v:7.2f}'
+                          changed+=1; block.append(line)
+                  out_lines.append(line)
+              if changed!=5:
+                  raise RuntimeError(f'expected 5 initial-condition rows, changed {changed}')
+              return '\n'.join(out_lines)+'\n','\n'.join(block)+'\n'
+
+          def parse_summary(p):
+              ls=p.read_text(errors='replace').splitlines()
+              hi=next(i for i,l in enumerate(ls) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
+              h=ls[hi]; d=next(l for l in ls[hi+1:] if l.strip() and not l.startswith(('@','!','*')))
+              names=h[1:].split(); vals=d.split(); idx=names.index('HWAM'); tail=names[idx:]
+              return dict(zip(tail,vals[-len(tail):]))
+
+          def consolidated_initial(txt):
+              lines=txt.splitlines(); start=next(i for i,l in enumerate(lines) if l.startswith('*INITIAL CONDITIONS'))
+              block=[]
+              for l in lines[start:]:
+                  if block and l.startswith('*PLANTING'): break
+                  block.append(l)
+              numeric=[]
+              for l in block:
+                  z=l.split()
+                  if len(z)>=4:
+                      try:
+                          dep=float(z[0]); water=float(z[1]); nh4=float(z[2]); no3=float(z[3])
+                          if 0 < dep <= 200 and 0 <= water <= 1:
+                              numeric.append({'depth_cm':dep,'SH2O':water,'SNH4':nh4,'SNO3':no3})
+                      except Exception:
+                          pass
+              return '\n'.join(block)+'\n',numeric
+
+          rows=[]; gates=[]
+          try:
+              for target in targets:
+                  restore_all()
+                  soil.write_text(build_soil(highom),encoding='latin-1')
+                  for y in (2019,2020): edit_srad(y)
+                  total_mgkg=target*1e6/soil_mass_kg_ha
+                  v=total_mgkg/2.0
+                  filex_blocks={}
+                  for (y,j),p in xfiles.items():
+                      txt=set_fertilizer_n193(p.read_text(encoding='latin-1'),y)
+                      txt,icblock=set_initial_fixed(txt,v)
+                      p.write_text(txt,encoding='latin-1')
+                      if j==2: filex_blocks[y]=icblock
+
+                  target_gate=None
+                  for y,yy in ((2019,'19'),(2020,'20')):
+                      for j,tr in enumerate(('W1','W2','W3','W4'),1):
+                          for fn in ('Summary.OUT','PlantGro.OUT','INFO.OUT','ERROR.OUT','WARNING.OUT'):
+                              p=maize/fn
+                              if p.exists(): p.unlink()
+                          for p in root.rglob('DSSAT48.INP'):
+                              p.unlink()
+                          x=f'SHIH{yy}{j:02d}'
+                          cp=subprocess.run(['../dscsm048','A',f'{x}.MZX'],cwd=maize,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                          if cp.returncode!=0 or not (maize/'Summary.OUT').exists():
+                              raise RuntimeError(f'MINN{target} {x} failed\n{cp.stdout[-2500:]}')
+                          z=parse_summary(maize/'Summary.OUT')
+                          pred=float(z['HWAM']); ob=obs[y,tr]
+                          if y==2020 and j==2:
+                              inp=next(iter(root.rglob('DSSAT48.INP')),None)
+                              if inp is None: raise RuntimeError(f'MINN{target}: DSSAT48.INP missing')
+                              block,numeric=consolidated_initial(inp.read_text(errors='replace'))
+                              if not numeric: raise RuntimeError(f'MINN{target}: no model-read IC rows')
+                              nh=sorted(set(r['SNH4'] for r in numeric)); no=sorted(set(r['SNO3'] for r in numeric))
+                              expected=round(v,2)
+                              ok=(all(abs(a-expected)<=0.011 for a in nh) and all(abs(a-expected)<=0.011 for a in no))
+                              target_gate={'target_kg_ha':target,'written_SN_each':v,'expected_rounded':expected,
+                                           'model_read_unique_SNH4':nh,'model_read_unique_SNO3':no,'pass':ok}
+                              (out/f'MINN{target}_FileX_initial.txt').write_text(filex_blocks[2020],encoding='utf-8')
+                              (out/f'MINN{target}_DSSAT48_initial.txt').write_text(block,encoding='utf-8')
+                          rows.append({'target_initial_mineral_N_kg_ha':target,'SNH4_mg_kg':v,'SNO3_mg_kg':v,
+                                       'year':y,'treatment':tr,'obs':ob,'HWAM':pred,'error':pred-ob,
+                                       'ARE_pct':abs(pred-ob)/ob*100,'SRADA':float(z['SRADA']),
+                                       'NICM':z.get('NICM',''),'NUCM':z.get('NUCM',''),'NMINC':z.get('NMINC','')})
+                  if target_gate is None: raise RuntimeError(f'MINN{target}: gate case never executed')
+                  gates.append(target_gate)
+
+              if not all(g['pass'] for g in gates):
+                  raise RuntimeError('STRICT MODEL-READ GATE FAIL: '+json.dumps(gates))
+              model_vals=[g['model_read_unique_SNH4'][0] for g in gates]
+              if any(model_vals[i] >= model_vals[i+1] for i in range(len(model_vals)-1)):
+                  raise RuntimeError('STRICT ORDER GATE FAIL: '+repr(model_vals))
+          finally:
+              restore_all()
+
+          metrics=[]
+          for target in targets:
+              for y in (2019,2020):
+                  q=[r for r in rows if r['target_initial_mineral_N_kg_ha']==target and r['year']==y]
+                  if len(q)!=4: raise RuntimeError(f'MINN{target} {y}: expected 4 rows, got {len(q)}')
+                  es=[r['error'] for r in q]; oo=[r['obs'] for r in q]
+                  rmse=math.sqrt(sum(e*e for e in es)/4); mo=sum(oo)/4
+                  metrics.append({'target_initial_mineral_N_kg_ha':target,'year':y,'RMSE_kg_ha':rmse,
+                                  'RRMSE_pct':100*rmse/mo,'MAE_kg_ha':sum(abs(e) for e in es)/4,
+                                  'Bias_kg_ha':sum(es)/4,'mean_HWAM':sum(r['HWAM'] for r in q)/4})
+
+          with (out/'model_read_gate.json').open('w',encoding='utf-8') as f: json.dump(gates,f,indent=2)
+          with (out/'treatment_rows.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+          with (out/'metrics.csv').open('w',newline='',encoding='utf-8-sig') as f:
+              w=csv.DictWriter(f,fieldnames=list(metrics[0])); w.writeheader(); w.writerows(metrics)
+
+          md=['# Shihezi initial mineral-N diagnostic V2 — strict fixed-column model-read gate','',
+              'Engineering status: **PASS**. Every target was written with the frozen V4 fixed-column layout and DSSAT48.INP SNH4/SNO3 was required to equal the written value after rounding before any yield sensitivity was accepted.','',
+              '## Model-read gate','',
+              '|Target kg N/ha|Written each mg/kg|DSSAT SNH4|DSSAT SNO3|Gate|','|---:|---:|---|---|---|']
+          for g in gates:
+              md.append(f"|{g['target_kg_ha']}|{g['written_SN_each']:.3f}|{g['model_read_unique_SNH4']}|{g['model_read_unique_SNO3']}|{'PASS' if g['pass'] else 'FAIL'}|")
+          md += ['', '## Cross-year yield sensitivity','',
+                 '|Initial mineral N target kg/ha|Year|RRMSE %|Mean HWAM kg/ha|Bias kg/ha|',
+                 '|---:|---:|---:|---:|---:|']
+          for m in metrics:
+              md.append(f"|{m['target_initial_mineral_N_kg_ha']}|{m['year']}|{m['RRMSE_pct']:.3f}|{m['mean_HWAM']:.1f}|{m['Bias_kg_ha']:+.1f}|")
+          best19=min((m for m in metrics if m['year']==2019),key=lambda x:x['RRMSE_pct'])
+          best20=min((m for m in metrics if m['year']==2020),key=lambda x:x['RRMSE_pct'])
+          md += ['',f"Lowest diagnostic 2019 RRMSE within the predeclared range: **{best19['target_initial_mineral_N_kg_ha']} kg/ha -> {best19['RRMSE_pct']:.3f}%**.",
+                 f"Lowest diagnostic 2020 RRMSE within the predeclared range: **{best20['target_initial_mineral_N_kg_ha']} kg/ha -> {best20['RRMSE_pct']:.3f}%**.",'',
+                 'These values quantify leverage only. No initial-N stock is promoted to the formal 2019-2020 reconstruction from yield fit.']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          cp=Path('research/dssat_dtr/checkpoints/CHECKPOINT_20260829_INITIAL_N_MODEL_READ_AUDIT_V2.md')
+          cp.write_text('# Initial-N V2 fixed-column checkpoint\n\n'+'\n'.join(md[2:])+'\n',encoding='utf-8')
+          print('\n'.join(md))
+          PY
+
+      - name: Commit accepted V2 result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/initial_n_model_read_audit_v2 research/dssat_dtr/checkpoints/CHECKPOINT_20260829_INITIAL_N_MODEL_READ_AUDIT_V2.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add strict Shihezi initial N model-read audit V2 results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
