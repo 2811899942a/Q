@@ -1,0 +1,33 @@
+name: Anningqu Extreme-DTT Mechanism Audit
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/anningqu-extreme-dtt-mechanism.yml'
+      - 'research/dssat_dtr/anningqu/audit_extreme_dtt_mechanism.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+      - name: Run exact equation audit
+        run: python research/dssat_dtr/anningqu/audit_extreme_dtt_mechanism.py
+      - name: Commit mechanism audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/anningqu/extreme_dtt_mechanism
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add Anningqu extreme-DTT mechanism audit results'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
