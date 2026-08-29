@@ -1,0 +1,113 @@
+name: Meng 2021 Same Trial Input Recovery
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/meng2021-same-trial-input-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Map public attachments and extract same-trial management
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/meng research/dssat_dtr/data/shihezi_real_case/meng2021_same_trial_recovery
+          INFO='https://lwtj.shzu.edu.cn/docinfo.action?id1=d91009ca4341ca28723cd25038895cec&id2=G7zhY97M9PM%253D'
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36'
+          curl -L -sS --retry 2 -A "$UA" "$INFO" -o /tmp/meng/docinfo.html
+          python - <<'PY'
+          from pathlib import Path
+          import re,html,urllib.parse
+          s=Path('/tmp/meng/docinfo.html').read_text(errors='replace')
+          cand=[]
+          for pat in [r'(?:href|src)=["\']([^"\']+)["\']', r'["\']([^"\']*(?:openfile|downfile|download)[^"\']*)["\']']:
+              for x in re.findall(pat,s,re.I):
+                  x=html.unescape(x).strip()
+                  if 'openfile' in x.lower() or 'downfile' in x.lower() or 'download' in x.lower():
+                      u=urllib.parse.urljoin('https://lwtj.shzu.edu.cn/',x)
+                      if u not in cand: cand.append(u)
+          # Add previously indexed free-browse attachment as fallback.
+          fallback='https://lwtj.shzu.edu.cn/openfile?dbid=72&lwsing=60931ddb25c7ab6ce77f44aadf98a132&objid=57_50_49_48_50'
+          if fallback not in cand: cand.append(fallback)
+          Path('/tmp/meng/urls.txt').write_text('\n'.join(cand)+'\n')
+          print('URLS')
+          print('\n'.join(cand))
+          PY
+          : > /tmp/meng/audit.txt
+          n=0
+          while IFS= read -r U; do
+            [ -z "$U" ] && continue
+            n=$((n+1))
+            code=$(curl -L -sS --retry 2 -A "$UA" -w '%{http_code}' -o "/tmp/meng/a${n}.bin" "$U")
+            bytes=$(wc -c < "/tmp/meng/a${n}.bin")
+            typ=$(file -b "/tmp/meng/a${n}.bin")
+            echo "ATT=$n HTTP=$code BYTES=$bytes TYPE=$typ URL=$U" | tee -a /tmp/meng/audit.txt
+            if file "/tmp/meng/a${n}.bin" | grep -qi PDF; then
+              pages=$(pdfinfo "/tmp/meng/a${n}.bin" 2>/dev/null | awk '/^Pages:/{print $2}')
+              echo "ATT${n}_PAGES=$pages" | tee -a /tmp/meng/audit.txt
+              pdftotext -layout "/tmp/meng/a${n}.bin" "/tmp/meng/a${n}.txt" || true
+              echo "ATT${n}_LINES=$(wc -l < /tmp/meng/a${n}.txt)" | tee -a /tmp/meng/audit.txt
+            fi
+          done < /tmp/meng/urls.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re,json
+          # Select the PDF/text with the most extracted lines as the full thesis candidate.
+          texts=list(Path('/tmp/meng').glob('a*.txt'))
+          if not texts: raise SystemExit('No readable public Meng PDF attachment found')
+          p=max(texts,key=lambda x: len(x.read_text(errors='replace').splitlines()))
+          lines=p.read_text(errors='replace').splitlines()
+          kws=['试验区','试验站','试验设计','新玉66','新玉 66','2019','2020','W1','W2','W3','W4','PE','普通膜',
+               '播种','密度','种植密度','株距','行距','播深','施肥','肥料','氮肥','尿素','磷肥','磷酸一铵','磷酸二铵','钾肥','硫酸钾','基肥','追肥','水肥','滴施',
+               '初始含水','初始水分','土壤含水率','土壤含水','土壤水分','田间持水','灌前','播前','灌水前','土壤理化','土壤容重',
+               '气象','降水','太阳辐射','最高温','最低温','灌水日期','灌溉制度','4875','5250','5625','6000']
+          hits=[]
+          for i,line in enumerate(lines):
+              found=[k for k in kws if k.lower() in line.lower()]
+              if found:
+                  block='\n'.join(lines[max(0,i-5):min(len(lines),i+6)]).strip()
+                  if block:
+                      hits.append({'line':i+1,'keywords':found,'context':block})
+          uniq=[]; seen=set()
+          for h in hits:
+              if h['context'] not in seen:
+                  seen.add(h['context']); uniq.append(h)
+          out=Path('research/dssat_dtr/data/shihezi_real_case/meng2021_same_trial_recovery')
+          (out/'keyword_context.json').write_text(json.dumps(uniq,ensure_ascii=False,indent=2),encoding='utf-8')
+          (out/'attachment_audit.txt').write_text(Path('/tmp/meng/audit.txt').read_text(errors='replace'),encoding='utf-8')
+          md=['# Meng Yu 2021 same-trial management recovery','',
+              'Target thesis: 降解膜对滴灌玉米土壤水热运动及作物生长影响研究 (Shihezi University, 2021).',
+              'This thesis reports the same 2019-2020 station, Xinyu66 cultivar and W1-W4 irrigation quotas used by Guo 2025, with PE ordinary mulch as one treatment family.','',
+              f'- Selected public text attachment: {p.name}, extracted lines: {len(lines)}.','',
+              '## Attachment audit','```',Path('/tmp/meng/audit.txt').read_text(errors='replace').rstrip(),'```','','## Targeted contexts','']
+          for h in uniq:
+              md += [f"### Source line {h['line']} — {', '.join(h['keywords'])}",'```text',h['context'],'```','']
+          (out/'README.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print('\n'.join(md[:1200]))
+          PY
+
+      - name: Commit recovered same-trial context
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/meng2021_same_trial_recovery
+          if ! git diff --cached --quiet; then
+            git commit -m 'Recover Meng 2021 same-trial management inputs'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
