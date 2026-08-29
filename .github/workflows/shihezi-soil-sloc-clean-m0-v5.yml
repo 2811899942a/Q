@@ -1,0 +1,54 @@
+name: Shihezi Soil SLOC Clean M0 V5
+
+on:
+  push:
+    branches: [research/dssat-dtr-matrix]
+    paths:
+      - '.github/workflows/shihezi-soil-sloc-clean-m0-v5.yml'
+      - 'research/dssat_dtr/shihezi/clean_sloc_audit_v5.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-dtr-matrix
+          fetch-depth: 0
+
+      - name: Build pristine frozen M0
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make >/dev/null
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/os
+          git -C /tmp/os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/data
+          git -C /tmp/data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          cmake -S /tmp/os -B /tmp/build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/clean_M0 >/dev/null
+          cmake --build /tmp/build --parallel 2 >/dev/null
+          cmake --install /tmp/build >/dev/null
+          cp -a /tmp/data/. /tmp/clean_M0/
+          test ! -e /tmp/clean_M0/Maize/DSSAT48.INP
+
+      - name: Run standalone LOWOM HIGHOM audit
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/shihezi/clean_sloc_audit_v5.py /tmp/clean_M0
+
+      - name: Commit V5 audit result
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/soil_sloc_clean_m0_v5
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add standalone Shihezi SLOC audit V5 result'
+            git pull --rebase origin research/dssat-dtr-matrix
+            git push origin HEAD:research/dssat-dtr-matrix
+          fi
