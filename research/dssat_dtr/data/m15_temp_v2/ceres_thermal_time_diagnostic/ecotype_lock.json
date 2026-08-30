@@ -1,0 +1,9 @@
+{
+  "source_commit": "0b91373806786b600d89ccfcfff78fa2f82cb26b",
+  "ecotype_file": "Data/Genotype/MZCER048.ECO",
+  "ecotype": "IB0001",
+  "raw_row": "IB0001 GENERIC MIDWEST1    8.0 34.0  34.0  12.5   4.0   6.0   170.  4.2   0.85   6.0  15.0",
+  "TBASE_C": 8.0,
+  "TOPT_C": 34.0,
+  "ROPT_C": 34.0
+}

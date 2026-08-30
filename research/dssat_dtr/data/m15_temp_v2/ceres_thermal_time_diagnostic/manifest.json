@@ -1,0 +1,58 @@
+{
+  "dssat_source_commit": "0b91373806786b600d89ccfcfff78fa2f82cb26b",
+  "ecotype": {
+    "source_commit": "0b91373806786b600d89ccfcfff78fa2f82cb26b",
+    "ecotype_file": "Data/Genotype/MZCER048.ECO",
+    "ecotype": "IB0001",
+    "raw_row": "IB0001 GENERIC MIDWEST1    8.0 34.0  34.0  12.5   4.0   6.0   170.  4.2   0.85   6.0  15.0",
+    "TBASE_C": 8.0,
+    "TOPT_C": 34.0,
+    "ROPT_C": 34.0
+  },
+  "hours_reproduced": [
+    1,
+    24
+  ],
+  "srad_scenario": "SRAD19P8_N_OFF",
+  "round1_two_year_plant_horizon": {
+    "window": "PLANT_TO_HORIZON",
+    "contrast": "R1_minus_M15_13P5",
+    "n_days": 350,
+    "days_nonzero_DTT_delta": 80,
+    "cum_DTT_delta_Cd": -10.808505058245114,
+    "mean_abs_daily_DTT_delta_Cd": 0.030881443023557466,
+    "max_abs_daily_DTT_delta_Cd": 0.5762536834817666,
+    "mean_abs_hourly_temperature_delta_C": 0.09464995419978164,
+    "delta_degree_hours_below_TBASE": 0.0,
+    "delta_degree_hours_above_DOPT": -175.4966647038424
+  },
+  "round3_two_year_plant_horizon": {
+    "window": "PLANT_TO_HORIZON",
+    "contrast": "R3_minus_R1",
+    "n_days": 350,
+    "days_nonzero_DTT_delta": 82,
+    "cum_DTT_delta_Cd": 23.061050784451258,
+    "mean_abs_daily_DTT_delta_Cd": 0.06588871652700361,
+    "max_abs_daily_DTT_delta_Cd": 0.49115275516837364,
+    "mean_abs_hourly_temperature_delta_C": 0.15033525468522133,
+    "delta_degree_hours_below_TBASE": -71.82584365165982,
+    "delta_degree_hours_above_DOPT": 0.0
+  },
+  "alpha_rounding_sensitivity": [
+    {
+      "arm_family": "13P5",
+      "alpha_exact": 6.407985379809223,
+      "alpha_fortran_literal": 6.408,
+      "max_hourly_temperature_difference_C": 2.3927184471972396e-05,
+      "max_daily_DTT_difference_Cd": 6.575071292758139e-06
+    },
+    {
+      "arm_family": "13P8",
+      "alpha_exact": 6.749813473189908,
+      "alpha_fortran_literal": 6.7498,
+      "max_hourly_temperature_difference_C": 1.973612111072498e-05,
+      "max_daily_DTT_difference_Cd": 4.154773264986034e-06
+    }
+  ],
+  "diagnostic_classification": "ROUND3_HAS_STRONGER_DIRECT_DTT_PROPAGATION"
+}
