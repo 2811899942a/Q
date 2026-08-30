@@ -1,0 +1,23 @@
+{
+  "source_commit": "0b91373806786b600d89ccfcfff78fa2f82cb26b",
+  "data_commit": "79cb5db71bbca186add92a6a9695866a09c8b51d",
+  "parameters": {
+    "DTRc": 13.5,
+    "alpha": 6.407985379809223,
+    "p": 0.5,
+    "Bnight": 1.05
+  },
+  "shared_input_gate": true,
+  "R1_vs_R3_source_diff_lines": 1,
+  "baseline_reproduction_gate": true,
+  "H0TT_RRMSE": 26.914715819032036,
+  "M15_13P5_RRMSE": 25.497365140494637,
+  "M15_13P8_RRMSE": 24.012204181427922,
+  "R1_P05_RRMSE": 25.497365140494637,
+  "R3_RRMSE": 23.983873684562646,
+  "R3_change_vs_R1_pp": -1.513491455931991,
+  "R3_change_vs_13P8_pp": -0.028330496865276444,
+  "wins_vs_R1": 6,
+  "wins_vs_13P8": 2,
+  "classification": "ROUND3_CROP_STRONG"
+}
