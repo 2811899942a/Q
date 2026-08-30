@@ -1,0 +1,24 @@
+{
+  "source_commit": "0b91373806786b600d89ccfcfff78fa2f82cb26b",
+  "data_commit": "79cb5db71bbca186add92a6a9695866a09c8b51d",
+  "temperature_parameters_frozen_before_crop": {
+    "DTRc_C": 13.5,
+    "alpha_exact": 6.407985379809223,
+    "alpha_fortran": 6.408,
+    "p": 0.5
+  },
+  "scenario": "SRAD19P8_N_OFF",
+  "shared_input_gate": true,
+  "source_isolation_diff_lines": 1,
+  "baseline_reproduction_gate": true,
+  "H0TT_ALL8_RRMSE_pct": 26.914715819032036,
+  "M15_13P5_ALL8_RRMSE_pct": 25.497365140494637,
+  "M15_13P8_ALL8_RRMSE_pct": 24.012204181427922,
+  "V2_P05_ALL8_RRMSE_pct": 25.497365140494637,
+  "V2_relative_improvement_vs_H0TT_pct": 5.2660807866868025,
+  "V2_RRMSE_change_vs_13P5_pp": 0.0,
+  "V2_RRMSE_change_vs_13P8_pp": 1.4851609590667145,
+  "V2_treatment_wins_vs_13P5": 0,
+  "V2_treatment_wins_vs_13P8": 2,
+  "classification": "NO_CROP_GAIN"
+}
