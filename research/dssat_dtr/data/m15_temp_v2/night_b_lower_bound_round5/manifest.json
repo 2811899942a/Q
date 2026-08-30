@@ -1,0 +1,28 @@
+{
+  "Bnight_frozen": 1.05,
+  "calibration_status": "NO_STABLE_CALIBRATION_IMPROVEMENT",
+  "calibration_active_night_n": 2603,
+  "B1p05_objective": 2.9957899713462295,
+  "chosen_objective": 2.9957899713462295,
+  "blocks_better_than_B1p05": 0,
+  "round3_dense_active_night_rmse_C": 2.989843826887693,
+  "round5_dense_active_night_rmse_C": 2.989843826887693,
+  "round3_target_rmse_C": 2.7247314843919757,
+  "round5_target_rmse_C": 2.7247314843919757,
+  "target_gain_C": 0.0,
+  "round3_highDTR_rmse_C": 4.445590941125448,
+  "round5_highDTR_rmse_C": 4.445590941125448,
+  "valid_years": [
+    2018,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "years_worse": 0,
+  "shape_violations": 0,
+  "ts_caps": 15,
+  "promotion_gate_pass": false,
+  "decision": "RETAIN_ROUND3_B1P05"
+}
