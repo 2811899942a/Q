@@ -1,0 +1,11 @@
+{
+  "DTRc_C": 13.5,
+  "alpha": 6.407985379809223,
+  "p_frozen": 0.5,
+  "calibration_status": "NONUNIT_PARAMETER_FROZEN",
+  "selection_objective": "mean contiguous-block active-postpeak RMSE on Diwopu 2000-2016",
+  "calibration_active_postpeak_n": 918,
+  "calibration_p1_objective": 2.4892780706843363,
+  "calibration_chosen_objective": 2.3054468619058763,
+  "calibration_blocks_better_than_p1": 4
+}
