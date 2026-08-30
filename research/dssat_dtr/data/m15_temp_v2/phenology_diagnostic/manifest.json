@@ -1,0 +1,149 @@
+{
+  "source_commit": "0b91373806786b600d89ccfcfff78fa2f82cb26b",
+  "data_commit": "79cb5db71bbca186add92a6a9695866a09c8b51d",
+  "cases": [
+    "2019_W1",
+    "2019_W4",
+    "2020_W1",
+    "2020_W4"
+  ],
+  "source_isolation_shape_diff_lines": 1,
+  "source_isolation_B_diff_lines": 1,
+  "shared_input_gate": true,
+  "R1_changed_fields": [
+    {
+      "contrast": "R1_minus_M15_13P5",
+      "case": "2020_W1",
+      "field": "HDAT",
+      "reference_value": "2020234",
+      "candidate_value": "2020235",
+      "changed": true
+    },
+    {
+      "contrast": "R1_minus_M15_13P5",
+      "case": "2020_W1",
+      "field": "MDAT",
+      "reference_value": "2020234",
+      "candidate_value": "2020235",
+      "changed": true
+    },
+    {
+      "contrast": "R1_minus_M15_13P5",
+      "case": "2020_W4",
+      "field": "HDAT",
+      "reference_value": "2020234",
+      "candidate_value": "2020235",
+      "changed": true
+    },
+    {
+      "contrast": "R1_minus_M15_13P5",
+      "case": "2020_W4",
+      "field": "MDAT",
+      "reference_value": "2020234",
+      "candidate_value": "2020235",
+      "changed": true
+    }
+  ],
+  "R3_changed_fields": [
+    {
+      "contrast": "R3_minus_R1",
+      "case": "2019_W1",
+      "field": "ADAT",
+      "reference_value": "2019183",
+      "candidate_value": "2019182",
+      "changed": true
+    },
+    {
+      "contrast": "R3_minus_R1",
+      "case": "2019_W4",
+      "field": "ADAT",
+      "reference_value": "2019183",
+      "candidate_value": "2019182",
+      "changed": true
+    },
+    {
+      "contrast": "R3_minus_R1",
+      "case": "2020_W1",
+      "field": "HDAT",
+      "reference_value": "2020235",
+      "candidate_value": "2020234",
+      "changed": true
+    },
+    {
+      "contrast": "R3_minus_R1",
+      "case": "2020_W1",
+      "field": "MDAT",
+      "reference_value": "2020235",
+      "candidate_value": "2020234",
+      "changed": true
+    },
+    {
+      "contrast": "R3_minus_R1",
+      "case": "2020_W4",
+      "field": "HDAT",
+      "reference_value": "2020235",
+      "candidate_value": "2020234",
+      "changed": true
+    },
+    {
+      "contrast": "R3_minus_R1",
+      "case": "2020_W4",
+      "field": "MDAT",
+      "reference_value": "2020235",
+      "candidate_value": "2020234",
+      "changed": true
+    }
+  ],
+  "M15_13P8_changed_fields": [],
+  "irrigation_phenology_check": [
+    {
+      "arm": "M15_13P5",
+      "year": "2019",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "M15_13P5",
+      "year": "2020",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "M15_13P8",
+      "year": "2019",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "M15_13P8",
+      "year": "2020",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "R1_P05",
+      "year": "2019",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "R1_P05",
+      "year": "2020",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "R3_P05_B105",
+      "year": "2019",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    },
+    {
+      "arm": "R3_P05_B105",
+      "year": "2020",
+      "n_changed_phenology_fields_W1_vs_W4": 0,
+      "changed_fields": ""
+    }
+  ],
+  "interpretation": "BOTH_ROUNDS_CHANGE_PHENOLOGY_MAGNITUDE_TIMING_NEEDS_QUANTIFICATION"
+}
