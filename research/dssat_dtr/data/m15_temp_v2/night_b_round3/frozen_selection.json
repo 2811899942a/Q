@@ -1,0 +1,8 @@
+{
+  "Bnight_frozen": 1.05,
+  "calibration_status": "NONBASELINE_B_FROZEN",
+  "calibration_active_night_n": 2603,
+  "B2p2_objective": 3.134027681975096,
+  "chosen_objective": 2.9957899713462295,
+  "blocks_better_than_B2p2": 4
+}

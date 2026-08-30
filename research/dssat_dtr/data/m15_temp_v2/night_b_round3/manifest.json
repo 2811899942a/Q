@@ -1,0 +1,28 @@
+{
+  "Bnight_frozen": 1.05,
+  "calibration_status": "NONBASELINE_B_FROZEN",
+  "calibration_active_night_n": 2603,
+  "B2p2_objective": 3.134027681975096,
+  "chosen_objective": 2.9957899713462295,
+  "blocks_better_than_B2p2": 4,
+  "baseline_pointwise_max_abs_diff_C": 0.0,
+  "round1_target_rmse_C": 2.76307668039491,
+  "candidate_target_rmse_C": 2.7247314843919757,
+  "target_rmse_gain_C": 0.0383451960029344,
+  "round1_highDTR_rmse_C": 4.540757978744158,
+  "candidate_highDTR_rmse_C": 4.445590941125448,
+  "round1_dense_active_night_rmse_C": 3.085228845888945,
+  "candidate_dense_active_night_rmse_C": 2.989843826887693,
+  "valid_years": [
+    2018,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "years_worse_than_round1": 0,
+  "shape_violations": 0,
+  "ts_caps": 15,
+  "decision": "PROMOTE_NIGHT_B"
+}
