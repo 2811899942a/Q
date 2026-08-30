@@ -1,0 +1,10 @@
+{
+  "gamma_frozen": 1.11,
+  "alpha_frozen": 7.319617797613228,
+  "calibration_status": "NONUNIT_GAMMA_FROZEN",
+  "calibration_sunset_n": 239,
+  "gamma1_alpha": 6.407985379809223,
+  "gamma1_cv_objective": 2.6683802761948705,
+  "chosen_cv_objective": 2.6628698854969377,
+  "blocks_better_than_gamma1": 3
+}
