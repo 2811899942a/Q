@@ -1,0 +1,44 @@
+name: M15 V2 night B lower-bound round5
+
+on:
+  push:
+    branches: [research/dssat-m15-temp-accuracy-v2]
+    paths:
+      - 'research/dssat_dtr/scripts/m15_v2_night_b_lower_bound_round5.py'
+      - '.github/workflows/m15-v2-night-b-lower-bound-round5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-m15-temp-accuracy-v2
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run temperature-only night-B lower-bound audit
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/scripts/m15_v2_night_b_lower_bound_round5.py
+      - name: Show result
+        run: |
+          cat research/dssat_dtr/data/m15_temp_v2/night_b_lower_bound_round5/README_M15_V2_ROUND5_NIGHT_B_LOWER_BOUND.md
+      - name: Commit round5 evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/m15_temp_v2/night_b_lower_bound_round5 \
+                  research/dssat_dtr/CHECKPOINT_20260830_M15_V2_ROUND5_NIGHT_B_LOWER_BOUND_RESULT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add M15 V2 night B lower-bound audit results'
+            git pull --rebase origin research/dssat-m15-temp-accuracy-v2
+            git push origin HEAD:research/dssat-m15-temp-accuracy-v2
+          fi
