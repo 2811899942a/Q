@@ -1,6 +1,6 @@
 # HANDOFF CURRENT — DSSAT M15 Temperature Accuracy V2
 
-Last updated: 2026-08-30 10:27 CST
+Last updated: 2026-08-30 10:43 CST
 Branch: `research/dssat-m15-temp-accuracy-v2`
 
 ## 1. Current objective
@@ -58,5 +58,20 @@ Older V2 prespecification:
 commit `ed3f084fb4139b355593d5bf403c40da54baf071`.
 Where the older prespecification is more elaborate than the latest user-approved protocol, the 10:27 control-variable checkpoint governs.
 
-## 7. Immediate next action
+## 7. Teacher-facing optimization-effect briefing finalized
+A teacher-facing report has been finalized before starting new V2 optimization experiments. It covers:
+- original DSSAT HTEMP / CERES extreme-DTT pathway versus M15 Xinjiang high-DTR pathway;
+- Shihezi thesis reference framework and the frame-level reproduction/control-variable boundary;
+- three-line tables for temperature accuracy and crop-yield accuracy;
+- 13.0/13.5/13.8/14.0/14.8 threshold comparison and the exact selection logic for 13.5/13.8;
+- innovation claims and exact Weather/HMET.for, MZ_CERES.for, MZ_PHENOL.for modification points;
+- reproducibility locks and next-step control-variable experiment rule.
+
+GitHub text version:
+`research/dssat_dtr/TEACHER_BRIEF_20260830_M15_XINJIANG_TEMP_OPTIMIZATION.md`
+commit `6a8e0ee451759dae3dd3416c88c1d4f14d82fd13`.
+
+The formatted DOCX was generated and visually QA-checked page-by-page (8 pages) in the ChatGPT artifact environment. No baseline algorithm/data package was modified to create this briefing.
+
+## 8. Immediate next action
 Build the first low-dimensional temperature-shape control-variable candidates from frozen M15-13.5, evaluate them on the same frozen temperature validation chain, then propagate passing candidates through the identical frozen crop cases and append results to a unified temperature-RMSE versus yield-RRMSE matrix.
