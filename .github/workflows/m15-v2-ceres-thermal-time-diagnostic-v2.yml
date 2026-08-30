@@ -1,0 +1,52 @@
+name: M15 V2 CERES thermal-time diagnostic V2
+
+on:
+  push:
+    branches: [research/dssat-m15-temp-accuracy-v2]
+    paths:
+      - 'research/dssat_dtr/scripts/m15_v2_ceres_thermal_time_diagnostic_run.py'
+      - '.github/workflows/m15-v2-ceres-thermal-time-diagnostic-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-m15-temp-accuracy-v2
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone locked DSSAT source for ecotype/source verification
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/dssat_os
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/dssat_os
+          git -C /tmp/dssat_os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          test "$(git -C /tmp/dssat_os rev-parse HEAD)" = "0b91373806786b600d89ccfcfff78fa2f82cb26b"
+          grep '^IB0001 ' /tmp/dssat_os/Data/Genotype/MZCER048.ECO
+      - name: Run no-fit CERES DTT diagnostic with canonical weather schema normalization
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/scripts/m15_v2_ceres_thermal_time_diagnostic_run.py /tmp/dssat_os
+      - name: Show result
+        run: |
+          cat research/dssat_dtr/data/m15_temp_v2/ceres_thermal_time_diagnostic/README_CERES_THERMAL_TIME_DIAGNOSTIC.md
+      - name: Commit diagnostic evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/m15_temp_v2/ceres_thermal_time_diagnostic \
+                  research/dssat_dtr/CHECKPOINT_20260830_M15_V2_CERES_THERMAL_TIME_DIAGNOSTIC_RESULT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add CERES thermal-time diagnostic results'
+            git pull --rebase origin research/dssat-m15-temp-accuracy-v2
+            git push origin HEAD:research/dssat-m15-temp-accuracy-v2
+          fi
