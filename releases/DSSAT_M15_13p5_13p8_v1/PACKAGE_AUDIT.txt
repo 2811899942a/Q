@@ -1,0 +1,39 @@
+DSSAT M15 Xinjiang 13.5/13.8 package audit
+Date: 2026-08-29
+
+Scientific freeze
+- Primary: M15-13.5, DTRc=13.5 C, alpha=6.407985379809223
+- Robustness: M15-13.8, DTRc=13.8 C, alpha=6.749813473189908
+- Project checkpoint: ef34289f50d889e15de9df1d0a0323c21b36f20c
+- Final audit run: 33259349242, SUCCESS
+
+Upstream lock
+- DSSAT CSM source v4.8.5.0: 0b91373806786b600d89ccfcfff78fa2f82cb26b
+- DSSAT data: 79cb5db71bbca186add92a6a9695866a09c8b51d
+- Exact commit identities were rechecked against the official GitHub repositories during package finalization.
+
+Code QA
+- Python py_compile: PASS
+- M15 physics/trigger selftest: PASS
+- Source patch contract selftest: PASS
+- Summary.OUT fixed-width parser selftest: PASS
+- 13.5 hourly demo: PASS
+- 13.8 hourly demo: PASS
+- Alpha fitting CLI synthetic contract check: PASS
+
+Document QA
+- Scientific tutorial DOCX: rendered page-by-page; 10 pages; PASS
+- Xinjiang regional generalizability/transferability report DOCX: rendered page-by-page; 7 pages; PASS
+
+Spreadsheet QA
+- Workbook load/save with openpyxl: PASS
+- 12 expected worksheets: PASS
+- Formula contract checks for DTR and 13.5/13.8 trigger examples: PASS
+- Formula error-literal scan: PASS
+- Automatic full recalculation on Excel open: ENABLED
+- Custom visual render/review of all 12 worksheets: PASS
+
+Packaging
+- Official DSSAT executable/source is intentionally not redistributed in this ZIP.
+- 00_SETUP_DSSAT485_M15.bat retrieves the locked upstream versions and builds both variants locally.
+- A working Fortran compiler visible to CMake is required for local DSSAT compilation.
