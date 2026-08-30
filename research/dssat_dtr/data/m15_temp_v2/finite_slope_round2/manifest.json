@@ -1,0 +1,27 @@
+{
+  "k_frozen": 0.865,
+  "calibration_status": "NONZERO_K_FROZEN",
+  "calibration_active_postpeak_n": 918,
+  "k0_objective": 2.4892780706843363,
+  "chosen_objective": 2.3730630380454527,
+  "blocks_better_than_k0": 3,
+  "round1_p05_target_rmse_C": 2.76307668039491,
+  "round2_target_rmse_C": 2.763329259284458,
+  "incremental_target_gain_C": -0.0002525788895479941,
+  "round1_p05_highDTR_rmse_C": 4.540757978744158,
+  "round2_highDTR_rmse_C": 4.543633481951291,
+  "round1_p05_dense_active_postpeak_rmse_C": 2.441266404622071,
+  "round2_dense_active_postpeak_rmse_C": 2.4869490017369897,
+  "years_worse_than_round1_p05": 3,
+  "valid_years": [
+    2018,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "shape_violations": 0,
+  "ts_caps": 15,
+  "decision": "RETAIN_ROUND1_P05"
+}

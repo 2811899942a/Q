@@ -1,0 +1,8 @@
+{
+  "k_frozen": 0.865,
+  "calibration_status": "NONZERO_K_FROZEN",
+  "calibration_active_postpeak_n": 918,
+  "k0_objective": 2.4892780706843363,
+  "chosen_objective": 2.3730630380454527,
+  "blocks_better_than_k0": 3
+}
