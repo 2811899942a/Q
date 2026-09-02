@@ -203,6 +203,11 @@ class Heartbeat(threading.Thread):
     def run(self) -> None:
         while not self.stop_event.wait(self.seconds):
             self.runtime.save()
+            print(
+                f"A1 heartbeat stage={self.runtime.stage} trial={self.runtime.current_trial} "
+                f"elapsed_hours={self.runtime.elapsed_hours:.4f}",
+                flush=True,
+            )
 
 
 def completed_trials(path: Path) -> set[str]:
