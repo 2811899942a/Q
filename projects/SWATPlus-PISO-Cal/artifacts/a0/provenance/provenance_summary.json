@@ -1,0 +1,73 @@
+{
+  "accounting_notes": [
+    "The combined standardized 5,000 candidate archive is 4,500 production Sobol candidates plus 500 formal handoff candidates.",
+    "The 500 handoff contains 400 sobol_extension and 80 sobol_new rows admitted to the broad pool, 17 historical maximin rows, and 3 fixed anchors.",
+    "The 17 historical rows and all legacy asset-index records remain reference/optimizer-directed and are not merged into the A1/A2 broad tensor.",
+    "The fixed anchors are retained as unknown reference rows and are not counted as observation-independent sampling.",
+    "No validation (2017-2020) or final test (2021-2024) data are admitted to the broad pool."
+  ],
+  "active_parameters": [
+    "cn2",
+    "latq_co",
+    "lat_ttime",
+    "esco",
+    "epco",
+    "petco",
+    "alpha",
+    "bf_max",
+    "revap_co",
+    "deep_seep",
+    "surlag",
+    "chn",
+    "chk",
+    "perco"
+  ],
+  "counts": {
+    "all_manifest_rows": 12672,
+    "broad_rows": 4980,
+    "broad_usable_rows": 4980,
+    "duplicate_simulation_ids": 0,
+    "historical_archive_rows": 7672,
+    "optimizer_directed_rows": 7665,
+    "standardized_candidate_rows": 5000,
+    "unknown_rows": 27
+  },
+  "duplicate_simulation_ids": [],
+  "schema": "a0-south-branch-provenance-v1",
+  "source_manifest_files": {
+    "formal_500": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\high_throughput_runner_v2\\formal_500_handoff_corrected\\manifest.json",
+    "historical_asset_index": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\EXISTING_REAL_SWAT_ASSET_INDEX.csv",
+    "production_4500": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\high_throughput_runner_v2\\production_5k\\manifest.json"
+  },
+  "study_area": {
+    "channels": [
+      12,
+      17,
+      18
+    ],
+    "development": [
+      2003,
+      2016
+    ],
+    "final_test": [
+      2021,
+      2024
+    ],
+    "gauges": [
+      "01605500",
+      "01606000",
+      "01606500"
+    ],
+    "parameter_dim": 14,
+    "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+    "swatplus_revision": "62.0.0",
+    "validation": [
+      2017,
+      2020
+    ],
+    "warmup": [
+      2000,
+      2002
+    ]
+  }
+}

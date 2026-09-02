@@ -4,12 +4,11 @@ import json
 import shutil
 import subprocess
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
-
 
 ParameterWriter = Callable[[Path, np.ndarray], None]
 OutputParser = Callable[[Path], np.ndarray]
@@ -33,14 +32,18 @@ class RealSWATRunner:
     def __init__(
         self,
         template_dir: str | Path,
-        executable_name: str,
+        executable_name: str | None,
         scratch_root: str | Path,
         parameter_writer: ParameterWriter,
         output_parser: OutputParser,
         keep_successful_runs: bool = False,
+        executable_path: str | Path | None = None,
     ) -> None:
         self.template_dir = Path(template_dir)
         self.executable_name = executable_name
+        self.executable_path = Path(executable_path) if executable_path is not None else None
+        if self.executable_name is None and self.executable_path is None:
+            raise ValueError("one of executable_name or executable_path is required")
         self.scratch_root = Path(scratch_root)
         self.parameter_writer = parameter_writer
         self.output_parser = output_parser
@@ -51,8 +54,13 @@ class RealSWATRunner:
         workdir = self.scratch_root / run_id
         shutil.copytree(self.template_dir, workdir)
         self.parameter_writer(workdir, np.asarray(theta, dtype=float))
+        command = (
+            [str(self.executable_path)]
+            if self.executable_path is not None
+            else [str(workdir / self.executable_name)]
+        )
         completed = subprocess.run(
-            [str(workdir / self.executable_name)],
+            command,
             cwd=workdir,
             capture_output=True,
             text=True,

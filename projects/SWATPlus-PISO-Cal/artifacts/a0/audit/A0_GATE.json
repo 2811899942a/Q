@@ -1,0 +1,386 @@
+{
+  "archive_detail": {
+    "a0_new_real_runs": 8,
+    "broad_rows": 4980,
+    "formal_manifest_candidate_count": 500,
+    "formal_summary": {
+      "candidate_total": 500,
+      "physical_swat_runs": 282,
+      "status": "COMPLETE"
+    },
+    "historical_archive_rows": 7672,
+    "production_manifest_candidate_count": 4500,
+    "production_summary": {
+      "candidate_total": 4500,
+      "final_test_read": "NO",
+      "formal_5k_started": "NO",
+      "physical_swat_runs": 4500,
+      "runs_per_hour": 495.5936256086594,
+      "validation_read": "NO"
+    },
+    "rerun_5000": false,
+    "standardized_candidate_rows": 5000
+  },
+  "blocking_issues": [],
+  "broad_vs_optimizer_separation_pass": true,
+  "checks": {
+    "broad_provenance": true,
+    "canonical_project": true,
+    "evaluation_accounting": true,
+    "gauge_order": true,
+    "leakage_audit": true,
+    "manifest_uniqueness": true,
+    "objective_snapshot": true,
+    "optimizer_rejection": true,
+    "paper_rejection": true,
+    "parameter_dimension": true,
+    "period_lock": true,
+    "qobs_audit": true,
+    "runner_equivalence": true,
+    "study_lock": true,
+    "tensor_shape_and_finite": true,
+    "validation_final_leakage": true
+  },
+  "counts": {
+    "all_manifest_rows": 12672,
+    "broad_rows": 4980,
+    "broad_usable_rows": 4980,
+    "optimizer_directed_rows": 7665,
+    "unknown_rows": 27
+  },
+  "dataset_build_pass": true,
+  "dataset_detail": {
+    "actual_shapes": {
+      "qobs": [
+        3,
+        5114
+      ],
+      "qsim": [
+        4980,
+        3,
+        5114
+      ],
+      "theta": [
+        4980,
+        14
+      ]
+    },
+    "files_present": true,
+    "finite": true,
+    "metadata": {
+      "broad_manifest_sha256": "22547eb3552ee19c8a992ec133353dc5e0bd91d12aad9c6cf5b80d82ebc96399",
+      "channel_order": [
+        12,
+        17,
+        18
+      ],
+      "contains_final_test": false,
+      "contains_locked_validation": false,
+      "content_hashes": {
+        "dates.csv": "7d97b575036a09b76d7d58009aa6ec5bdd0fdb0f40ae3190160627615c3f54a1",
+        "parameter_bounds.csv": "e27e479247c21ffb852fb69d8bed0ed9bac982d00db320c09eab0e4b8905df1c",
+        "qobs.npy": "fa70d39793a41cf72bb1788d95ca814cd6f64f94974f168d83d2c0b8166bcdc1",
+        "qsim.npy": "ad4a2447608c6ce95f8969a7734da99e022ed9db050ba279b1ee7f74a30490e9",
+        "sample_ids.csv": "8dd793a829a210984ad94e590fdfbdb4cb8da55a89b359a0f28e7227fa2379f4",
+        "theta.npy": "b47cea232f28bf1a01170e5b3ea13a3003e569ea6180fa889e1b34a69ef92085"
+      },
+      "development_end": "2016-12-31",
+      "development_period": [
+        "2003-01-01",
+        "2016-12-31"
+      ],
+      "development_start": "2003-01-01",
+      "dtype": {
+        "qobs": "float32",
+        "qsim": "float32",
+        "theta": "float32"
+      },
+      "gauge_channels": [
+        12,
+        17,
+        18
+      ],
+      "gauge_order": [
+        "01605500",
+        "01606000",
+        "01606500"
+      ],
+      "gauges": [
+        "01605500",
+        "01606000",
+        "01606500"
+      ],
+      "missing_value_policy": "reject missing/nonfinite values; no fill",
+      "number_of_broad_samples": 4980,
+      "number_of_optimizer_directed_samples": 7665,
+      "number_of_unknown_samples": 27,
+      "objective_definition_hash": "dfa155dc1c161739d5758f4dc81cc305641abb5d880bb92134cf5ba9bb4c3e86",
+      "objective_metrics_retained_for_audit_only": true,
+      "observation_independent": true,
+      "parameter_dictionary_hash": "41ddaeaee50bdd96768f6e036792d5c715773f2841b46769f7c263846bbcf0a5",
+      "parameter_dim": 14,
+      "parameter_names": [
+        "cn2",
+        "latq_co",
+        "lat_ttime",
+        "esco",
+        "epco",
+        "petco",
+        "alpha",
+        "bf_max",
+        "revap_co",
+        "deep_seep",
+        "surlag",
+        "chn",
+        "chk",
+        "perco"
+      ],
+      "period": {
+        "end": "2016-12-31",
+        "rows": 5114,
+        "start": "2003-01-01"
+      },
+      "provenance": {
+        "broad_manifest": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a0\\provenance\\broad_pool_manifest.csv",
+        "manifest": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a0\\provenance\\simulation_manifest.csv",
+        "optimizer_and_unknown_excluded": true,
+        "selection_rule": "source_class=broad and usable_for_A1_A2=YES"
+      },
+      "provenance_manifest_sha256": "6be157459c7f30f2fb2e56f1f3babe21fbad339de69fd9eecb1e773b116d6f14",
+      "qobs_derived_features_included": false,
+      "qobs_metadata": {
+        "channel_order": [
+          12,
+          17,
+          18
+        ],
+        "fill_policy": "none",
+        "gauge_order": [
+          "01605500",
+          "01606000",
+          "01606500"
+        ],
+        "pass": true,
+        "period": {
+          "end": "2016-12-31",
+          "rows": 5114,
+          "start": "2003-01-01"
+        },
+        "schema": "a0-qobs-audit-v1",
+        "shape": [
+          3,
+          5114
+        ],
+        "source_policy": "read Q_m3s directly from locked clean 2000-2024 station exports",
+        "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+        "unit": "m3/s",
+        "validation_or_final_loaded": false
+      },
+      "qsim_failures": [],
+      "sample_count": 4980,
+      "schema": "a0-south-branch-dataset-v1",
+      "shape": {
+        "qobs": [
+          3,
+          5114
+        ],
+        "qsim": [
+          4980,
+          3,
+          5114
+        ],
+        "theta": [
+          4980,
+          14
+        ]
+      },
+      "source_archive": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a0\\provenance\\broad_pool_manifest.csv",
+      "source_class": "observation_independent_broad",
+      "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+      "swatplus_revision": "62.0.0",
+      "tensor_hashes": {
+        "dates.csv": "7d97b575036a09b76d7d58009aa6ec5bdd0fdb0f40ae3190160627615c3f54a1",
+        "parameter_bounds.csv": "e27e479247c21ffb852fb69d8bed0ed9bac982d00db320c09eab0e4b8905df1c",
+        "qobs.npy": "fa70d39793a41cf72bb1788d95ca814cd6f64f94974f168d83d2c0b8166bcdc1",
+        "qsim.npy": "ad4a2447608c6ce95f8969a7734da99e022ed9db050ba279b1ee7f74a30490e9",
+        "sample_ids.csv": "8dd793a829a210984ad94e590fdfbdb4cb8da55a89b359a0f28e7227fa2379f4",
+        "theta.npy": "b47cea232f28bf1a01170e5b3ea13a3003e569ea6180fa889e1b34a69ef92085"
+      },
+      "time_step": "daily",
+      "unit": "m3/s",
+      "warmup_period": [
+        "2000-01-01",
+        "2002-12-31"
+      ]
+    },
+    "qsim_nonnegative": true
+  },
+  "gate": "A0_PASS",
+  "gauge_mapping_pass": true,
+  "leakage_audit_pass": true,
+  "lock_detail": {
+    "channels": [
+      12,
+      17,
+      18
+    ],
+    "development": [
+      2003,
+      2016
+    ],
+    "final_test": [
+      2021,
+      2024
+    ],
+    "gauges": [
+      "01605500",
+      "01606000",
+      "01606500"
+    ],
+    "lock_files": [
+      {
+        "exists": true,
+        "path": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\docs\\A_BASIN_LOCK.md",
+        "sha256": "b18e5d3f4febee5fa0ab6c56b47e20b52dc4d5ce6caa64227e70b70cfca2f4c7"
+      },
+      {
+        "exists": true,
+        "path": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\docs\\HANDOFF_NEXT_CHAT_ZH.md",
+        "sha256": "7ab5b560e883a9cb608686156685eba26f771202c534b99620180dd7d9436092"
+      },
+      {
+        "exists": true,
+        "path": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\configs\\south_branch.yaml",
+        "sha256": "185e69ceea7a4668b6ec554d50ff81b422e6ae76fe18cddf7203c00a1591402c"
+      }
+    ],
+    "parameter_dim": 14,
+    "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+    "swatplus_revision": "62.0.0",
+    "validation": [
+      2017,
+      2020
+    ]
+  },
+  "next_entry": "A1 may start only from dataset/source_class=observation_independent_broad after A0_PASS; A0_FAIL forbids A1-A5/model training.",
+  "objective_equivalence_pass": true,
+  "paper_watershed_contamination": false,
+  "parameter_dim": 14,
+  "period_lock_pass": true,
+  "provenance_pass": true,
+  "qobs_detail": {
+    "metadata": {
+      "channel_order": [
+        12,
+        17,
+        18
+      ],
+      "fill_policy": "none",
+      "gauge_order": [
+        "01605500",
+        "01606000",
+        "01606500"
+      ],
+      "pass": true,
+      "period": {
+        "end": "2016-12-31",
+        "rows": 5114,
+        "start": "2003-01-01"
+      },
+      "schema": "a0-qobs-audit-v1",
+      "shape": [
+        3,
+        5114
+      ],
+      "source_policy": "read Q_m3s directly from locked clean 2000-2024 station exports",
+      "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+      "unit": "m3/s",
+      "validation_or_final_loaded": false
+    },
+    "row_count": 3
+  },
+  "runner_detail": {
+    "case_count": 4,
+    "cases": [
+      {
+        "candidate_id": "DEEPCAL5K-SOBOL-0001",
+        "case_index": 1,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "metric_abs_diff": 0.0,
+        "new_wall_seconds": 29.987441100005526,
+        "objective_abs_diff": 0.0,
+        "old_wall_seconds": 28.381610599986743,
+        "parameter_vector_hash": "da980056a1716cf4e819e2c716480e8fc37e0e7645a0c9b0e36fb971182a48ec",
+        "pass": "YES",
+        "rmse_diff": 0.0
+      },
+      {
+        "candidate_id": "DEEPCAL5K-SOBOL-1500",
+        "case_index": 2,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "metric_abs_diff": 0.0,
+        "new_wall_seconds": 29.776391499995952,
+        "objective_abs_diff": 0.0,
+        "old_wall_seconds": 28.729299300001003,
+        "parameter_vector_hash": "799c3b814341efa9b404629d373826c2299c61273b8fa9bb58295ce46583237c",
+        "pass": "YES",
+        "rmse_diff": 0.0
+      },
+      {
+        "candidate_id": "DEEPCAL5K-SOBOL-3000",
+        "case_index": 3,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "metric_abs_diff": 0.0,
+        "new_wall_seconds": 31.300616900000023,
+        "objective_abs_diff": 0.0,
+        "old_wall_seconds": 28.971615299989935,
+        "parameter_vector_hash": "f49b91dcff2a8084efd05dec1df2ef2b26ee5cfb91bfbe0eaa1ee0155cf1b4e5",
+        "pass": "YES",
+        "rmse_diff": 0.0
+      },
+      {
+        "candidate_id": "DEEPCAL5K-SOBOL-4500",
+        "case_index": 4,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0,
+        "metric_abs_diff": 0.0,
+        "new_wall_seconds": 29.701342699991073,
+        "objective_abs_diff": 0.0,
+        "old_wall_seconds": 28.85228369999095,
+        "parameter_vector_hash": "37d43d6a5fb5d888a0b5174fa8ef26da98649901e37c087b7f19869f7af64ea3",
+        "pass": "YES",
+        "rmse_diff": 0.0
+      }
+    ],
+    "engine": "D:\\QAPP\\SWATPlus\\Editor\\resources\\app.asar.unpacked\\static\\swat_exe\\swatplus-62-ifo-win_amd64-Rel.exe",
+    "gauge_order": [
+      "01605500/ch12",
+      "01606000/ch17",
+      "01606500/ch18"
+    ],
+    "new_runner": "swatplus_piso.swat.south_branch.SouthBranchLegacyAdapter + RealSWATRunner",
+    "old_runner": "direct invocation of inherited r3_calibration writer/parser/objective primitives",
+    "pass": true,
+    "period": [
+      "2003-01-01",
+      "2016-12-31"
+    ],
+    "schema": "a0-runner-equivalence-v1",
+    "template": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\template_frozen",
+    "tolerance": {
+      "daily_atol": 0.0,
+      "daily_rtol": 0.0,
+      "metric_abs": 0.0,
+      "objective_abs": 0.0
+    }
+  },
+  "runner_equivalence_pass": true,
+  "schema": "a0-south-branch-gate-v1",
+  "stage": "A0_SOUTH_BRANCH_PISO_TAKEOVER_AUDIT",
+  "status": "PASS",
+  "study_area": "A_SOUTH_BRANCH_POTOMAC",
+  "swat_revision": 62
+}

@@ -1,14 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 
 from swatplus_piso.study_area import A_BASIN
 from swatplus_piso.swat.runner import OutputParser, ParameterWriter, RealSWATRunner
-
 
 LegacyParameterWriter = Callable[[Path, np.ndarray], None]
 LegacyOutputParser = Callable[[Path], np.ndarray]
@@ -57,9 +56,10 @@ class SouthBranchLegacyAdapter:
     def build_runner(
         self,
         template_dir: str | Path,
-        executable_name: str,
+        executable_name: str | None,
         scratch_root: str | Path,
         keep_successful_runs: bool = False,
+        executable_path: str | Path | None = None,
     ) -> RealSWATRunner:
         writer, parser = self.callbacks()
         return RealSWATRunner(
@@ -69,6 +69,7 @@ class SouthBranchLegacyAdapter:
             parameter_writer=writer,
             output_parser=parser,
             keep_successful_runs=keep_successful_runs,
+            executable_path=executable_path,
         )
 
 

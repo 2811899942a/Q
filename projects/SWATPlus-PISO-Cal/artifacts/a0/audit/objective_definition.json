@@ -1,0 +1,39 @@
+{
+  "additional_boundary_penalty": false,
+  "additional_failure_penalty": false,
+  "aggregate_formula": "0.75*min_nse + 0.20*mean_nse + 0.05*mean_kge - 0.05*bias_excess",
+  "bias_excess_formula": "mean(max(0, abs(pbias)-15)/15)",
+  "development_period": [
+    "2003-01-01",
+    "2016-12-31"
+  ],
+  "failure_fitness": -1e+300,
+  "gauges": [
+    {
+      "channel": 12,
+      "usgs_id": "01605500"
+    },
+    {
+      "channel": 17,
+      "usgs_id": "01606000"
+    },
+    {
+      "channel": 18,
+      "usgs_id": "01606500"
+    }
+  ],
+  "metrics": [
+    "NSE",
+    "KGE",
+    "R2",
+    "PBIAS",
+    "RMSE",
+    "MAE",
+    "N"
+  ],
+  "redefinition_in_a0": false,
+  "schema": "a0-inherited-objective-definition-v1",
+  "source": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\r3_calibration.py",
+  "source_role": "formal_existing_A_basin_calibration_workflow",
+  "source_sha256": "8bba2cccd401147599050ef36e59e62af3007e2e6a232b06b9b23524616880ed"
+}

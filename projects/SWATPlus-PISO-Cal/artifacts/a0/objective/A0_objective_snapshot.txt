@@ -1,0 +1,24 @@
+A0 objective snapshot: inherited South Branch formal workflow
+
+Study area: A_SOUTH_BRANCH_POTOMAC
+Development period: 2003-01-01 through 2016-12-31 (5114 daily records)
+Gauge order: 01605500/ch12, 01606000/ch17, 01606500/ch18
+
+The objective is inherited from the existing A-basin formal calibration code. A0 does not
+redefine or optimize a new objective. The source computes per-gauge NSE, KGE, R2, PBIAS,
+RMSE, MAE, and N, then aggregates:
+
+  min_nse       = minimum gauge NSE
+  mean_nse      = mean gauge NSE
+  mean_kge      = mean gauge KGE
+  mean_abs_pbias = mean absolute gauge PBIAS
+  bias_excess   = mean(max(0, abs(PBIAS)-15) / 15)
+  fitness       = 0.75*min_nse + 0.20*mean_nse + 0.05*mean_kge - 0.05*bias_excess
+
+Ranking key: (min_nse, mean_nse, mean_kge, -mean_abs_pbias, fitness), in descending order.
+PBIAS convention is 100*sum(obs-sim)/sum(obs), so positive values indicate underestimation.
+Failed runs receive fitness=-1e300 in the inherited code; no extra failure or boundary
+penalty is introduced by A0.
+
+Source file and hash are recorded in objective_definition.json. The source remains the
+single formal writer/parser/objective authority for the takeover.

@@ -1,0 +1,37 @@
+{
+  "candidate_id": "DEEPCAL5K-SOBOL-4500",
+  "case_index": 4,
+  "parameter_order": [
+    "cn2",
+    "latq_co",
+    "lat_ttime",
+    "esco",
+    "epco",
+    "petco",
+    "alpha",
+    "bf_max",
+    "revap_co",
+    "deep_seep",
+    "surlag",
+    "chn",
+    "chk",
+    "perco"
+  ],
+  "parameter_vector": {
+    "alpha": 0.6900634765625,
+    "bf_max": 0.72274169921875,
+    "chk": 115.2954178503418,
+    "chn": 0.1262281494140625,
+    "cn2": 3.712158203125,
+    "deep_seep": 0.3867032470703125,
+    "epco": 0.2811279296875,
+    "esco": 0.6312255859375,
+    "lat_ttime": 78.48345947265625,
+    "latq_co": 0.8543701171875,
+    "perco": 0.91729736328125,
+    "petco": 1.169287109375,
+    "revap_co": 0.14816650390625,
+    "surlag": 9.080950927734376
+  },
+  "parameter_vector_hash": "37d43d6a5fb5d888a0b5174fa8ef26da98649901e37c087b7f19869f7af64ea3"
+}

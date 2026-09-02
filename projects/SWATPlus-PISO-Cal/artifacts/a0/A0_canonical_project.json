@@ -1,0 +1,18 @@
+{
+  "cal_parms": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\template_frozen\\cal_parms.cal",
+  "executable": {
+    "exists": true,
+    "path": "D:\\QAPP\\SWATPlus\\Editor\\resources\\app.asar.unpacked\\static\\swat_exe\\swatplus-62-ifo-win_amd64-Rel.exe",
+    "sha256": "d680b142b6029762d9a9deeade50494ed0ec5a7e7f68fbace193b2c760f163d0",
+    "size_bytes": 7557632
+  },
+  "file_cio": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\template_frozen\\file.cio",
+  "legacy_runner_sha256": "8bba2cccd401147599050ef36e59e62af3007e2e6a232b06b9b23524616880ed",
+  "legacy_runner_source": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\r3_calibration.py",
+  "legacy_smoke_sha256": "01a706af77a0adf98e1af5b736129aee809632bf81b279595f3aa3ff537b939a",
+  "legacy_smoke_source": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\deepcal_standardized_smoke.py",
+  "template": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\template_frozen",
+  "template_exists": true,
+  "template_tree_sha256": "d16499653b35e73207bfc584781d206f4022505a4648d7889195e736bbfecb54",
+  "time_sim": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\template_frozen\\time.sim"
+}

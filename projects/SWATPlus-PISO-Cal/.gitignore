@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.egg-info/
 outputs/
 runs/
 data/raw/
@@ -13,3 +14,7 @@ data/processed/
 *.pkl
 *.joblib
 *.zip
+artifacts/a0/dataset/*.npy
+artifacts/a0/observations/*.npy
+artifacts/a0/runner_equivalence/workspaces_old/
+artifacts/a0/runner_equivalence/workspaces_new/

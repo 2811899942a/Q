@@ -1,0 +1,15 @@
+parameter,name,lower,upper,transform,change_type,swat_file,target_file,target_field
+cn2,cn2,-20,10,pctchg,pctchg,calibration.cal / HRU objects,calibration.cal / HRU objects,cn2
+latq_co,latq_co,0,1,absolute,absolute,calibration.cal / HRU objects,calibration.cal / HRU objects,latq_co
+lat_ttime,lat_ttime,0.5,180,absolute,absolute,calibration.cal / HRU objects,calibration.cal / HRU objects,lat_ttime
+esco,esco,0,1,absolute,absolute,calibration.cal / HRU objects,calibration.cal / HRU objects,esco
+epco,epco,0,1,absolute,absolute,calibration.cal / HRU objects,calibration.cal / HRU objects,epco
+petco,petco,0.8,1.2,absolute,absolute,calibration.cal / HRU objects,calibration.cal / HRU objects,petco
+alpha,alpha,0,1,absolute,absolute,calibration.cal / aquifer objects,calibration.cal / aquifer objects,alpha
+bf_max,bf_max,0.1,2,absolute,absolute,calibration.cal / aquifer objects,calibration.cal / aquifer objects,bf_max
+revap_co,revap_co,0.02,0.2,absolute,absolute,calibration.cal / aquifer objects,calibration.cal / aquifer objects,revap_co
+deep_seep,deep_seep,0.001,0.4,absolute,absolute,calibration.cal / aquifer objects,calibration.cal / aquifer objects,deep_seep
+surlag,surlag,0.05,24,absolute,absolute,calibration.cal / basin objects,calibration.cal / basin objects,surlag
+chn,chn,0.001,0.3,absolute,absolute,calibration.cal / routing objects,calibration.cal / routing objects,chn
+chk,chk,1e-05,500,absolute,absolute,calibration.cal / routing objects,calibration.cal / routing objects,chk
+perco,perco,0.8,1.1,native_relative,native_relative,calibration.cal / HRU objects,calibration.cal / HRU objects,perco

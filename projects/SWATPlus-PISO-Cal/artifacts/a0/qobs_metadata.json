@@ -1,0 +1,28 @@
+{
+  "channel_order": [
+    12,
+    17,
+    18
+  ],
+  "fill_policy": "none",
+  "gauge_order": [
+    "01605500",
+    "01606000",
+    "01606500"
+  ],
+  "pass": true,
+  "period": {
+    "end": "2016-12-31",
+    "rows": 5114,
+    "start": "2003-01-01"
+  },
+  "schema": "a0-qobs-audit-v1",
+  "shape": [
+    3,
+    5114
+  ],
+  "source_policy": "read Q_m3s directly from locked clean 2000-2024 station exports",
+  "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+  "unit": "m3/s",
+  "validation_or_final_loaded": false
+}

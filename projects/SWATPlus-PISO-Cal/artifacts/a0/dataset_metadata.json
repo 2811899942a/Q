@@ -1,0 +1,146 @@
+{
+  "broad_manifest_sha256": "22547eb3552ee19c8a992ec133353dc5e0bd91d12aad9c6cf5b80d82ebc96399",
+  "channel_order": [
+    12,
+    17,
+    18
+  ],
+  "contains_final_test": false,
+  "contains_locked_validation": false,
+  "content_hashes": {
+    "dates.csv": "7d97b575036a09b76d7d58009aa6ec5bdd0fdb0f40ae3190160627615c3f54a1",
+    "parameter_bounds.csv": "e27e479247c21ffb852fb69d8bed0ed9bac982d00db320c09eab0e4b8905df1c",
+    "qobs.npy": "fa70d39793a41cf72bb1788d95ca814cd6f64f94974f168d83d2c0b8166bcdc1",
+    "qsim.npy": "ad4a2447608c6ce95f8969a7734da99e022ed9db050ba279b1ee7f74a30490e9",
+    "sample_ids.csv": "8dd793a829a210984ad94e590fdfbdb4cb8da55a89b359a0f28e7227fa2379f4",
+    "theta.npy": "b47cea232f28bf1a01170e5b3ea13a3003e569ea6180fa889e1b34a69ef92085"
+  },
+  "development_end": "2016-12-31",
+  "development_period": [
+    "2003-01-01",
+    "2016-12-31"
+  ],
+  "development_start": "2003-01-01",
+  "dtype": {
+    "qobs": "float32",
+    "qsim": "float32",
+    "theta": "float32"
+  },
+  "gauge_channels": [
+    12,
+    17,
+    18
+  ],
+  "gauge_order": [
+    "01605500",
+    "01606000",
+    "01606500"
+  ],
+  "gauges": [
+    "01605500",
+    "01606000",
+    "01606500"
+  ],
+  "missing_value_policy": "reject missing/nonfinite values; no fill",
+  "number_of_broad_samples": 4980,
+  "number_of_optimizer_directed_samples": 7665,
+  "number_of_unknown_samples": 27,
+  "objective_definition_hash": "dfa155dc1c161739d5758f4dc81cc305641abb5d880bb92134cf5ba9bb4c3e86",
+  "objective_metrics_retained_for_audit_only": true,
+  "observation_independent": true,
+  "parameter_dictionary_hash": "41ddaeaee50bdd96768f6e036792d5c715773f2841b46769f7c263846bbcf0a5",
+  "parameter_dim": 14,
+  "parameter_names": [
+    "cn2",
+    "latq_co",
+    "lat_ttime",
+    "esco",
+    "epco",
+    "petco",
+    "alpha",
+    "bf_max",
+    "revap_co",
+    "deep_seep",
+    "surlag",
+    "chn",
+    "chk",
+    "perco"
+  ],
+  "period": {
+    "end": "2016-12-31",
+    "rows": 5114,
+    "start": "2003-01-01"
+  },
+  "provenance": {
+    "broad_manifest": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a0\\provenance\\broad_pool_manifest.csv",
+    "manifest": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a0\\provenance\\simulation_manifest.csv",
+    "optimizer_and_unknown_excluded": true,
+    "selection_rule": "source_class=broad and usable_for_A1_A2=YES"
+  },
+  "provenance_manifest_sha256": "6be157459c7f30f2fb2e56f1f3babe21fbad339de69fd9eecb1e773b116d6f14",
+  "qobs_derived_features_included": false,
+  "qobs_metadata": {
+    "channel_order": [
+      12,
+      17,
+      18
+    ],
+    "fill_policy": "none",
+    "gauge_order": [
+      "01605500",
+      "01606000",
+      "01606500"
+    ],
+    "pass": true,
+    "period": {
+      "end": "2016-12-31",
+      "rows": 5114,
+      "start": "2003-01-01"
+    },
+    "schema": "a0-qobs-audit-v1",
+    "shape": [
+      3,
+      5114
+    ],
+    "source_policy": "read Q_m3s directly from locked clean 2000-2024 station exports",
+    "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+    "unit": "m3/s",
+    "validation_or_final_loaded": false
+  },
+  "qsim_failures": [],
+  "sample_count": 4980,
+  "schema": "a0-south-branch-dataset-v1",
+  "shape": {
+    "qobs": [
+      3,
+      5114
+    ],
+    "qsim": [
+      4980,
+      3,
+      5114
+    ],
+    "theta": [
+      4980,
+      14
+    ]
+  },
+  "source_archive": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a0\\provenance\\broad_pool_manifest.csv",
+  "source_class": "observation_independent_broad",
+  "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
+  "swatplus_revision": "62.0.0",
+  "tensor_hashes": {
+    "dates.csv": "7d97b575036a09b76d7d58009aa6ec5bdd0fdb0f40ae3190160627615c3f54a1",
+    "parameter_bounds.csv": "e27e479247c21ffb852fb69d8bed0ed9bac982d00db320c09eab0e4b8905df1c",
+    "qobs.npy": "fa70d39793a41cf72bb1788d95ca814cd6f64f94974f168d83d2c0b8166bcdc1",
+    "qsim.npy": "ad4a2447608c6ce95f8969a7734da99e022ed9db050ba279b1ee7f74a30490e9",
+    "sample_ids.csv": "8dd793a829a210984ad94e590fdfbdb4cb8da55a89b359a0f28e7227fa2379f4",
+    "theta.npy": "b47cea232f28bf1a01170e5b3ea13a3003e569ea6180fa889e1b34a69ef92085"
+  },
+  "time_step": "daily",
+  "unit": "m3/s",
+  "warmup_period": [
+    "2000-01-01",
+    "2002-12-31"
+  ]
+}

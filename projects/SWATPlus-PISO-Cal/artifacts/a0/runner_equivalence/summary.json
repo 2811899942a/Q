@@ -1,0 +1,78 @@
+{
+  "case_count": 4,
+  "cases": [
+    {
+      "candidate_id": "DEEPCAL5K-SOBOL-0001",
+      "case_index": 1,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "metric_abs_diff": 0.0,
+      "new_wall_seconds": 29.987441100005526,
+      "objective_abs_diff": 0.0,
+      "old_wall_seconds": 28.381610599986743,
+      "parameter_vector_hash": "da980056a1716cf4e819e2c716480e8fc37e0e7645a0c9b0e36fb971182a48ec",
+      "pass": "YES",
+      "rmse_diff": 0.0
+    },
+    {
+      "candidate_id": "DEEPCAL5K-SOBOL-1500",
+      "case_index": 2,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "metric_abs_diff": 0.0,
+      "new_wall_seconds": 29.776391499995952,
+      "objective_abs_diff": 0.0,
+      "old_wall_seconds": 28.729299300001003,
+      "parameter_vector_hash": "799c3b814341efa9b404629d373826c2299c61273b8fa9bb58295ce46583237c",
+      "pass": "YES",
+      "rmse_diff": 0.0
+    },
+    {
+      "candidate_id": "DEEPCAL5K-SOBOL-3000",
+      "case_index": 3,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "metric_abs_diff": 0.0,
+      "new_wall_seconds": 31.300616900000023,
+      "objective_abs_diff": 0.0,
+      "old_wall_seconds": 28.971615299989935,
+      "parameter_vector_hash": "f49b91dcff2a8084efd05dec1df2ef2b26ee5cfb91bfbe0eaa1ee0155cf1b4e5",
+      "pass": "YES",
+      "rmse_diff": 0.0
+    },
+    {
+      "candidate_id": "DEEPCAL5K-SOBOL-4500",
+      "case_index": 4,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "metric_abs_diff": 0.0,
+      "new_wall_seconds": 29.701342699991073,
+      "objective_abs_diff": 0.0,
+      "old_wall_seconds": 28.85228369999095,
+      "parameter_vector_hash": "37d43d6a5fb5d888a0b5174fa8ef26da98649901e37c087b7f19869f7af64ea3",
+      "pass": "YES",
+      "rmse_diff": 0.0
+    }
+  ],
+  "engine": "D:\\QAPP\\SWATPlus\\Editor\\resources\\app.asar.unpacked\\static\\swat_exe\\swatplus-62-ifo-win_amd64-Rel.exe",
+  "gauge_order": [
+    "01605500/ch12",
+    "01606000/ch17",
+    "01606500/ch18"
+  ],
+  "new_runner": "swatplus_piso.swat.south_branch.SouthBranchLegacyAdapter + RealSWATRunner",
+  "old_runner": "direct invocation of inherited r3_calibration writer/parser/objective primitives",
+  "pass": true,
+  "period": [
+    "2003-01-01",
+    "2016-12-31"
+  ],
+  "schema": "a0-runner-equivalence-v1",
+  "template": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\template_frozen",
+  "tolerance": {
+    "daily_atol": 0.0,
+    "daily_rtol": 0.0,
+    "metric_abs": 0.0,
+    "objective_abs": 0.0
+  }
+}

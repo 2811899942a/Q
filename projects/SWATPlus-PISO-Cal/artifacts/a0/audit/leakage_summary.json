@@ -1,0 +1,12 @@
+{
+  "broad_fail_rows": 0,
+  "broad_rows": 4980,
+  "fail_rows": 17,
+  "locked_or_final_rows": 16,
+  "optimizer_rows": 7665,
+  "paper_rows": 1,
+  "pass_rows": 12655,
+  "row_count": 12672,
+  "schema": "a0-leakage-audit-v1",
+  "unknown_rows": 27
+}
