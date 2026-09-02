@@ -7,6 +7,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from swatplus_piso.study_area import validate_south_branch_metadata
+
 
 @dataclass
 class SimulationDataset:
@@ -40,6 +42,8 @@ class SimulationDataset:
 
 
 def load_dataset(root: str | Path) -> SimulationDataset:
+    """Load a generic simulation dataset, including optional paper-reproduction data."""
+
     root = Path(root)
     dataset = SimulationDataset(
         theta=np.load(root / "theta.npy"),
@@ -49,6 +53,18 @@ def load_dataset(root: str | Path) -> SimulationDataset:
         metadata=json.loads((root / "metadata.json").read_text(encoding="utf-8")),
     )
     dataset.validate()
+    return dataset
+
+
+def load_south_branch_dataset(root: str | Path) -> SimulationDataset:
+    """Load and hard-validate the formal South Branch Potomac development dataset."""
+
+    dataset = load_dataset(root)
+    validate_south_branch_metadata(dataset.metadata)
+    if dataset.theta.shape[1] != 14:
+        raise ValueError("formal A-basin parameter dimension must be 14")
+    if dataset.qsim.shape[1] != 3:
+        raise ValueError("formal A-basin dataset must contain exactly three gauges")
     return dataset
 
 

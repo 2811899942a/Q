@@ -1,56 +1,66 @@
 # Data contract
 
-All arrays must use float32 unless there is a strong reason to retain float64.
+All arrays use float32 unless a reproducibility reason requires float64.
 
-## Required files
+## Formal A-basin files
 
-### `theta.npy`
+```text
+theta.npy                 [N,14]
+qsim.npy                  [N,3,T]
+qobs.npy                  [3,T]
+dates.csv                 T rows
+parameter_bounds.csv      14 rows
+metadata.json
+```
 
-Shape `[N, P]`. Each row is one Real-SWAT+ parameter vector. Values are in physical units.
+Gauge order is immutable:
 
-### `qsim.npy`
+1. 01605500 / ch12
+2. 01606000 / ch17
+3. 01606500 / ch18
 
-Shape `[N, G, T]`. Daily simulated discharge aligned across all simulations and gauges.
+Development data span 2003-01-01 through 2016-12-31 after alignment with the established A-basin workflow. Locked validation and final-test values must not be included in method-development arrays.
 
-### `qobs.npy`
+## parameter_bounds.csv
 
-Shape `[G, T]`. Daily observed discharge for the same gauges and dates.
-
-### `dates.csv`
-
-One ISO date per row. Exactly `T` rows.
-
-### `parameter_bounds.csv`
-
-Columns:
+Required columns:
 
 ```text
 name,lower,upper,transform,change_type,target_file,target_field
 ```
 
-`transform` is one of `linear`, `log`, or `logit`. `change_type` records SWAT+ absolute, relative, or replacement semantics.
+The 14 rows are inherited from the established A-basin calibration workflow. Do not reconstruct parameter semantics from memory.
 
-### `metadata.json`
+## Formal metadata.json
 
-Must include:
+At minimum:
 
 ```json
 {
+  "study_area_id": "A_SOUTH_BRANCH_POTOMAC",
   "swatplus_revision": "62.0.0",
   "parameter_dim": 14,
   "gauges": ["01605500", "01606000", "01606500"],
-  "start_date": "2003-01-01",
-  "end_date": "2016-12-31",
-  "objective_definition": "frozen identifier",
-  "source_archive": "path or DOI",
+  "gauge_channels": [12, 17, 18],
+  "development_start": "2003-01-01",
+  "development_end": "2016-12-31",
+  "source_class": "observation_independent_broad",
+  "contains_locked_validation": false,
+  "contains_final_test": false,
+  "objective_definition_hash": "sha256 of frozen inherited objective definition",
+  "parameter_dictionary_hash": "sha256 of frozen 14D dictionary",
+  "source_archive": "absolute local provenance or immutable manifest id",
   "content_hashes": {}
 }
 ```
 
-## Leakage rules
+`source_class=observation_directed_optimizer_trace` is forbidden for the primary inverse/posterior training library.
+
+## Leakage and provenance rules
 
 - Simulation train/validation/test indices are split by parameter realization.
-- All flow and parameter scalers are fitted on training realizations only.
-- Observed flow is never included in simulation training statistics.
-- 2017-2020 and 2021-2024 are not read during method selection.
-- Public DL4SWAT reproduction and South Branch experiments use separate data roots and manifests.
+- Flow and parameter scalers are fitted on training realizations only.
+- Real observed flow is never used to fit simulation normalization statistics.
+- DeepCal/DDS/DE/BO trajectories are not merged into the from-scratch broad training library.
+- 2017–2020 and 2021–2024 are not read during method selection.
+- Public DL4SWAT reproduction uses a separate generic data root and the generic `load_dataset`; formal A-basin work uses `load_south_branch_dataset`.

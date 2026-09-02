@@ -1,91 +1,117 @@
-# 代码实现计划
+# 代码实现计划——A流域优先版
 
-## 1. 模块边界
+## 1. 正式入口
+
+第一任务永远是 `A0_SOUTH_BRANCH_PISO_TAKEOVER_AUDIT`。Public DL4SWAT reproduction 为可选 P0，不再是进入 A 流域研究的前置门。
+
+新增硬锁模块：
 
 ```text
-src/swatplus_piso/
-├── data.py                 数据契约、训练期 scaler
-├── metrics.py              NSE/KGE/PBIAS/RMSE与三站聚合
-├── models/
-│   ├── encoders.py         CNN/TCN/BiLSTM/Patch Transformer
-│   ├── point_inverse.py    确定性参数反演
-│   └── posterior.py        sbi NPE接口
-├── calibration/
-│   ├── ood.py              模拟域偏移诊断
-│   ├── proposal.py         posterior/prior候选混合与多样性
-│   └── sequential.py       通用序贯评价循环
-└── swat/
-    └── runner.py           隔离工作目录Real-SWAT+执行器
+src/swatplus_piso/study_area.py
+src/swatplus_piso/swat/south_branch.py
 ```
 
-## 2. 下一步必须补齐的生产代码
+正式 A 流域数据必须通过 `load_south_branch_dataset()`，自动拒绝错误流域、错误站点、非14D、目标导向训练轨迹以及 locked period 泄漏。
 
-### 2.1 Public reproduction adapter
+## 2. A0：接管现有 South Branch 工程
 
-- 读取 `swat_params_sobol_1000realz.csv`；
-- 读取 `flow_wy_sobol_1000realz.csv`；
-- 读取官方 train/val/test indices；
-- 只在800个训练 realization 上拟合参数和流量 scaler；
-- 输出统一 `theta.npy/qsim.npy/qobs.npy`；
-- 写出源文件 MD5、数组形状和日期 manifest。
+Codex 扫描：
 
-### 2.2 South Branch adapter
+```text
+D:/SWAT+_3V3/A_SouthBranchPotomac/
+```
 
-复用现有正式 SWAT+ 写参和 `channel_sd_day`/目标输出解析逻辑，封装成：
+定位当前正式版本，而不是默认某个旧子目录。
+
+必须提取并冻结：
+
+1. SWAT+ executable 与 revision；
+2. 正式 TxtInOut/Scenarios/运行目录；
+3. 14D 参数名称、上下界、写入模式、目标文件/字段；
+4. ch12/ch17/ch18 与 USGS 三站映射；
+5. development Qobs；
+6. 当前 formal objective 的源代码/公式/权重；
+7. 当前正式 parameter writer/output parser；
+8. 所有 simulation archive 的生成机制。
+
+生成 sha256 manifest。PISO 不重写物理模型、不重新定义 objective。
+
+## 3. archive分层
+
+### A层：observation-independent broad
+
+允许作为 inverse/NPE 正式训练库。每行必须能追溯 `theta -> Real-SWAT+ -> qsim`。
+
+### B层：observed-directed
+
+DeepCal/DDS/DE/BO/TuRBO 等读取过真实 objective 的轨迹。主训练库禁止使用。保留用于历史诊断和 asset-reuse 附加实验。
+
+## 4. runner接入
+
+使用 `SouthBranchLegacyAdapter` 包裹现有 writer/parser：
 
 ```python
-parameter_writer(workdir, theta)
-output_parser(workdir) -> qsim[gauge, time]
+adapter = SouthBranchLegacyAdapter(existing_writer, existing_parser)
+runner = adapter.build_runner(template_dir, executable_name, scratch_root)
 ```
 
-必须用同一正式候选执行：旧工作流与新 runner 输出逐日完全一致，指标完全一致，才允许接入优化器。
+禁止重新写一套不同参数语义的 writer。
 
-### 2.3 Deterministic training
+同一个正式 theta 必须同时通过：
 
-需要实现：
+```text
+旧正式runner
+新RealSWATRunner+SouthBranchLegacyAdapter
+```
 
-- realization-level split；
-- DataLoader；
-- train-only scaler；
-- bounded normalized parameters；
-- early stopping；
-- checkpoint与config hash；
-- 三seed汇总；
-- 参数写回后的 Real-SWAT+ 验证。
+要求三站逐日输出完全一致；若底层文件格式引入可解释的浮点序列化差异，必须先记录证据再显式放宽 `atol`。
 
-### 2.4 SBI training
+## 5. A1：DL4SWAT-style A流域确定性反演
 
-- 使用 `sbi==0.27.0`；
-- 只向NPE提供 `(theta, qsim)`；
-- 自定义多站时序 embedding；
-- MAF与NSF；
-- posterior保存与重载；
-- SBC、expected coverage、TARP、posterior predictive check；
-- 真实Qobs只用于条件化和后续 Real-SWAT+评分。
+先做 1D-CNN 基线，再做 TCN/BiLSTM/Patch Transformer。同一 realization split、train-only scaler、同一14D参数损失、同seed。
 
-### 2.5 Online optimizers
+评估两层：
 
-所有DDS/TuRBO/PISO共用：
+1. synthetic held-out 参数 MAE/NRMSE；
+2. 对真实三站 Qobs 反演 theta 后，必须 fresh Real-SWAT+ 重跑并计算正式 inherited objective。
 
-- 同一参数边界；
-- 同一目标函数；
-- 同一初始42点；
-- 同一 evaluation accountant；
-- 同一 W6 runner；
-- 每个候选原子级checkpoint；
-- 失败重试和重复候选去重；
-- 可断点续跑。
+模型排名只是 encoder screen，不作为主创新。
 
-## 3. 代码质量门
+## 6. A2：概率反演
+
+Top-2 encoder + `sbi==0.27.0` NPE，优先 MAF/NSF。
+
+训练样本只能是 `(theta, Qsim)`。必须做 SBC、coverage、TARP、PPC。
+
+## 7. A3：simulation-observation gap
+
+使用受控失配实验确定并冻结 posterior trust 规则。不得根据 A4 正式结果反向调 OOD 阈值。
+
+## 8. A4：fresh Real-SWAT+ pilot
+
+所有方法共用同一：
+
+- 14D bounds；
+- inherited objective；
+- 42 common initial points；
+- paired seeds；
+- evaluation accountant；
+- W6 runner；
+- checkpoint/retry/dedup。
+
+正式比较 DDS、TuRBO、Point-Warm-TuRBO、Posterior-Only、PISO-Cal。决定性因果比较为 PISO-Cal vs TuRBO。
+
+## 9. 代码质量门
 
 ```text
 A. compile/import PASS
 B. pytest PASS
-C. toy smoke PASS
-D. public data manifest PASS
-E. one-candidate old/new runner equivalence PASS
-F. same formal scheduled/remote execution context dry-run PASS
-G. all methods evaluation accounting PASS
+C. A-basin metadata hard-lock tests PASS
+D. archive provenance manifest PASS
+E. one-candidate old/new runner daily equivalence PASS
+F. development objective equality PASS
+G. W6 formal execution-context dry-run PASS
+H. evaluation accounting PASS
 ```
 
-E–G完成以前，不得宣称真实实验框架已部署。
+C–H 未完成前，不启动 A4。

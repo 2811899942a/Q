@@ -1,52 +1,70 @@
-# Decision gates
+# Decision gates — A-basin formal sequence
 
-## Gate R0: public reproduction
+## Optional P0: published-method implementation check
 
-Pass when the clean-room CNN reproduces the published qualitative ranking and produces a valid SWAT parameter set from observed ARW discharge. Exact headline metrics are reported as replication targets, not guaranteed acceptance thresholds, because the original study used a very large architecture search.
+Public DL4SWAT data may be used for a clean-room CNN sanity check. P0 is optional and does not block A-basin work. Failure means inspect implementation ambiguity; it does not authorize changing the A-basin study area.
 
-Fail action: fix data interpretation, preprocessing, or environment. Do not start South Branch SBI.
+## Gate A0: South Branch takeover and equivalence
 
-## Gate R1: South Branch deterministic inverse baseline
+Required PASS:
 
-Pass when at least one encoder produces fresh Real-SWAT+ performance that reaches the existing DeepCal/DDS neighborhood and does not collapse at any gauge.
+- formal study area = A_SOUTH_BRANCH_POTOMAC;
+- SWAT+ rev.62 project located and hashed;
+- exact 14D parameter dictionary/bounds/write semantics frozen from existing workflow;
+- gauge order = 01605500/ch12, 01606000/ch17, 01606500/ch18;
+- 2003–2016 observed development data aligned;
+- existing formal objective snapshotted and hashed;
+- broad and observed-directed archives separated;
+- one formal theta produces equivalent old/new daily three-gauge outputs and identical objective;
+- locked validation/final test remain unopened.
 
-Fail action: retain the reproduction result and stop encoder expansion. Diagnose observation support and parameter reachability.
+Fail action: repair takeover/audit only. No deep-learning training.
 
-## Gate R2: posterior validity on synthetic held-out targets
+## Gate A1: deterministic inverse baseline on A basin
+
+At least one encoder must produce a valid 14D theta from real development Qobs and a successful fresh Real-SWAT+ run. Report synthetic parameter error and real observed objective separately.
+
+A1 is informative even if it does not beat DDS. Do not rescue a weak encoder by adding architectures beyond the frozen four-model screen.
+
+## Gate A2: posterior validity on held-out A-basin simulations
 
 Required:
 
-- simulation-based calibration approximately uniform;
-- acceptable empirical coverage at 50%, 80%, and 95%;
-- posterior predictive checks reproduce held-out simulator outputs;
+- acceptable SBC behavior;
+- empirical 50/80/95% coverage reported;
+- TARP reported;
+- posterior predictive checks consistent with held-out simulator outputs;
 - no systematic boundary collapse;
-- posterior samples remain inside prior support.
+- posterior samples inside frozen prior bounds.
 
-Fail action: simplify the density estimator or observation embedding. Do not run observed-target sequential experiments.
+Fail action: simplify density/embedding once. Persistent failure terminates posterior branch.
 
-## Gate R3: real-observation misspecification safety
+## Gate A3: real-observation misspecification safety
 
-The real observation receives an embedding-space OOD percentile. Posterior influence is reduced automatically when the percentile exceeds 0.95 or 0.99. A posterior-only result is never accepted without Real-SWAT+ verification.
+Establish support/OOD diagnostics using controlled mismatch experiments. Posterior trust schedule is frozen here before seeing A4 method-comparison outcomes. Real Qobs never supplies a fictitious true theta label.
 
-## Gate R4: fresh Real-SWAT+ pilot
+## Gate A4: fresh Real-SWAT+ pilot
 
-For DDS, TuRBO, and PISO-Cal, use identical 14D bounds, objectives, seeds, common initial designs, and 198-evaluation budgets.
+Methods share identical 14D bounds, inherited objective, common initial points, paired seeds, runner, and accounting.
 
-PISO-Cal passes when either:
+Primary comparison: PISO-Cal vs TuRBO.
 
-1. it reaches the same target NSE using at least 25% fewer fresh Real-SWAT+ evaluations than the strongest baseline; or
-2. at the same budget, median final mean NSE improves by at least 0.02 without reducing the worst-gauge NSE by more than 0.03.
+PISO-Cal passes if either:
 
-The median advantage must occur across three paired seeds.
+1. it reaches the same predeclared target mean NSE with at least 25% fewer fresh Real-SWAT+ evaluations than the strongest baseline; or
+2. at the same 198-evaluation budget, median final mean NSE improves by at least 0.02 without reducing worst-gauge NSE by more than 0.03.
 
-Fail action: stop PISO-Cal development. Retain the best published-method reproduction and baseline comparison.
+Three paired seeds are required for the pilot. A single-seed win is not a PASS.
 
-## Gate R5: final confirmation
+Fail action: stop PISO-Cal mechanism development. Retain A-basin inverse-calibration reproduction and strongest baseline result.
 
-Only after Gate R4 passes:
+## Gate A5: final confirmation
+
+Only after A4 PASS:
 
 - five paired seeds;
-- 300 evaluations per method and seed;
-- pre-registered statistics;
-- locked validation opened once after final method freeze;
-- final test opened once after validation reporting.
+- up to 300 evaluations per method/seed;
+- pre-registered comparison statistics;
+- method and hyperparameters frozen;
+- open 2017–2020 locked validation once;
+- report validation before opening 2021–2024 final test once.

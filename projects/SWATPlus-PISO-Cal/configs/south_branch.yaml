@@ -1,3 +1,33 @@
+study_area:
+  id: A_SOUTH_BRANCH_POTOMAC
+  name: South Branch Potomac
+  role: formal_and_only_study_area
+  local_scan_root: "D:/SWAT+_3V3/A_SouthBranchPotomac"
+  swatplus_revision: "62.0.0"
+  gauges:
+    - {usgs_id: "01605500", channel: 12}
+    - {usgs_id: "01606000", channel: 17}
+    - {usgs_id: "01606500", channel: 18}
+  warmup: [2000, 2002]
+  development: [2003, 2016]
+  locked_validation: [2017, 2020]
+  final_test: [2021, 2024]
+  parameter_dim: 14
+  formal_objective:
+    source: inherit_existing_A_basin_calibration_workflow
+    rule: do_not_redefine_during_PISO_development
+
+paper_reference:
+  dl4swat_role: method_reference_and_optional_implementation_check_only
+  paper_watershed_is_formal_study_area: false
+  mix_paper_data_into_A_basin_training: false
+  public_reproduction_required_before_A_basin_work: false
+
+archive_policy:
+  inverse_training_source: observation_independent_broad_only
+  exclude_observed_directed_traces: true
+  report_offline_online_total_costs: true
+
 project:
   name: south_branch_potomac_piso
   seed: 42
@@ -5,6 +35,7 @@ project:
 data:
   parameter_dim: 14
   gauges: ["01605500", "01606000", "01606500"]
+  gauge_channels: [12, 17, 18]
   warmup: [2000, 2002]
   development: [2003, 2016]
   locked_validation: [2017, 2020]
@@ -35,17 +66,14 @@ posterior:
   ood:
     method: knn_embedding_percentile
     k: 20
-    posterior_weight_by_percentile:
-      - [0.95, 0.80]
-      - [0.99, 0.50]
-      - [1.00, 0.20]
+    trust_schedule_status: must_be_frozen_in_A3_before_A4
 
 fresh_pilot:
   common_initial_design: 42
   total_budget_per_method_seed: 198
   batch_size: 6
-  methods: [dds, turbo, piso]
-  seeds: [42, 2026, 3407]
+  methods: [dds, turbo, point_warm_turbo, posterior_only, piso]
+  paired_seeds: [42, 2026, 3407]
   thresholds_nse: [0.557, 0.58, 0.60]
   piso_batch_allocation:
     objective_surrogate: 4
