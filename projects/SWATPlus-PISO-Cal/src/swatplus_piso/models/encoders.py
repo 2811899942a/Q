@@ -73,6 +73,13 @@ class BiLSTMEncoder(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
+    """Patch-based transformer for long multi-gauge daily sequences.
+
+    Full self-attention over 5,000+ daily steps is quadratic and can exhaust GPU
+    memory. A learnable Conv1d patch stem reduces the sequence length before
+    attention while retaining all gauges as input channels.
+    """
+
     def __init__(
         self,
         gauges: int,
@@ -80,27 +87,56 @@ class TransformerEncoder(nn.Module):
         d_model: int = 96,
         heads: int = 4,
         layers: int = 2,
+        patch_size: int = 14,
     ) -> None:
         super().__init__()
-        self.input_proj = nn.Linear(gauges, d_model)
+        if patch_size <= 0:
+            raise ValueError("patch_size must be positive")
+        self.patch_size = patch_size
+        self.patch = nn.Conv1d(
+            gauges,
+            d_model,
+            kernel_size=patch_size,
+            stride=patch_size,
+            padding=0,
+        )
         layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=heads,
             dim_feedforward=d_model * 4,
+            dropout=0.1,
             batch_first=True,
             activation="gelu",
+            norm_first=True,
         )
         self.encoder = nn.TransformerEncoder(layer, num_layers=layers)
+        self.norm = nn.LayerNorm(d_model)
         self.output_proj = nn.Linear(d_model, embedding_dim)
 
+    @staticmethod
+    def _sinusoidal_encoding(length: int, dim: int, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+        positions = torch.arange(length, device=device, dtype=dtype).unsqueeze(1)
+        div = torch.exp(
+            torch.arange(0, dim, 2, device=device, dtype=dtype)
+            * (-math.log(10000.0) / dim)
+        )
+        pe = torch.zeros((length, dim), device=device, dtype=dtype)
+        pe[:, 0::2] = torch.sin(positions * div)
+        if dim > 1:
+            pe[:, 1::2] = torch.cos(positions * div[: pe[:, 1::2].shape[1]])
+        return pe
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        seq = self.input_proj(x.transpose(1, 2))
-        positions = torch.arange(seq.shape[1], device=seq.device, dtype=seq.dtype)
-        div = torch.exp(torch.arange(0, seq.shape[2], 2, device=seq.device, dtype=seq.dtype) * (-math.log(10000.0) / seq.shape[2]))
-        pe = torch.zeros_like(seq)
-        pe[..., 0::2] = torch.sin(positions[:, None] * div)
-        pe[..., 1::2] = torch.cos(positions[:, None] * div[: pe[..., 1::2].shape[-1]])
-        return self.output_proj(self.encoder(seq + pe).mean(dim=1))
+        if x.ndim != 3:
+            raise ValueError("expected input with shape [batch, gauges, time]")
+        if x.shape[-1] < self.patch_size:
+            raise ValueError("time dimension is shorter than patch_size")
+        seq = self.patch(x).transpose(1, 2)
+        pe = self._sinusoidal_encoding(
+            seq.shape[1], seq.shape[2], seq.device, seq.dtype
+        )
+        encoded = self.encoder(seq + pe.unsqueeze(0))
+        return self.output_proj(self.norm(encoded.mean(dim=1)))
 
 
 def build_encoder(name: str, gauges: int, embedding_dim: int = 128) -> nn.Module:

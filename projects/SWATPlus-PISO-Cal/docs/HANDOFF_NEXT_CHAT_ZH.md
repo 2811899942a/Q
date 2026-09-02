@@ -20,11 +20,12 @@
 2. 建立 Python 3.11 环境；
 3. 安装 `.[dev,sbi]`；
 4. 运行 `pytest -q` 与 `python scripts/run_toy_smoke.py`；
-5. 下载 DL4SWAT Zenodo 数据并记录 MD5；
-6. 输出数据文件树、数组形状和日期范围；
-7. 将数据转换为统一 data contract；
-8. 只实现并复现 deterministic CNN；
-9. 复现报告通过 Gate R0 后，才迁移 South Branch。
+5. 阅读 `DATA_PROVENANCE_AND_FAIRNESS_ZH.md`，先隔离 broad 与 observed-directed archive；
+6. 下载 DL4SWAT Zenodo 数据并记录 MD5；
+7. 输出数据文件树、数组形状和日期范围；
+8. 将数据转换为统一 data contract；
+9. 只实现并复现 deterministic CNN；
+10. 复现报告通过 Gate R0 后，才迁移 South Branch。
 
 ## 禁止事项
 

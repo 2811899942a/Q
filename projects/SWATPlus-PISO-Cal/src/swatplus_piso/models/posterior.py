@@ -35,8 +35,8 @@ def train_npe(
     density_builder = posterior_nn(
         model=density,
         embedding_net=encoder,
+        z_score_theta="none",
         z_score_x="none",
-        z_score_y="none",
     )
     inference = NPE(prior=prior, density_estimator=density_builder)
     density_estimator = inference.append_simulations(theta_normalized, q_scaled).train(

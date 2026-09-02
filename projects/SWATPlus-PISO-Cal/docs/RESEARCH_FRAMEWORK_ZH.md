@@ -118,3 +118,13 @@ N_total   = N_offline + N_online
 ```
 
 在线快和总成本快分开表述。已有 5000 套数据可以作为资产情景，同时还要做 250/500/1000/2500/5000 的训练规模曲线。
+
+## 8. 数据来源公平规则
+
+主训练库只允许使用与真实USGS目标无关的 broad simulations。DeepCal/DDS/DE/BO等定向优化轨迹已经包含 observed-objective 信息，只能进入次级资产复用实验，并完整计入在线/总成本。详细规则见 `DATA_PROVENANCE_AND_FAIRNESS_ZH.md`。
+
+## 9. 主结论层级
+
+- PISO-Cal超过TuRBO：支持posterior-informed sequential optimization的算法增量；
+- PISO-Cal与TuRBO接近且二者超过DDS：支持局部代理优化的应用价值，posterior机制不成立；
+- DDS保持最强：停止该方法线，保留公开复现和严格负结果。
