@@ -1,0 +1,59 @@
+project:
+  name: south_branch_potomac_piso
+  seed: 42
+
+data:
+  parameter_dim: 14
+  gauges: ["01605500", "01606000", "01606500"]
+  warmup: [2000, 2002]
+  development: [2003, 2016]
+  locked_validation: [2017, 2020]
+  final_test: [2021, 2024]
+  flow_transform: log1p_global_gauge_zscore
+
+encoder_benchmark:
+  models: [cnn, tcn, bilstm, transformer]
+  seeds: [42, 2026, 3407]
+  early_stopping_patience: 25
+  max_epochs: 300
+  batch_size: 32
+  selection:
+    primary: synthetic_parameter_nrmse
+    secondary: real_swat_observed_objective
+    keep_top_k: 2
+
+posterior:
+  method: npe
+  density: maf
+  sbi_version: "0.27.0"
+  posterior_samples: 20000
+  synthetic_diagnostics:
+    - posterior_predictive_check
+    - simulation_based_calibration
+    - expected_coverage
+    - tarp
+  ood:
+    method: knn_embedding_percentile
+    k: 20
+    posterior_weight_by_percentile:
+      - [0.95, 0.80]
+      - [0.99, 0.50]
+      - [1.00, 0.20]
+
+fresh_pilot:
+  common_initial_design: 42
+  total_budget_per_method_seed: 198
+  batch_size: 6
+  methods: [dds, turbo, piso]
+  seeds: [42, 2026, 3407]
+  thresholds_nse: [0.557, 0.58, 0.60]
+  piso_batch_allocation:
+    objective_surrogate: 4
+    posterior_guided: 1
+    uncertainty_diversity: 1
+
+success_gate:
+  minimum_evaluation_reduction: 0.25
+  minimum_final_nse_gain: 0.02
+  max_allowed_worst_gauge_loss: 0.03
+  pilot_requires_median_advantage: true

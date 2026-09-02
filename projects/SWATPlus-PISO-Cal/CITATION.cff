@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this research software, cite the software and the methodological papers listed in the README."
+title: "SWATPlus-PISO-Cal"
+version: 0.1.0
+date-released: 2026-09-02
+authors:
+  - family-names: "2811899942a"
+license: MIT
+repository-code: "https://github.com/2811899942a/Q/tree/main/projects/SWATPlus-PISO-Cal"

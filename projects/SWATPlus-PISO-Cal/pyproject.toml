@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swatplus-piso-cal"
+version = "0.1.0"
+description = "Posterior-informed sequential optimization for fast and accurate SWAT+ calibration"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = {text = "MIT"}
+authors = [{name = "2811899942a"}]
+dependencies = [
+  "numpy>=2.0,<3",
+  "pandas>=2.2,<3",
+  "scipy>=1.13,<2",
+  "scikit-learn>=1.5,<2",
+  "torch>=2.4,<3",
+  "PyYAML>=6,<7",
+  "typer>=0.12,<1",
+]
+
+[project.optional-dependencies]
+sbi = ["sbi==0.27.0"]
+dev = [
+  "pytest>=8,<9",
+  "ruff>=0.9,<1",
+  "mypy>=1.13,<2",
+]
+
+[project.scripts]
+swatplus-piso = "swatplus_piso.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
