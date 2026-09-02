@@ -232,6 +232,7 @@ def train_ridge(data: A1Data, root: Path) -> dict[str, Any]:
     predictions = model.predict(pca.transform(features[data.val]))
     import pickle
 
+    root.mkdir(parents=True, exist_ok=True)
     with (root / "ridge.pkl").open("wb") as handle:
         pickle.dump((pca, model), handle)
     return {
