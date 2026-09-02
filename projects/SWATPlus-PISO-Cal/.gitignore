@@ -18,3 +18,9 @@ artifacts/a0/dataset/*.npy
 artifacts/a0/observations/*.npy
 artifacts/a0/runner_equivalence/workspaces_old/
 artifacts/a0/runner_equivalence/workspaces_new/
+artifacts/a1/runtime/
+artifacts/a1/checkpoints/
+artifacts/a1/models/
+artifacts/a1/selftest/
+artifacts/a1/closure/
+artifacts/a1/fresh_swat/

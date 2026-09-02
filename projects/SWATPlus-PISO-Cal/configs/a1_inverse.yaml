@@ -1,0 +1,27 @@
+{
+  "dataset_root": "artifacts/a0/dataset",
+  "split_seed": 20260902,
+  "split": {"train": 3984, "val": 498, "test": 498},
+  "input_stride": 7,
+  "search": {"epochs": 3, "patience": 2, "max_trials_per_arch": 24, "safety_minutes": 90},
+  "final_seeds": [20260902, 20260903, 20260904, 20260905, 20260906],
+  "models": {
+    "CNN": [
+      {"width": 16, "dropout": 0.05, "lr": 0.001, "batch_size": 128},
+      {"width": 32, "dropout": 0.10, "lr": 0.0007, "batch_size": 128}
+    ],
+    "TCN": [
+      {"width": 16, "dropout": 0.05, "lr": 0.001, "batch_size": 128},
+      {"width": 32, "dropout": 0.10, "lr": 0.0007, "batch_size": 128}
+    ],
+    "BiLSTM": [
+      {"width": 16, "dropout": 0.05, "lr": 0.001, "batch_size": 96},
+      {"width": 32, "dropout": 0.10, "lr": 0.0007, "batch_size": 96}
+    ],
+    "Transformer": [
+      {"width": 16, "heads": 4, "patch_days": 7, "input_stride": 7, "dropout": 0.05, "lr": 0.001, "batch_size": 96},
+      {"width": 32, "heads": 4, "patch_days": 14, "input_stride": 7, "dropout": 0.10, "lr": 0.0007, "batch_size": 96},
+      {"width": 32, "heads": 4, "patch_days": 28, "input_stride": 7, "dropout": 0.10, "lr": 0.0007, "batch_size": 96}
+    ]
+  }
+}
