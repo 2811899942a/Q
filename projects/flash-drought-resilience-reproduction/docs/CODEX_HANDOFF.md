@@ -4,7 +4,7 @@ This file is the local execution entry point once Codex quota is available.
 
 ## Objective
 
-Reproduce Guo et al. (2026), *Nature Communications* 17:4050 with minimum unnecessary data download. First reproduce the author package, then independently rebuild only the method blocks worth learning.
+Reproduce Guo et al. (2026), *Nature Communications* 17:4050 while minimizing local raw-data downloads. First reproduce the author package. For the independent rebuild, use Google Earth Engine (GEE) or source-side subsetting for expensive preprocessing and bring only compact, analysis-ready products to the workstation.
 
 ## Current verified state
 
@@ -14,7 +14,7 @@ Reproduce Guo et al. (2026), *Nature Communications* 17:4050 with minimum unnece
 - Nature Source Data XLSX: obtained, 45 sheets audited, SHA256 locked.
 - Code Ocean DOI identified: `10.24433/CO.0939560.v1`.
 - Code Ocean capsule archive: **still required**.
-- GitHub already contains paper logic, method map, parameter lock, figure matrix, uncertainty ledger, Source Data checks and provenance documentation.
+- GitHub already contains paper logic, method map, parameter lock, figure matrix, uncertainty ledger, Source Data checks, provenance documentation and a guarded GEE preprocessing track.
 
 Read first:
 
@@ -26,6 +26,7 @@ Read first:
 6. `docs/KNOWN_UNCERTAINTIES.md`
 7. `config/paper_parameters.json`
 8. `docs/RUN_ORDER.md`
+9. `gee/README.md`
 
 ## Local root
 
@@ -110,7 +111,7 @@ Use this audit to update `docs/KNOWN_UNCERTAINTIES.md`. Do not infer missing par
 
 ## Task C3 - smallest official rerun
 
-Before any global raw-data download, locate the smallest author workflow that can run using bundled process data.
+Before reconstructing upstream data, locate the smallest author workflow that can run using bundled process data.
 
 Priority:
 
@@ -130,27 +131,113 @@ For each successful target record:
 - visual comparison against paper;
 - PASS/FAIL with tolerance.
 
-## Task C4 - produce minimal upstream download list
+## Task C4 - build the independent-reproduction data chain with cloud preprocessing
 
-Only after capsule audit, determine what is genuinely absent.
+The default strategy is **GEE/cloud first, local compact outputs second**.
 
-Do not bulk-download ERA5-Land/GLDAS/FluxSat/CMIP6 merely because the paper names them. If the capsule already contains processed 1-degree/pentad input, first reproduce the paper from that processed layer.
+### C4.1 ERA5-Land: GEE preferred
 
-The eventual independent-rebuild list should specify exact:
+Use the official Earth Engine collection:
 
-- product short name/version;
-- variable;
-- time range;
-- spatial range;
-- temporal frequency;
-- file naming pattern;
-- expected data volume;
-- authentication method;
-- script that consumes it.
+```text
+ECMWF/ERA5_LAND/DAILY_AGGR
+```
 
-## Task C5 - GitHub return package
+GitHub already contains:
 
-Do not commit large raw NetCDF/HDF/MAT archives.
+```text
+gee/01_era5_land_prepare.js
+```
+
+Required paper variables:
+
+- temperature_2m;
+- dewpoint_temperature_2m;
+- volumetric_soil_water_layer_1;
+- volumetric_soil_water_layer_2;
+- volumetric_soil_water_layer_3;
+- surface_solar_radiation_downwards_sum;
+- total_precipitation_sum;
+- total_evaporation_sum.
+
+GEE should perform server-side:
+
+- the paper's 0-1 m ERA5-Land soil-moisture weighting: `0.07*SM1 + 0.21*SM2 + 0.72*SM3`;
+- 0.1° -> 1° aggregation by mean;
+- VPD derivation where needed;
+- after Code Ocean resolves calendar/grid conventions: pentad aggregation and, if validated, further event preprocessing.
+
+Do not download 74 years of global native-resolution ERA5-Land to Windows.
+
+### C4.2 MCD12C1: GEE preferred
+
+Use:
+
+```text
+MODIS/061/MCD12C1
+```
+
+GitHub already contains:
+
+```text
+gee/02_mcd12c1_prepare.js
+```
+
+The paper says 1° vegetation type is obtained by mode. Confirm the exact year/static-map selection and class collapse from Code Ocean before final export.
+
+### C4.3 GLDAS_CLSM: do not substitute the easy GEE product
+
+GEE exposes a GLDAS-2.2 CLSM product beginning in 2003. The paper's flash/slow drought chain uses ERA5-Land + GLDAS_CLSM for 1950-2023. Therefore the GEE 2.2 product alone is not historically equivalent.
+
+Resolve the exact author GLDAS chain from Code Ocean first. Prefer, in order:
+
+1. author-bundled processed 1°/pentad soil moisture;
+2. targeted GES DISC server-side subset/OPeNDAP for only the required variable/time span;
+3. a locally downloaded subset if unavoidable.
+
+Do not bulk-download the complete GLDAS archive.
+
+### C4.4 FluxSat / CSIF / static RF predictors
+
+First use author-bundled 1° processed layers if present. If absent, use source-specific subsetting and preprocess before local transfer wherever possible.
+
+### C4.5 CMIP6
+
+Do not download a full CMIP6 archive. Preserve the paper definition exactly:
+
+- variable: `mrso`;
+- scenario: SSP2-4.5;
+- member: `r1i1p1f1` as stated in the paper;
+- exact retained eight models.
+
+Prefer author-processed inputs if bundled. Otherwise request only those variables/models/times through ESGF/server-side subsetting. Do not replace `mrso` with an easier GEE/downscaled climate dataset.
+
+## Task C5 - compact local products
+
+The intended local inputs should be compact and auditable, such as:
+
+- 1° pentad soil-moisture products by year;
+- 1° pentad climate-driver products for 2001-2019;
+- annual/period flash and slow drought event tables;
+- MFDI/hotspot masks;
+- 1° vegetation/static predictor grids;
+- retained CMIP6 `mrso` pentad products only.
+
+Every cloud-exported product must carry a manifest with:
+
+- source collection/product;
+- band/variable;
+- date range;
+- reducer;
+- projection/grid transform;
+- units/sign convention;
+- mask;
+- output hash;
+- GEE task ID or source-side request identifier.
+
+## Task C6 - GitHub return package
+
+Do not commit large raw NetCDF/HDF/MAT/GeoTIFF archives.
 
 Return to GitHub only auditable lightweight artifacts:
 
@@ -158,10 +245,10 @@ Return to GitHub only auditable lightweight artifacts:
 - environment/toolbox manifest;
 - resolved method notes;
 - run logs;
+- GEE scripts and export manifests;
 - figure comparison metrics;
 - small CSV/Parquet event summaries;
 - selected reproduced figures if redistribution/size permits;
-- download scripts/query files;
 - updated status/gates.
 
 ## Hard rules
@@ -169,7 +256,8 @@ Return to GitHub only auditable lightweight artifacts:
 1. No claim of exact reproduction from Source Data plotting alone.
 2. No silent replacement of MATLAB parameters with Python/sklearn analogues.
 3. If Version of Record and peer review conflict, inspect author code.
-4. No raw-data mass download before capsule inventory.
-5. No declaring G1 PASS solely because scripts run; outputs must be compared against Source Data/paper.
-6. Preserve original author assets and hashes.
-7. Errors should be diagnosed from first principles; do not repeatedly patch a broken pipeline when the author package can clarify the intended process.
+4. Prefer GEE/cloud-side preprocessing to local raw-data downloads whenever the exact dataset/product is available.
+5. Cloud convenience must not change the scientific dataset definition; GLDAS/CMIP6 substitutes are prohibited without explicit validation.
+6. No declaring G1 PASS solely because scripts run; outputs must be compared against Source Data/paper.
+7. Preserve original author assets and hashes.
+8. Errors should be diagnosed from first principles; do not repeatedly patch a broken pipeline when the author package can clarify the intended process.
