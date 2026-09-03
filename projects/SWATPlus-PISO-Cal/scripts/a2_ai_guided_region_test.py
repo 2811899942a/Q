@@ -13,10 +13,12 @@ import csv
 import hashlib
 import json
 import os
+import struct
 import subprocess
 import sys
 import time
 import traceback
+import zlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
@@ -59,6 +61,8 @@ RESULTS_PATH = OUT_ROOT / "results.csv"
 GATE_PATH = OUT_ROOT / "A2_GATE.json"
 REPORT_PATH = ROOT / "docs" / "A2_AI_GUIDED_REGION_REPORT.md"
 PLOT_PATH = OUT_ROOT / "best_so_far_nse.png"
+PLOT_SVG_PATH = OUT_ROOT / "best_so_far_nse.svg"
+PLOT_REPORT_LINK = "../artifacts/a2/best_so_far_nse.svg"
 PLAN_PATH = RUNTIME_ROOT / "plan.json"
 CHECKPOINT_PATH = RUNTIME_ROOT / "checkpoint.json"
 HEARTBEAT_PATH = RUNTIME_ROOT / "heartbeat.json"
@@ -632,11 +636,133 @@ def group_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def plot_best_so_far(grouped: dict[str, list[dict[str, Any]]]) -> str:
-    import matplotlib
+def _plot_geometry(grouped: dict[str, list[dict[str, Any]]]) -> tuple[int, int, int, int, int, int, float, float, dict[str, list[tuple[float, float]]]]:
+    width, height = 1200, 760
+    left, right, top, bottom = 105, 35, 45, 90
+    values = [float(row["mean_nse"]) for rows in grouped.values() for row in rows]
+    ymin = min(0.0, float(np.floor(min(values) * 10.0) / 10.0)) if values else 0.0
+    ymax = max(1.0, float(np.ceil(max(values) * 10.0) / 10.0)) if values else 1.0
+    if ymax <= ymin:
+        ymax = ymin + 1.0
+    series: dict[str, list[tuple[float, float]]] = {}
+    for group in GROUPS:
+        records = grouped.get(group, [])
+        if not records:
+            continue
+        best = np.maximum.accumulate(np.asarray([row["mean_nse"] for row in records], dtype=float))
+        points: list[tuple[float, float]] = []
+        for row, value in zip(records, best, strict=True):
+            x = left + (float(row["evaluation_number"]) - 1.0) * (width - left - right) / max(1.0, GROUP_N - 1.0)
+            y = top + (ymax - float(value)) * (height - top - bottom) / (ymax - ymin)
+            points.append((x, y))
+        series[group] = points
+    return width, height, left, right, top, bottom, ymin, ymax, series
 
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
+
+def _write_svg_plot(grouped: dict[str, list[dict[str, Any]]]) -> None:
+    width, height, left, right, top, bottom, ymin, ymax, series = _plot_geometry(grouped)
+    plot_width = width - left - right
+    plot_height = height - top - bottom
+    colors = {"AI_GUIDED": "#1f77b4", "GLOBAL_CONTROL": "#d62728"}
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<rect width="100%" height="100%" fill="white"/>',
+        '<style>text{font-family:Arial,sans-serif;fill:#222} .grid{stroke:#d9d9d9;stroke-width:1} .axis{stroke:#333;stroke-width:2}</style>',
+        f'<text x="{width / 2:.1f}" y="24" text-anchor="middle" font-size="20">A2 AI-guided region versus global control</text>',
+    ]
+    for tick in np.linspace(ymin, ymax, 6):
+        y = top + (ymax - float(tick)) * plot_height / (ymax - ymin)
+        lines.append(f'<line class="grid" x1="{left}" x2="{width - right}" y1="{y:.2f}" y2="{y:.2f}"/>')
+        lines.append(f'<text x="{left - 12}" y="{y + 5:.2f}" text-anchor="end" font-size="13">{tick:.2f}</text>')
+    for threshold in THRESHOLDS:
+        if ymin <= threshold <= ymax:
+            y = top + (ymax - threshold) * plot_height / (ymax - ymin)
+            lines.append(f'<line x1="{left}" x2="{width - right}" y1="{y:.2f}" y2="{y:.2f}" stroke="#999" stroke-width="1" stroke-dasharray="6,5"/>')
+            lines.append(f'<text x="{width - right + 8}" y="{y + 5:.2f}" font-size="12">{threshold:.2f}</text>')
+    lines.extend([
+        f'<line class="axis" x1="{left}" x2="{left}" y1="{top}" y2="{height - bottom}"/>',
+        f'<line class="axis" x1="{left}" x2="{width - right}" y1="{height - bottom}" y2="{height - bottom}"/>',
+    ])
+    for group, points in series.items():
+        point_text = " ".join(f"{x:.2f},{y:.2f}" for x, y in points)
+        lines.append(f'<polyline points="{point_text}" fill="none" stroke="{colors[group]}" stroke-width="2.4"/>')
+    lines.extend([
+        f'<text x="{left + plot_width / 2:.1f}" y="{height - 24}" text-anchor="middle" font-size="15">Real-SWAT+ evaluation number within group</text>',
+        f'<text x="22" y="{top + plot_height / 2:.1f}" text-anchor="middle" font-size="15" transform="rotate(-90 22 {top + plot_height / 2:.1f})">Best-so-far mean NSE</text>',
+    ])
+    legend_x, legend_y = width - right - 190, top + 15
+    for index, group in enumerate(GROUPS):
+        y = legend_y + index * 28
+        lines.append(f'<line x1="{legend_x}" x2="{legend_x + 28}" y1="{y}" y2="{y}" stroke="{colors[group]}" stroke-width="3"/>')
+        lines.append(f'<text x="{legend_x + 38}" y="{y + 5}" font-size="13">{group}</text>')
+    lines.append('</svg>')
+    PLOT_SVG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PLOT_SVG_PATH.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _write_simple_png_plot(grouped: dict[str, list[dict[str, Any]]]) -> None:
+    """Write a dependency-free raster companion when matplotlib is unavailable."""
+    width, height, left, right, top, bottom, ymin, ymax, series = _plot_geometry(grouped)
+    pixels = bytearray([255] * (width * height * 3))
+
+    def pixel(x: int, y: int, color: tuple[int, int, int]) -> None:
+        if 0 <= x < width and 0 <= y < height:
+            offset = (y * width + x) * 3
+            pixels[offset : offset + 3] = bytes(color)
+
+    def line(x0: float, y0: float, x1: float, y1: float, color: tuple[int, int, int], thickness: int = 1) -> None:
+        steps = max(1, int(max(abs(x1 - x0), abs(y1 - y0))))
+        for step in range(steps + 1):
+            fraction = step / steps
+            x = int(round(x0 + fraction * (x1 - x0)))
+            y = int(round(y0 + fraction * (y1 - y0)))
+            for dx in range(-thickness + 1, thickness):
+                for dy in range(-thickness + 1, thickness):
+                    pixel(x + dx, y + dy, color)
+
+    black, grid, blue, red = (45, 45, 45), (222, 222, 222), (31, 119, 180), (214, 39, 40)
+    plot_height = height - top - bottom
+    for tick in np.linspace(ymin, ymax, 6):
+        y = top + (ymax - float(tick)) * plot_height / (ymax - ymin)
+        line(left, y, width - right, y, grid)
+    for threshold in THRESHOLDS:
+        if ymin <= threshold <= ymax:
+            y = top + (ymax - threshold) * plot_height / (ymax - ymin)
+            line(left, y, width - right, y, (155, 155, 155))
+    line(left, top, left, height - bottom, black, 2)
+    line(left, height - bottom, width - right, height - bottom, black, 2)
+    for group, points in series.items():
+        color = blue if group == "AI_GUIDED" else red
+        for first, second in zip(points, points[1:], strict=False):
+            line(first[0], first[1], second[0], second[1], color, 2)
+    # Legend swatches keep the PNG self-explanatory even without a font renderer.
+    legend_x, legend_y = width - right - 190, top + 15
+    line(legend_x, legend_y, legend_x + 28, legend_y, blue, 3)
+    line(legend_x, legend_y + 28, legend_x + 28, legend_y + 28, red, 3)
+    raw = bytearray()
+    row_size = width * 3
+    for row in range(height):
+        raw.append(0)
+        raw.extend(pixels[row * row_size : (row + 1) * row_size])
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+
+    png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b"")
+    PLOT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PLOT_PATH.write_bytes(png)
+
+
+def plot_best_so_far(grouped: dict[str, list[dict[str, Any]]]) -> str:
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        _write_svg_plot(grouped)
+        _write_simple_png_plot(grouped)
+        return str(PLOT_PATH)
 
     PLOT_PATH.parent.mkdir(parents=True, exist_ok=True)
     figure, axis = plt.subplots(figsize=(8.2, 5.2), dpi=160)
@@ -656,6 +782,7 @@ def plot_best_so_far(grouped: dict[str, list[dict[str, Any]]]) -> str:
     axis.legend(frameon=False)
     figure.tight_layout()
     figure.savefig(PLOT_PATH)
+    figure.savefig(PLOT_SVG_PATH)
     plt.close(figure)
     return str(PLOT_PATH)
 
@@ -747,7 +874,7 @@ def report(gate: dict[str, Any]) -> str:
         )
     lines += [
         "",
-        f"![Best-so-far mean NSE]({PLOT_PATH.name})",
+        f"![Best-so-far mean NSE]({PLOT_REPORT_LINK})",
         "",
         "The figure plots best-so-far mean NSE against within-group Real-SWAT+ evaluation number. `NOT_REACHED` is retained as a literal result in the threshold table.",
         "",
@@ -761,7 +888,7 @@ def report(gate: dict[str, Any]) -> str:
         "",
         "## Artifact boundary",
         "",
-        f"Tracked small outputs are `{REGION_PATH.name}`, `{RESULTS_PATH.name}`, `{GATE_PATH.name}`, this report, and `{PLOT_PATH.name}`. Daily qsim arrays and runtime checkpoint/scratch files remain local and are excluded from Git.",
+        f"Tracked small outputs are `{REGION_PATH.name}`, `{RESULTS_PATH.name}`, `{GATE_PATH.name}`, this report, `{PLOT_PATH.name}`, and `{PLOT_SVG_PATH.name}`. Daily qsim arrays and runtime checkpoint/scratch files remain local and are excluded from Git.",
         "",
     ]
     return "\n".join(lines)
@@ -828,6 +955,7 @@ def execute(resume: bool) -> dict[str, Any]:
             "region": str(REGION_PATH),
             "results": str(RESULTS_PATH),
             "plot": plot_path,
+            "plot_svg": str(PLOT_SVG_PATH),
             "report": str(REPORT_PATH),
             "plan_local_only": str(PLAN_PATH),
             "qsim_local_only": str(QSIM_ROOT),
