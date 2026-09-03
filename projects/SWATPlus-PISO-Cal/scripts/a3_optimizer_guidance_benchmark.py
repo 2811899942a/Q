@@ -1301,6 +1301,7 @@ def finalize(observed: np.ndarray, lower: np.ndarray, upper: np.ndarray, region:
         "runs_total": len(specs),
         "formal_budget": {"runs": len(specs), "evaluations_per_run": EVALUATIONS_PER_RUN, "total": len(specs) * EVALUATIONS_PER_RUN, "max_active_runs": MAX_ACTIVE_RUNS},
         "runtime": cpu_metadata(),
+        "region": region,
         "algorithms": {
             "DDS": {"definition": "standard sequential DDS", "sigma": DDS_SIGMA},
             "DE": {"definition": "DE/rand/1/bin", "population": DE_POPULATION, "F": DE_F, "CR": DE_CR},
