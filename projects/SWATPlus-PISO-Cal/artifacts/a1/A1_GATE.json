@@ -1,6 +1,36 @@
 {
   "A1_GATE": "A1_PASS",
   "completed_at": "2026-09-03T04:24:13+08:00",
+  "A1_1_CORRECTION": {
+    "schema": "a1.1-scientific-correction-v1",
+    "base_commit": "ea045ecdd7b9635ca48f185a8e13fccc0df3badb",
+    "best_inverse_overall": "PCA+Ridge",
+    "best_neural": "Transformer",
+    "ridge_qobs_theta_file": "a1_1_ridge_qobs_theta.json",
+    "ridge_qobs_mean_nse": 0.25741828272540285,
+    "ridge_qobs_nse_by_gauge": {
+      "01605500": 0.19570284120696702,
+      "01606000": 0.29806923910404515,
+      "01606500": 0.2784827678651963
+    },
+    "transformer_best_qobs_mean_nse": 0.3174554569324134,
+    "closure_30": {
+      "case_count": 30,
+      "reference": "original qsim(theta_true) at fixed test indices",
+      "mean_nse": 0.8717964538829486,
+      "median_nse": 0.9272779254096664,
+      "min_nse": 0.5637378395167024,
+      "summary_file": "a1_1/closure/summary.csv"
+    },
+    "qobs_mismatch": {
+      "pca_space": "Ridge PCA fit on train split",
+      "nearest_neighbor_percentile": 100.0,
+      "mismatch_label": "HIGH",
+      "trust_threshold_used": false
+    },
+    "inverse_learnability": "PARTIAL",
+    "a2_started": false
+  },
   "result": {
     "forward_closure_completed": 30,
     "qobs_swat": [

@@ -1,0 +1,6 @@
+model,completed_trials,best_config,selection_metric,val_MSE,val_NRMSE_sqrtMSE,test_NRMSE,test_mean_R2
+PCA+Ridge,1,PCA64_Ridge_alpha10,Ridge_validation_NRMSE,,0.1840229451,0.1833680494,0.4978617579
+CNN,4,width32_dropout0.10_lr0.0007,neural_validation_MSE,0.0751907155,0.2742092549,0.2732537752,0.0945126436
+TCN,4,width32_dropout0.10_lr0.0007,neural_validation_MSE,0.0757935122,0.2753062153,0.2747369486,0.0837189563
+BiLSTM,4,compressed128_width32_dropout0.10,neural_validation_MSE,0.0796593353,0.2822398542,0.2829339125,0.0437457587
+Transformer,14,patch14d_width32_dropout0.10_lr0.0007,neural_validation_MSE,0.0742794424,0.2725425516,0.2716594012,0.1057022108

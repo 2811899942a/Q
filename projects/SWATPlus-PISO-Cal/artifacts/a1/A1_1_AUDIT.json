@@ -1,0 +1,133 @@
+{
+  "a2_started": false,
+  "base_commit": "ea045ecdd7b9635ca48f185a8e13fccc0df3badb",
+  "best_inverse_overall": "PCA+Ridge",
+  "best_neural": "Transformer",
+  "closure_30": {
+    "case_count": 30,
+    "mean_nse": 0.8717964538829486,
+    "median_nse": 0.9272779254096664,
+    "min_nse": 0.5637378395167024,
+    "per_gauge": {
+      "01605500": {
+        "kge": {
+          "mean": 0.8537828429195986,
+          "median": 0.8608767289723344
+        },
+        "nse": {
+          "mean": 0.8893431973728202,
+          "median": 0.9302259550474703
+        },
+        "rmse": {
+          "mean": 1.3481348024602418,
+          "median": 0.8917220985202918
+        }
+      },
+      "01606000": {
+        "kge": {
+          "mean": 0.8542852308782083,
+          "median": 0.8655161274651237
+        },
+        "nse": {
+          "mean": 0.8680267180146104,
+          "median": 0.9251284817231336
+        },
+        "rmse": {
+          "mean": 2.851822415373058,
+          "median": 2.305779663713419
+        }
+      },
+      "01606500": {
+        "kge": {
+          "mean": 0.8530381319607317,
+          "median": 0.849531375925404
+        },
+        "nse": {
+          "mean": 0.8580194462614146,
+          "median": 0.928097972337744
+        },
+        "rmse": {
+          "mean": 4.192304896389711,
+          "median": 2.934764853279081
+        }
+      }
+    },
+    "reference": "original qsim from artifacts/a0/dataset/qsim.npy at fixed test indices"
+  },
+  "inverse_learnability": "PARTIAL",
+  "preserves_original_a1_outputs": true,
+  "qobs_mismatch": {
+    "mismatch_label": "HIGH",
+    "nearest_neighbor_distance": 30.697904586791992,
+    "percentile_rank": 100.0,
+    "reference_nn_distance_mean": 4.82475773852513,
+    "reference_nn_distance_std": 2.953265147691438,
+    "space": "Ridge PCA fit on train split; distances query qobs against all 4980 broad qsim",
+    "standardized_pca_distance": 47.218505859375,
+    "trust_threshold_used": false
+  },
+  "ridge_qobs": {
+    "aggregate": {
+      "bias_excess": 0.0,
+      "fitness": 0.21553739160688054,
+      "mean_abs_pbias": 2.552576531371623,
+      "mean_kge": 0.3455320831314938,
+      "mean_nse": 0.25741828272540285,
+      "min_nse": 0.19570284120696702
+    },
+    "case_id": "ridge_qobs",
+    "metrics": {
+      "01605500": {
+        "N": 5114,
+        "kge": 0.318606382872361,
+        "mae": 3.3911041849608563,
+        "nse": 0.19570284120696702,
+        "pbias": 2.9690196003013467,
+        "r2": 0.21171799119902932,
+        "rmse": 7.9523537884811795
+      },
+      "01606000": {
+        "N": 5114,
+        "kge": 0.3441693216744257,
+        "mae": 8.0001372111822,
+        "nse": 0.29806923910404515,
+        "pbias": 3.04187579047142,
+        "r2": 0.29885422562857344,
+        "rmse": 16.72681163096564
+      },
+      "01606500": {
+        "N": 5114,
+        "kge": 0.37382054484769467,
+        "mae": 12.830720492523476,
+        "nse": 0.2784827678651963,
+        "pbias": -1.6468342033421024,
+        "r2": 0.2816388490812611,
+        "rmse": 28.4361032879196
+      }
+    },
+    "period": "2003-2016",
+    "qsim_shape": [
+      3,
+      5114
+    ],
+    "runner": "SouthBranchLegacyAdapter",
+    "theta": [
+      -13.885457992553711,
+      0.0,
+      180.0,
+      0.3052646815776825,
+      0.0,
+      1.1181944608688354,
+      0.036759018898010254,
+      1.1117955446243286,
+      0.14865685999393463,
+      0.4000000059604645,
+      0.05000000074505806,
+      0.10574346780776978,
+      9.999999747378752e-06,
+      1.100000023841858
+    ]
+  },
+  "schema": "a1.1-scientific-correction-v1",
+  "transformer_best_qobs_mean_nse": 0.3174554569324134
+}
