@@ -1,0 +1,15 @@
+{
+  "source": "artifacts/a0/dataset/qobs.npy",
+  "shape": [3, 5114],
+  "period": "2003-01-01 to 2016-12-31",
+  "unit": "m3/s",
+  "nonfinite_count": 0,
+  "negative_count": 0,
+  "global": {"min": 0.2426753789, "max": 526.693359375, "mean": 13.7148962021, "median": 6.0314884186, "std": 24.1037082671},
+  "gauges": {
+    "01605500": {"mean": 5.5116758347, "std": 8.8672189713},
+    "01606000": {"mean": 13.1211061478, "std": 19.9648494720},
+    "01606500": {"mean": 22.5119075775, "std": 33.4770164490}
+  },
+  "diagnostic": "finite and nonnegative; leakage-safe log1p gauge scaling fitted on train split only"
+}

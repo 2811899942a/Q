@@ -1,0 +1,13 @@
+trial_id,at,traceback
+A1_MAIN,2026-09-02T20:51:15+08:00,"Traceback (most recent call last):
+  File ""D:\SWAT+_3V3\Q\projects\SWATPlus-PISO-Cal\scripts\a1_run_12h.py"", line 591, in main
+    ridge = train_ridge(data, ROOT / ""artifacts"" / ""a1"" / ""models"")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""D:\SWAT+_3V3\Q\projects\SWATPlus-PISO-Cal\scripts\a1_run_12h.py"", line 235, in train_ridge
+    with (root / ""ridge.pkl"").open(""wb"") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""D:\_ENV\uv\python\cpython-3.12-windows-x86_64-none\Lib\pathlib.py"", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a1\\models\\ridge.pkl'
+"

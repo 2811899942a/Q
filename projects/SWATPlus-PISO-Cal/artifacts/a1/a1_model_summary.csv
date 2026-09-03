@@ -1,0 +1,6 @@
+model,completed_trials,best_config,best_val_nrmse,test_nrmse,test_mean_r2
+PCA+Ridge,1,PCA64_Ridge_alpha10,0.1840229451,0.1833680494,0.4978617579
+CNN,4,width32_dropout0.10_lr0.0007,0.0751907155,0.2732537752,0.0945126436
+TCN,4,width32_dropout0.10_lr0.0007,0.0757935122,0.2747369486,0.0837189563
+BiLSTM,4,compressed128_width32_dropout0.10,0.0796593353,0.2829339125,0.0437457587
+Transformer,14,patch14d_width32_dropout0.10_lr0.0007,0.0742794424,0.2716594012,0.1057022108

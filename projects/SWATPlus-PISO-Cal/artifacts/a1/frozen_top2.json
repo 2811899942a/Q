@@ -1,0 +1,31 @@
+{
+  "frozen_at": "2026-09-03T03:52:05+08:00",
+  "selected": [
+    {
+      "config": {
+        "batch_size": 96,
+        "dropout": 0.1,
+        "heads": 4,
+        "input_stride": 7,
+        "lr": 0.0007,
+        "patch_days": 14,
+        "width": 32
+      },
+      "model": "Transformer",
+      "val": 0.07427944242954254
+    },
+    {
+      "config": {
+        "batch_size": 96,
+        "dropout": 0.1,
+        "heads": 4,
+        "input_stride": 7,
+        "lr": 0.0005949999999999999,
+        "patch_days": 14,
+        "width": 32
+      },
+      "model": "Transformer",
+      "val": 0.0748516246676445
+    }
+  ]
+}
