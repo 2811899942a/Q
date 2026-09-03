@@ -1,79 +1,76 @@
-// Guo et al. (2026) flash-drought reproduction: MCD12C1 GEE preprocessing
-// Paper states vegetation type from MODIS MCD12C1 IGBP and 1-degree upscaling by mode.
-// The exact single-year/static-map choice is not stated in the Version of Record.
-// Because annual 1-degree categorical maps are tiny, this script exports the complete
-// 2001-2019 candidate series. The downstream audit can then reproduce/test the author's
-// likely convention without re-downloading raw MODIS data.
+// Guo et al. (2026) flash-drought reproduction: MCD12C1 vegetation-type preprocessing
+// Paper source: MCD12C1, IGBP classification, 1-degree upscaling by mode.
+// Reference 51 cites the MODIS Collection 6 Land Cover product.
+// Earth Engine currently exposes the official Collection 6.1 successor as MODIS/061/MCD12C1.
+// The paper does not state which single MCD12C1 year/static convention was used, so export
+// all 2001-2019 annual candidates; they are small and can be tested later against Source Data.
 
-var CFG = {
-  collection: 'MODIS/061/MCD12C1',
-  band: 'LC_Type1', // IGBP classification
-  yearStart: 2001,
-  yearEnd: 2019,
-  exportEnabled: false,
-  exportFolder: 'FlashDrought_Guo2026_GEE_exports',
-  region: ee.Geometry.Rectangle([-180, -60, 180, 90], null, false),
-  crs: 'EPSG:4326',
-  crsTransform: [1, 0, -180, 0, -1, 90]
-};
+var START_YEAR = 2001;
+var END_YEAR = 2019;
+var DRIVE_FOLDER = 'FlashDrought_Guo2026_GEE_exports';
 
-var src = ee.ImageCollection(CFG.collection).select(CFG.band);
+var REGION = ee.Geometry.Rectangle([-180, -60, 180, 90], null, false);
+var CRS = 'EPSG:4326';
+var TRANSFORM = [1, 0, -180, 0, -1, 90];
 
-function mapForYear(year) {
-  var image = src
-    .filter(ee.Filter.calendarRange(year, year, 'year'))
-    .first();
+var COLLECTION = 'MODIS/061/MCD12C1';
+var BAND = 'Majority_Land_Cover_Type_1'; // IGBP class, values 0-16
 
-  // Paper: mode inside each 1-degree upscaling window represents vegetation type.
-  var oneDeg = ee.Image(image)
+var src = ee.ImageCollection(COLLECTION).select(BAND);
+
+function oneDegreeIGBP(year) {
+  var image = ee.Image(
+    src.filter(ee.Filter.calendarRange(year, year, 'year')).first()
+  );
+
+  // Paper: use the mode inside the upscaling window to represent vegetation type.
+  return image
     .reduceResolution({
       reducer: ee.Reducer.mode(),
-      maxPixels: 65535,
-      bestEffort: false
+      maxPixels: 4096
     })
     .reproject({
-      crs: CFG.crs,
-      crsTransform: CFG.crsTransform
+      crs: CRS,
+      crsTransform: TRANSFORM
     })
-    .rename('MCD12C1_IGBP_mode_1deg')
+    .rename('IGBP_mode_1deg')
     .toInt16()
-    .clip(CFG.region)
     .set({
       year: year,
-      source_collection: CFG.collection,
-      source_band: CFG.band,
-      aggregation: 'mode to explicit 1-degree grid'
+      source_collection: COLLECTION,
+      source_band: BAND,
+      source_scheme: 'IGBP',
+      spatial_aggregation: 'mode to 1 degree'
     });
-
-  return oneDeg;
 }
 
-print('MCD12C1 source collection', src);
-print('2001 candidate', mapForYear(2001));
-print('2019 candidate', mapForYear(2019));
+print('MCD12C1 collection', src);
+print('2001 1-degree IGBP', oneDegreeIGBP(2001));
+print('2019 1-degree IGBP', oneDegreeIGBP(2019));
 
-if (CFG.exportEnabled) {
-  for (var y = CFG.yearStart; y <= CFG.yearEnd; y++) {
-    var out = mapForYear(y);
-    var prefix = 'MCD12C1_IGBP_mode_1deg_' + y;
+Map.setCenter(100, 35, 3);
+Map.addLayer(
+  oneDegreeIGBP(2019),
+  {min: 0, max: 16},
+  'MCD12C1 IGBP 1deg 2019'
+);
 
-    Export.image.toDrive({
-      image: out,
-      description: prefix,
-      folder: CFG.exportFolder,
-      fileNamePrefix: prefix,
-      region: CFG.region,
-      crs: CFG.crs,
-      crsTransform: CFG.crsTransform,
-      maxPixels: 1e13,
-      fileFormat: 'GeoTIFF',
-      formatOptions: {cloudOptimized: true}
-    });
-  }
+for (var year = START_YEAR; year <= END_YEAR; year++) {
+  var output = oneDegreeIGBP(year);
+  var name = 'MCD12C1_IGBP_1deg_' + year;
+
+  Export.image.toDrive({
+    image: output,
+    description: name,
+    folder: DRIVE_FOLDER,
+    fileNamePrefix: name,
+    region: REGION,
+    crs: CRS,
+    crsTransform: TRANSFORM,
+    maxPixels: 1e13,
+    fileFormat: 'GeoTIFF',
+    formatOptions: {cloudOptimized: true}
+  });
 }
 
-// Downstream rule:
-// - preserve all annual candidates;
-// - after the reconstruction begins, compare plausible year/static-map conventions against
-//   Source Data region counts / published vegetation grouping;
-// - record the selected rule explicitly instead of silently assuming year 2001.
+print('Created export tasks:', END_YEAR - START_YEAR + 1);
