@@ -1,33 +1,68 @@
 # Reproduction Status
 
-Last initialized: 2026-09-03
+Last updated: 2026-09-03
 
 ## Gate summary
 
 | Gate | State | Evidence |
 |---|---|---|
-| G0 AUTHOR_ASSETS_VERIFIED | BLOCKED | official URLs identified; remote binary assets/capsule not materialized in current runtime; capsule rehosting license not yet verified |
-| G1 AUTHOR_RUN_REPRODUCED | NOT_STARTED | requires G0 |
-| G2 CORE_METHOD_REBUILT | NOT_STARTED | requires exact implementation details from G0/G1 |
-| G3 ATTRIBUTION_REBUILT | NOT_STARTED | requires G2 + processed predictors |
-| G4 CMIP6_REBUILT | NOT_STARTED | later stage |
+| G0A NATURE_ASSETS_VERIFIED | **PASS** | Supplementary, Reporting Summary, Transparent Peer Review and Source Data supplied by user; file type/content inspected; SHA256 recorded in `AUTHOR_ASSET_AUDIT_20260903.md` |
+| G0B CODE_OCEAN_CAPSULE_VERIFIED | **BLOCKED** | DOI confirmed, capsule still not materialized; license/file tree/environment unavailable for audit |
+| G0 AUTHOR_ASSETS_VERIFIED | **PARTIAL_PASS** | Nature package complete; Code Ocean is the remaining author-package blocker |
+| G1 AUTHOR_RUN_REPRODUCED | NOT_STARTED | requires Code Ocean capsule/environment |
+| G2 CORE_METHOD_REBUILT | NOT_STARTED | exact code-dependent edge cases remain |
+| G3 ATTRIBUTION_REBUILT | NOT_STARTED | requires fitted author implementation or independent processed predictors |
+| G4 CMIP6_REBUILT | NOT_STARTED | intentionally deferred |
 
-## Completed initialization checks
+## Completed checks
 
-- PASS: correct paper identified: Nature Communications 17:4050 (2026), DOI `10.1038/s41467-026-70417-z`.
-- PASS: supplied PDF inspected and key figures/method pages visually checked.
-- PASS: official paper states Source Data are provided with the article.
-- PASS: official paper states main-result code is at Code Ocean DOI `10.24433/CO.0939560.v1`.
-- PASS: direct official Springer Nature URLs for Supplementary Information and Source Data have been identified and encoded in the fetch script.
-- PASS: data/method/figure/run-order documentation initialized.
-- PASS: uncertainties that would otherwise invite guessing are explicitly logged.
+- PASS: correct paper identified: *Nature Communications* 17:4050 (2026), DOI `10.1038/s41467-026-70417-z`.
+- PASS: Version of Record PDF inspected.
+- PASS: official Supplementary Information obtained and audited: 26 pages, Fig. S1-S21, Table S1-S3.
+- PASS: official Reporting Summary obtained and audited; confirms MATLAB R2020b and Code Ocean process data/code deposit.
+- PASS: official Transparent Peer Review obtained and audited; key reproduction clarifications extracted.
+- PASS: official Source Data XLSX obtained and audited: 45 sheets, 0 formulas, 0 external links, 0 defined names.
+- PASS: exact SHA256 hashes recorded for all four Nature assets.
+- PASS: source-value OLS checks reproduce the rounded Fig. 1 count/severity/onset-speed linear slopes.
+- PASS: Source Data confirm all final RF predictor VIF values are <5.
+- PASS: Source Data confirm Fig. S21 RF group sample sizes (437/486/370/722).
+- PASS: Source Data contain the nine-model Taylor metrics used for CMIP6 screening and support exclusion of CMCC-CM2-SR5 on STD/RMSD grounds.
+- PASS: peer review resolves several previously ambiguous method details, including deseasonalize+detrend before soil-moisture percentiles, GPP growing-season threshold logic, OOB permutation importance intent and minimum terminal node wording.
+- CHECKED/UNRESOLVED: literal MFDI reverse engineering from Source Data reaches ~0.98 correlation with published MFDI but not exact equality; author implementation is still required.
 
 ## Current blockers
 
-1. Current execution runtime cannot directly materialize the remote Springer binary attachments; DNS/download access is unavailable from the container and the browser retrieval interface exposes the link but not the binary file bytes.
-2. Code Ocean DOI/capsule cannot be materialized through the currently available download interface, so the capsule's explicit license and complete file tree remain unverified.
-3. Because repository `2811899942a/Q` is public, author files will not be blindly mirrored until capsule/source-data redistribution terms are confirmed.
+1. Code Ocean capsule `10.24433/CO.0939560.v1` has not yet been exported/materialized.
+2. The Version of Record says RF uses `300 binary trees with 5 leaves`; the peer-review response states `minimum terminal node size = 5`. Exact MATLAB parameterization must be read from released code.
+3. Exact soil-moisture percentile reference-window/calendar handling and event edge cases require released code.
+4. Exact MFDI implementation contains at least one convention not recoverable exactly from the printed equations + Source Data alone.
+5. BEAST configuration, RF randomization/seeds, PDP confidence intervals, CO2-beta numerical implementation and CMIP6 calendar handling still require code inspection.
 
-## Next executable action
+## GitHub-side preparation completed before Codex quota is used
 
-Run `scripts/fetch_official_assets.py` from a normal network-enabled machine (or Codex host), export the Code Ocean capsule from its public page, then place/export it according to `vendor/codeocean/README.md`. Immediately compute hashes and update G0.
+- paper logic map;
+- methods map;
+- figure reproduction matrix;
+- staged run order;
+- data manifest + local download checklist;
+- author-asset SHA256/provenance audit;
+- peer-review method clarification audit;
+- Source Data numerical/structural audit;
+- machine-readable paper parameter lock in `config/paper_parameters.json`;
+- Source Data workbook audit script;
+- Source Data numerical smoke-test script;
+- explicit uncertainty ledger.
+
+## Next action when Codex/local work starts
+
+Priority 1 is **Code Ocean capsule export and audit**, not ERA5-Land/GLDAS bulk download.
+
+After the capsule is obtained:
+
+1. preserve original archive;
+2. hash every file;
+3. inventory file tree/environment;
+4. map scripts to figures;
+5. resolve `KNOWN_UNCERTAINTIES.md` against executable code;
+6. run the smallest official author workflow against bundled process data;
+7. only then derive the minimal missing upstream-download list.
