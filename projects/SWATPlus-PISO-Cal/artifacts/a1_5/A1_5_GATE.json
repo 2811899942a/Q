@@ -1,0 +1,4417 @@
+{
+  "a1_engineering_gate": "A1_PASS",
+  "a2_started": false,
+  "base_commit": "1460acd61396988108d7c469eae5e1826be63a96",
+  "classification": {
+    "a2_ready": "NO",
+    "a2_recommended_method": "preconditioned RNPE + local simulation enrichment",
+    "broad_best_nearest20_mean_nse": 0.491918939371039,
+    "broad_feature_overlap_fraction": 0.38666666666666666,
+    "confirmed_directed_best_nearest20_mean_nse": 0.4992979169457197,
+    "confirmed_directed_feature_overlap_fraction": 0.7466666666666667,
+    "coverage_gap_flag": false,
+    "interpretation": "The evidence supports more than one limitation: directed coverage changes the distance, but residual OOD and/or representation quality remain material.",
+    "mismatch_cause": "MIXED",
+    "representation_gap_flag": true,
+    "rules": {
+      "coverage_gap": "directed PCA NN distance < broad distance and directed percentile + 10 < broad percentile",
+      "mixed": "more than one flag is material",
+      "representation_gap": "broad PCA percentile >= 95, confirmed-directed feature Q05-Q95 overlap >= 0.70, and directed nearest20 best mean NSE >= max(0.45, 0.90*broad best)",
+      "structural_gap": "directed PCA percentile >= 75"
+    },
+    "structural_gap_flag": true
+  },
+  "current_commit_at_run": "1460acd61396988108d7c469eae5e1826be63a96",
+  "diagnostic_contrast_pool": {
+    "asset_index_sha256": "6b9ce1b27af29e6042e0b9c0c0c52e55e3b9242924fb52c348825e7746e83768",
+    "n": 53,
+    "records": [
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0001\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0001",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0002\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0002",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0003\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0003",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0004\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0004",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0005\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0005",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0006\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0006",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0007\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0007",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0008\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0008",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0009\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0009",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0010\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0010",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0011\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0011",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0012\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0012",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0013\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0013",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0014\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0014",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0015\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0015",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0016\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0016",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\standardized_smoke_100_seed_42\\features\\DEEPCAL100-HIST-FP-0017\\development_q.csv",
+        "simulation_id": "DEEPCAL100-HIST-FP-0017",
+        "source": "historical_maximin_farthest_point",
+        "source_kind": "feature_qsim_csv"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_01\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000004:worker_01",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_02\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000005:worker_02",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_03\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000006:worker_03",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_04\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000007:worker_04",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_05\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000008:worker_05",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_06\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000009:worker_06",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_07\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000010:worker_07",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\workers\\worker_08\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000011:worker_08",
+        "source": "R2 calibration",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\workers\\worker_03\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000012:worker_03",
+        "source": "R3_4096 calibration and sensitivity",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\workers\\worker_04\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000013:worker_04",
+        "source": "R3_4096 calibration and sensitivity",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\workers\\worker_05\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000014:worker_05",
+        "source": "R3_4096 calibration and sensitivity",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\workers\\worker_06\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000015:worker_06",
+        "source": "R3_4096 calibration and sensitivity",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\workers\\worker_07\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000016:worker_07",
+        "source": "R3_4096 calibration and sensitivity",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\workers\\worker_08\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000017:worker_08",
+        "source": "R3_4096 calibration and sensitivity",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\pilot_seed_42\\arms\\BO\\candidates\\PILOT-PROPOSAL-BO-42-0034\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000033:PILOT-PROPOSAL-BO-42-0034",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\pilot_seed_42\\arms\\BO\\candidates\\PILOT-PROPOSAL-BO-42-0094\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000034:PILOT-PROPOSAL-BO-42-0094",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\pilot_seed_42\\arms\\BO\\candidates\\PILOT-PROPOSAL-BO-42-0109\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000035:PILOT-PROPOSAL-BO-42-0109",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\pilot_seed_42\\arms\\KG-BO_same-space\\candidates\\PILOT-PROPOSAL-KG-BO_same-space-42-0078\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000036:PILOT-PROPOSAL-KG-BO_same-space-42-0078",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\pilot_seed_42\\arms\\Random\\candidates\\PILOT-PROPOSAL-Random-42-0172\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000037:PILOT-PROPOSAL-Random-42-0172",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\COMMON-ANCHOR-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000038:COMMON-ANCHOR-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\COMMON-ANCHOR-20260910-0002\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000039:COMMON-ANCHOR-20260910-0002",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\COMMON-ANCHOR-20260910-0003\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000040:COMMON-ANCHOR-20260910-0003",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-BASELINE\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000041:SMOKE-BASELINE",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-DDS-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000042:SMOKE-PROPOSAL-DDS-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-DE-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000043:SMOKE-PROPOSAL-DE-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-KG-BO_same-space_ablation-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000044:SMOKE-PROPOSAL-KG-BO_same-space_ablation-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-Knowledge-guided_BO-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000045:SMOKE-PROPOSAL-Knowledge-guided_BO-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-LHS-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000046:SMOKE-PROPOSAL-LHS-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-Random-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000047:SMOKE-PROPOSAL-Random-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\smoke\\candidates\\SMOKE-PROPOSAL-Standard_BO-20260910-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000048:SMOKE-PROPOSAL-Standard_BO-20260910-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\v2_pilot_seed_42\\arms\\BO\\candidates\\V2-PROPOSAL-BO-42-0051\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000049:V2-PROPOSAL-BO-42-0051",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\v2_pilot_seed_42\\arms\\KG-prior-only\\candidates\\V2-PROPOSAL-KG-prior-only-42-0058\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000050:V2-PROPOSAL-KG-prior-only-42-0058",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\v2_smoke_seed_42\\arms\\BO\\candidates\\V2-PROPOSAL-BO-42-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000055:V2-PROPOSAL-BO-42-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\v2_smoke_seed_42\\arms\\KG-prior-only\\candidates\\V2-PROPOSAL-KG-prior-only-42-0002\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000056:V2-PROPOSAL-KG-prior-only-42-0002",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\v2_smoke_seed_42\\arms\\KG-prior_space\\candidates\\V2-PROPOSAL-KG-prior_space-42-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000057:V2-PROPOSAL-KG-prior_space-42-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      },
+      {
+        "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\v2_smoke_seed_42\\candidates\\V2-SMOKE-ANCHOR-42-0001\\channel_sd_day.txt",
+        "simulation_id": "archive-index:000058:V2-SMOKE-ANCHOR-42-0001",
+        "source": "Knowledge-guided calibration V1/V2",
+        "source_kind": "existing_channel_sd_day"
+      }
+    ],
+    "shape": [
+      53,
+      3,
+      5114
+    ],
+    "source_counts": {
+      "Knowledge-guided calibration V1/V2": 22,
+      "R2 calibration": 8,
+      "R3_4096 calibration and sensitivity": 6,
+      "historical_maximin_farthest_point": 17
+    },
+    "use": "diagnostic contrast only; never merged into A1/A2 training"
+  },
+  "hydrologic_features": {
+    "broad": {
+      "feature_count": 75,
+      "features": {
+        "01605500.cv": {
+          "population": {
+            "mean": 0.5654590017025756,
+            "q05": 0.31645161517551856,
+            "q25": 0.39920873590787814,
+            "q50": 0.5151928082379467,
+            "q75": 0.685295364906628,
+            "q95": 0.9794779013776277,
+            "std": 0.21088445019895918
+          },
+          "qobs": 1.6089635919727998,
+          "qobs_standardized_residual": 4.948229180888989,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.high_flow_frequency": {
+          "population": {
+            "mean": 0.04996426849360681,
+            "q05": 0.00899491591709034,
+            "q25": 0.018576456785295268,
+            "q50": 0.03519749706687524,
+            "q75": 0.06985725459522879,
+            "q95": 0.13825772389518973,
+            "std": 0.04080236374915366
+          },
+          "qobs": 0.0543605788032851,
+          "qobs_standardized_residual": 0.10774646137429776,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.lag1_acf": {
+          "population": {
+            "mean": 0.9117286695669418,
+            "q05": 0.7939669858756716,
+            "q25": 0.882135255485775,
+            "q50": 0.92778293913303,
+            "q75": 0.9579185444775987,
+            "q95": 0.9810630162315922,
+            "std": 0.0640009409929177
+          },
+          "qobs": 0.6375680982928302,
+          "qobs_standardized_residual": -4.283695942915063,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.low_flow_frequency": {
+          "population": {
+            "mean": 0.04998240910454489,
+            "q05": 0.0,
+            "q25": 0.0,
+            "q50": 0.0,
+            "q75": 0.07357254595228785,
+            "q95": 0.2426965193586235,
+            "std": 0.08409409909129772
+          },
+          "qobs": 0.3410246382479468,
+          "qobs_standardized_residual": 3.4609114347896104,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.mean": {
+          "population": {
+            "mean": 8.07680634481964,
+            "q05": 6.894805718735408,
+            "q25": 7.66714626403819,
+            "q50": 8.097755152351883,
+            "q75": 8.570425863383942,
+            "q95": 9.139862690304797,
+            "std": 0.6971899603512929
+          },
+          "qobs": 5.511675966079691,
+          "qobs_standardized_residual": -3.6792417054420103,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.01": {
+          "population": {
+            "mean": 7.7059519338185565,
+            "q05": 6.476967860009813,
+            "q25": 7.125785708496098,
+            "q50": 7.702753447030546,
+            "q75": 8.26376496950671,
+            "q95": 9.016312026723465,
+            "std": 0.794875856957307
+          },
+          "qobs": 6.046892955006542,
+          "qobs_standardized_residual": -2.087192565091457,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.02": {
+          "population": {
+            "mean": 7.787855165957345,
+            "q05": 6.860995069386983,
+            "q25": 7.383958958917194,
+            "q50": 7.792864906366425,
+            "q75": 8.199876912314483,
+            "q95": 8.704899895748104,
+            "std": 0.5779269244142665
+          },
+          "qobs": 6.69636216368338,
+          "qobs_standardized_residual": -1.8886349747075597,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.03": {
+          "population": {
+            "mean": 11.490433162238336,
+            "q05": 8.957608533509864,
+            "q25": 9.86805874383944,
+            "q50": 10.855936633826401,
+            "q75": 12.55352995390167,
+            "q95": 16.4076207250494,
+            "std": 2.2684105410318876
+          },
+          "qobs": 11.36193897345099,
+          "qobs_standardized_residual": -0.05664503248556446,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.04": {
+          "population": {
+            "mean": 12.501123105944105,
+            "q05": 10.123282011122932,
+            "q25": 11.010360116901852,
+            "q50": 12.083195242995307,
+            "q75": 13.841379155147644,
+            "q95": 15.957090700524194,
+            "std": 1.841981230875907
+          },
+          "qobs": 9.810958074104219,
+          "qobs_standardized_residual": -1.4604736393327196,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.05": {
+          "population": {
+            "mean": 13.689764238277673,
+            "q05": 11.243533848068132,
+            "q25": 12.201051271181502,
+            "q50": 13.362957363853806,
+            "q75": 15.13180131214555,
+            "q95": 16.87094780437408,
+            "std": 1.8061327189315404
+          },
+          "qobs": 9.075020804383238,
+          "qobs_standardized_residual": -2.555041158118441,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.06": {
+          "population": {
+            "mean": 10.442573452165368,
+            "q05": 7.192935106250502,
+            "q25": 9.678297034615563,
+            "q50": 10.720232130232311,
+            "q75": 11.55029285294669,
+            "q95": 12.492859985203971,
+            "std": 1.5676753936150083
+          },
+          "qobs": 4.41571559324151,
+          "qobs_standardized_residual": -3.8444552255337148,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.07": {
+          "population": {
+            "mean": 7.164598551412957,
+            "q05": 3.045761248543172,
+            "q25": 5.871475802176559,
+            "q50": 7.719225812617535,
+            "q75": 8.758004617855846,
+            "q95": 9.655051054218397,
+            "std": 2.047045498103408
+          },
+          "qobs": 2.0836109867843065,
+          "qobs_standardized_residual": -2.4821077837967747,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.08": {
+          "population": {
+            "mean": 5.145105655230754,
+            "q05": 1.4986234122844337,
+            "q25": 3.5515299519772903,
+            "q50": 5.570110599291489,
+            "q75": 6.831414178494484,
+            "q95": 7.901777653265659,
+            "std": 2.0468752224977136
+          },
+          "qobs": 1.519316265247934,
+          "qobs_standardized_residual": -1.7713778300361807,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.09": {
+          "population": {
+            "mean": 4.586017212910864,
+            "q05": 2.023025465667957,
+            "q25": 3.292023393511772,
+            "q50": 4.700429758855275,
+            "q75": 5.884042866457076,
+            "q95": 7.002737626802354,
+            "std": 1.586030698566849
+          },
+          "qobs": 2.728409085954939,
+          "qobs_standardized_residual": -1.1712308775829285,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.10": {
+          "population": {
+            "mean": 4.5070898314512,
+            "q05": 2.4821726889877413,
+            "q25": 3.5589242511201427,
+            "q50": 4.499981572139099,
+            "q75": 5.4693657906923425,
+            "q95": 6.55271691924416,
+            "std": 1.2518844760321208
+          },
+          "qobs": 2.115294540532723,
+          "qobs_standardized_residual": -1.9105559152705072,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.monthly_climatology.11": {
+          "population": {
+            "mean": 4.811766335322337,
+            "q05": 3.1577667607118687,
+            "q25": 4.0706244063519295,
+            "q50": 4.833808337081046,
+            "q75": 5.522291074764161,
+            "q95": 6.455265595543953,
+            "std": 1.0072336176143575
+          },
+          "qobs": 3.9892234404881797,
+          "qobs_standardized_residual": -0.8166356647054528,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.12": {
+          "population": {
+            "mean": 7.065202611498188,
+            "q05": 5.401925566243136,
+            "q25": 6.218722349350354,
+            "q50": 6.92917627041241,
+            "q75": 7.760230986066677,
+            "q95": 9.263901141414651,
+            "std": 1.1893857420950387
+          },
+          "qobs": 6.365535779482758,
+          "qobs_standardized_residual": -0.5882589703682007,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q05": {
+          "population": {
+            "mean": 2.7726394043711715,
+            "q05": 0.4203444895148277,
+            "q25": 1.5652750119566918,
+            "q50": 2.8908250451087953,
+            "q75": 3.9476499795913695,
+            "q95": 4.918050217628479,
+            "std": 1.430009485205418
+          },
+          "qobs": 0.8806539177894592,
+          "qobs_standardized_residual": -1.3230579979753578,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q25": {
+          "population": {
+            "mean": 4.663871979883996,
+            "q05": 1.9093374863266945,
+            "q25": 3.674562528729439,
+            "q50": 4.886000156402588,
+            "q75": 5.788500070571899,
+            "q95": 6.819012385606766,
+            "std": 1.4908592097401963
+          },
+          "qobs": 1.3677036762237549,
+          "qobs_standardized_residual": -2.2109185643590332,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.q50": {
+          "population": {
+            "mean": 7.09839990324524,
+            "q05": 5.0288748145103455,
+            "q25": 6.512875020503998,
+            "q50": 7.231750130653381,
+            "q75": 7.865624964237213,
+            "q95": 8.603025150299072,
+            "std": 1.0862893817881005
+          },
+          "qobs": 2.9449520111083984,
+          "qobs_standardized_residual": -3.823518817149818,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.q75": {
+          "population": {
+            "mean": 10.603167618230643,
+            "q05": 8.857749938964844,
+            "q25": 9.84237515926361,
+            "q50": 10.5600004196167,
+            "q75": 11.357499837875366,
+            "q95": 12.510375237464906,
+            "std": 1.1227226132450032
+          },
+          "qobs": 6.371290683746338,
+          "qobs_standardized_residual": -3.7692987426813476,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.q95": {
+          "population": {
+            "mean": 16.32374738292042,
+            "q05": 12.473500013351435,
+            "q25": 13.760000228881836,
+            "q50": 15.44024989604949,
+            "q75": 17.9671245574951,
+            "q95": 23.258475193977333,
+            "std": 3.46430218914921
+          },
+          "qobs": 17.509721946716294,
+          "qobs_standardized_residual": 0.3423415450045229,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.std": {
+          "population": {
+            "mean": 4.515742216140255,
+            "q05": 2.6626400338662717,
+            "q25": 3.2704795244063174,
+            "q50": 4.138325653256086,
+            "q75": 5.4292109764232865,
+            "q95": 7.532974954770486,
+            "std": 1.5954295067664073
+          },
+          "qobs": 8.868085960173731,
+          "qobs_standardized_residual": 2.728007552558531,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.cv": {
+          "population": {
+            "mean": 0.5786243712760232,
+            "q05": 0.3395025071195099,
+            "q25": 0.42218219490128994,
+            "q50": 0.5269971714089366,
+            "q75": 0.6895808608742687,
+            "q95": 0.9778836297863408,
+            "std": 0.20677330221111348
+          },
+          "qobs": 1.521731551638487,
+          "qobs_standardized_residual": 4.561068427487606,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.high_flow_frequency": {
+          "population": {
+            "mean": 0.04994212281272136,
+            "q05": 0.007039499413375049,
+            "q25": 0.016621040281579978,
+            "q50": 0.03617520531873289,
+            "q75": 0.07098161908486508,
+            "q95": 0.13942119671490028,
+            "std": 0.041911869955797904
+          },
+          "qobs": 0.09640203363316387,
+          "qobs_standardized_residual": 1.108514386722448,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.lag1_acf": {
+          "population": {
+            "mean": 0.8699231677168909,
+            "q05": 0.695522252893449,
+            "q25": 0.8207774331690605,
+            "q50": 0.8889078970539555,
+            "q75": 0.938719483880822,
+            "q95": 0.9771594103993267,
+            "std": 0.0899065783410712
+          },
+          "qobs": 0.7433937232979227,
+          "qobs_standardized_residual": -1.407343564326973,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.low_flow_frequency": {
+          "population": {
+            "mean": 0.049982998085419506,
+            "q05": 0.0,
+            "q25": 0.0,
+            "q50": 0.0,
+            "q75": 0.07743449354712553,
+            "q95": 0.23175596402033646,
+            "std": 0.08010927944004115
+          },
+          "qobs": 0.37641767696519357,
+          "qobs_standardized_residual": 4.0748672458613715,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.mean": {
+          "population": {
+            "mean": 16.14453738886015,
+            "q05": 13.92111830861775,
+            "q25": 15.393876076047665,
+            "q50": 16.189951206540336,
+            "q75": 17.036270439368373,
+            "q95": 18.065707461264946,
+            "std": 1.276118134058643
+          },
+          "qobs": 13.121106172839342,
+          "qobs_standardized_residual": -2.3692408526512154,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.01": {
+          "population": {
+            "mean": 15.6797739355169,
+            "q05": 13.565739303195532,
+            "q25": 14.694645758048729,
+            "q50": 15.681625600234703,
+            "q75": 16.643168766515046,
+            "q95": 17.855266529266736,
+            "std": 1.3376966888737967
+          },
+          "qobs": 15.808055791986703,
+          "qobs_standardized_residual": 0.0958975659705157,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.02": {
+          "population": {
+            "mean": 16.061828777257062,
+            "q05": 14.431735582122899,
+            "q25": 15.323875012196073,
+            "q50": 16.005666649702825,
+            "q75": 16.726465268907223,
+            "q95": 17.869941834969953,
+            "std": 1.0767615951382565
+          },
+          "qobs": 17.639607736558624,
+          "qobs_standardized_residual": 1.4653001801192227,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.03": {
+          "population": {
+            "mean": 25.11950195299879,
+            "q05": 19.787272812858703,
+            "q25": 21.617047787536674,
+            "q50": 23.68683985521167,
+            "q75": 27.107798402485212,
+            "q95": 36.19054272133634,
+            "std": 5.0221832649474765
+          },
+          "qobs": 30.40798706008542,
+          "qobs_standardized_residual": 1.0530251143955422,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.04": {
+          "population": {
+            "mean": 24.36376448179353,
+            "q05": 19.69068807863054,
+            "q25": 21.370345225220635,
+            "q50": 23.423678576378595,
+            "q75": 27.015095241864522,
+            "q95": 31.414910448959894,
+            "std": 3.738211390854882
+          },
+          "qobs": 24.30057378099078,
+          "qobs_standardized_residual": -0.016903993433162796,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.05": {
+          "population": {
+            "mean": 25.30894946754387,
+            "q05": 20.974004662421443,
+            "q25": 22.803744263912673,
+            "q50": 24.80279954567483,
+            "q75": 27.87395739225748,
+            "q95": 30.543224635321973,
+            "std": 3.0825354687918987
+          },
+          "qobs": 21.840640296035097,
+          "qobs_standardized_residual": -1.1251481796795384,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.06": {
+          "population": {
+            "mean": 19.840977874556817,
+            "q05": 14.060294427616256,
+            "q25": 18.2551547901971,
+            "q50": 20.378285722505478,
+            "q75": 21.935357161930632,
+            "q95": 23.62621784244265,
+            "std": 2.9022468576551197
+          },
+          "qobs": 9.461932705271812,
+          "qobs_standardized_residual": -3.57621032198162,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.07": {
+          "population": {
+            "mean": 14.318616744445785,
+            "q05": 7.06296573115796,
+            "q25": 11.954687786267101,
+            "q50": 15.25875460826856,
+            "q75": 17.19515148066156,
+            "q95": 18.875513828844518,
+            "std": 3.6659677047795642
+          },
+          "qobs": 3.9824774053788956,
+          "qobs_standardized_residual": -2.819484559449592,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.08": {
+          "population": {
+            "mean": 10.437059469979607,
+            "q05": 3.668238900354656,
+            "q25": 7.564908977752457,
+            "q50": 11.140877887400613,
+            "q75": 13.53516244860838,
+            "q95": 15.563551852889875,
+            "std": 3.7496872917834057
+          },
+          "qobs": 2.033926007522416,
+          "qobs_standardized_residual": -2.2410224662922613,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.09": {
+          "population": {
+            "mean": 8.923031551403731,
+            "q05": 3.8833283041488555,
+            "q25": 6.33648928857985,
+            "q50": 9.163466668128967,
+            "q75": 11.472054757674535,
+            "q95": 13.60912345352627,
+            "std": 3.088924325864681
+          },
+          "qobs": 3.6755300713082155,
+          "qobs_standardized_residual": -1.6988119249656979,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.10": {
+          "population": {
+            "mean": 8.728960461218142,
+            "q05": 4.851696688772827,
+            "q25": 6.876608866734713,
+            "q50": 8.71134907364296,
+            "q75": 10.573520732365445,
+            "q95": 12.655179146028336,
+            "std": 2.4108983131256885
+          },
+          "qobs": 4.033956633803482,
+          "qobs_standardized_residual": -1.9474084833249004,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.11": {
+          "population": {
+            "mean": 10.387529879506271,
+            "q05": 7.332497742133481,
+            "q25": 9.091030959146364,
+            "q50": 10.429641798706282,
+            "q75": 11.674219636548134,
+            "q95": 13.33887444955962,
+            "std": 1.8110032702487715
+          },
+          "qobs": 8.504722142787207,
+          "qobs_standardized_residual": -1.039648998789731,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.12": {
+          "population": {
+            "mean": 14.522926954904399,
+            "q05": 11.66338261201085,
+            "q25": 13.126252311577995,
+            "q50": 14.347422583998622,
+            "q75": 15.684607693951252,
+            "q95": 18.189085482012842,
+            "std": 1.9895288626759964
+          },
+          "qobs": 15.948472127936403,
+          "qobs_standardized_residual": 0.716523997100791,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.q05": {
+          "population": {
+            "mean": 5.838932170291323,
+            "q05": 1.1615599682927131,
+            "q25": 3.518649995326996,
+            "q50": 6.172475051879883,
+            "q75": 8.132462513446809,
+            "q95": 9.988387253284454,
+            "std": 2.8102111893051505
+          },
+          "qobs": 0.49554482102394104,
+          "qobs_standardized_residual": -1.9014184306157471,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.q25": {
+          "population": {
+            "mean": 9.416788598153007,
+            "q05": 4.532925087213516,
+            "q25": 7.6289375722408295,
+            "q50": 9.808374762535095,
+            "q75": 11.390000343322754,
+            "q95": 13.190499591827395,
+            "std": 2.6273616118873764
+          },
+          "qobs": 2.030317783355713,
+          "qobs_standardized_residual": -2.8113643669670583,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.q50": {
+          "population": {
+            "mean": 14.362913559048051,
+            "q05": 10.595000267028809,
+            "q25": 13.303750276565552,
+            "q50": 14.65750002861023,
+            "q75": 15.755000114440918,
+            "q95": 17.0649995803833,
+            "std": 1.9689768667191163
+          },
+          "qobs": 6.880993843078613,
+          "qobs_standardized_residual": -3.7999022956711945,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.q75": {
+          "population": {
+            "mean": 20.834948787200883,
+            "q05": 17.350000381469727,
+            "q25": 19.38749933242798,
+            "q50": 20.75,
+            "q75": 22.378124475479126,
+            "q95": 24.559999465942383,
+            "std": 2.237451778404162
+          },
+          "qobs": 15.687533378601074,
+          "qobs_standardized_residual": -2.300570433867025,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.q95": {
+          "population": {
+            "mean": 31.98194877680045,
+            "q05": 24.730499553680403,
+            "q25": 27.12037534713744,
+            "q50": 30.136999320983875,
+            "q75": 35.0748749732971,
+            "q95": 45.150649061202984,
+            "std": 6.61022757512746
+          },
+          "qobs": 47.855472564697266,
+          "qobs_standardized_residual": 2.401358138957918,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.std": {
+          "population": {
+            "mean": 9.24363063045255,
+            "q05": 5.66626842370937,
+            "q25": 6.90422905513848,
+            "q50": 8.482562596486972,
+            "q75": 10.879306011405385,
+            "q95": 15.197444593681452,
+            "std": 3.0737202914157633
+          },
+          "qobs": 19.966801255608143,
+          "qobs_standardized_residual": 3.4886618197182937,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.cv": {
+          "population": {
+            "mean": 0.5592308152908378,
+            "q05": 0.3216140949498107,
+            "q25": 0.3999627905893252,
+            "q50": 0.5070766132271611,
+            "q75": 0.6698566482014103,
+            "q95": 0.9635410631493406,
+            "std": 0.20556832412739257
+          },
+          "qobs": 1.487225691545682,
+          "qobs_standardized_residual": 4.5142892524616745,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.high_flow_frequency": {
+          "population": {
+            "mean": 0.04999359974116254,
+            "q05": 0.007235041063746578,
+            "q25": 0.017012123582323034,
+            "q50": 0.035588580367618305,
+            "q75": 0.06941728588189285,
+            "q95": 0.14120062573328124,
+            "std": 0.04304427705192093
+          },
+          "qobs": 0.10539694955025421,
+          "qobs_standardized_residual": 1.287124644752725,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.lag1_acf": {
+          "population": {
+            "mean": 0.897126107461816,
+            "q05": 0.745250428955539,
+            "q25": 0.8611862374001498,
+            "q50": 0.9168460401101053,
+            "q75": 0.9543456786677923,
+            "q95": 0.9814119661676665,
+            "std": 0.07824403463073192
+          },
+          "qobs": 0.7150251858777685,
+          "qobs_standardized_residual": -2.327345751576639,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.low_flow_frequency": {
+          "population": {
+            "mean": 0.04999878277285913,
+            "q05": 0.0,
+            "q25": 0.0,
+            "q50": 0.0,
+            "q75": 0.07635901447008213,
+            "q95": 0.23543214704732107,
+            "std": 0.08080955071876732
+          },
+          "qobs": 0.31032459913961674,
+          "qobs_standardized_residual": 3.2214733784714866,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.mean": {
+          "population": {
+            "mean": 24.336711940783793,
+            "q05": 20.906399438485625,
+            "q25": 23.112689096397567,
+            "q50": 24.360723503315686,
+            "q75": 25.701989835740815,
+            "q95": 27.328578251833953,
+            "std": 2.095785024279237
+          },
+          "qobs": 22.51190854067629,
+          "qobs_standardized_residual": -0.8707016125067554,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.01": {
+          "population": {
+            "mean": 23.437612309930383,
+            "q05": 20.09633565047919,
+            "q25": 21.855440092526273,
+            "q50": 23.402345611203103,
+            "q75": 24.92156453670994,
+            "q95": 26.90707710778109,
+            "std": 2.2062588365188742
+          },
+          "qobs": 25.389380547308154,
+          "qobs_standardized_residual": 0.8846506153635859,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.02": {
+          "population": {
+            "mean": 23.937267385204933,
+            "q05": 21.401256465068972,
+            "q25": 22.804564407979598,
+            "q50": 23.840267679305992,
+            "q75": 24.93727020181791,
+            "q95": 26.616024118962915,
+            "std": 1.704881503355718
+          },
+          "qobs": 28.583568392377913,
+          "qobs_standardized_residual": 2.725292636483991,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.monthly_climatology.03": {
+          "population": {
+            "mean": 36.738473473564135,
+            "q05": 28.716467755181448,
+            "q25": 31.432597965139397,
+            "q50": 34.509183151930706,
+            "q75": 39.748038640769394,
+            "q95": 53.5306668274963,
+            "std": 7.610597675795739
+          },
+          "qobs": 49.254936359994424,
+          "qobs_standardized_residual": 1.6446097165583946,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.04": {
+          "population": {
+            "mean": 36.91141631431528,
+            "q05": 29.677006005332583,
+            "q25": 32.270059564000086,
+            "q50": 35.428630969637915,
+            "q75": 40.91569044022333,
+            "q95": 47.68200360002972,
+            "std": 5.828930050475814
+          },
+          "qobs": 41.07028235821497,
+          "qobs_standardized_residual": 0.7134870392826552,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.05": {
+          "population": {
+            "mean": 39.156497610584985,
+            "q05": 32.15736170144674,
+            "q25": 34.966831774206206,
+            "q50": 38.2225921428698,
+            "q75": 43.254521894015475,
+            "q95": 47.911102481042185,
+            "std": 5.223427102026595
+          },
+          "qobs": 37.87991531763208,
+          "qobs_standardized_residual": -0.24439554109171063,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.06": {
+          "population": {
+            "mean": 30.409182035292048,
+            "q05": 21.305393797897157,
+            "q25": 27.996142876715886,
+            "q50": 31.13394044240316,
+            "q75": 33.58166071346828,
+            "q95": 36.30797616776966,
+            "std": 4.583442346199571
+          },
+          "qobs": 17.934724274703434,
+          "qobs_standardized_residual": -2.7216351419652804,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.monthly_climatology.07": {
+          "population": {
+            "mean": 21.659714508398118,
+            "q05": 10.35408481889606,
+            "q25": 18.04137327209596,
+            "q50": 23.07919354922211,
+            "q75": 26.064233845280064,
+            "q95": 28.738221157970518,
+            "std": 5.717737954181846
+          },
+          "qobs": 8.258562659338322,
+          "qobs_standardized_residual": -2.3437855943115484,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.monthly_climatology.08": {
+          "population": {
+            "mean": 15.731831830937594,
+            "q05": 5.407377994857076,
+            "q25": 11.3163294954234,
+            "q50": 16.850679735983572,
+            "q75": 20.432511504344674,
+            "q95": 23.58624309966092,
+            "std": 5.766720054453595
+          },
+          "qobs": 5.034944115421189,
+          "qobs_standardized_residual": -1.8549344539891868,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.monthly_climatology.09": {
+          "population": {
+            "mean": 13.646849173949526,
+            "q05": 6.079200591203713,
+            "q25": 9.805276786855288,
+            "q50": 13.995527382691701,
+            "q75": 17.444755927153995,
+            "q95": 20.727742897101816,
+            "std": 4.649862512589632
+          },
+          "qobs": 8.760039029234932,
+          "qobs_standardized_residual": -1.0509579867110934,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.10": {
+          "population": {
+            "mean": 13.286088861943181,
+            "q05": 7.4060526809865435,
+            "q25": 10.502140550706793,
+            "q50": 13.27475458713171,
+            "q75": 16.0815956136598,
+            "q95": 19.260913575849226,
+            "std": 3.65888775948174
+          },
+          "qobs": 7.707545517776419,
+          "qobs_standardized_residual": -1.5246554993960493,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.11": {
+          "population": {
+            "mean": 15.334227908515512,
+            "q05": 10.726478570976427,
+            "q25": 13.346238109327498,
+            "q50": 15.370526192301796,
+            "q75": 17.2790773772058,
+            "q95": 19.82973811399369,
+            "std": 2.7860978754541903
+          },
+          "qobs": 14.91952615862801,
+          "qobs_standardized_residual": -0.14884679879379148,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.12": {
+          "population": {
+            "mean": 21.72269223219176,
+            "q05": 17.28638179263761,
+            "q25": 19.47221775867972,
+            "q50": 21.374597936456652,
+            "q75": 23.52302821028617,
+            "q95": 27.75424964496617,
+            "std": 3.2201195694832365
+          },
+          "qobs": 25.643579604438923,
+          "qobs_standardized_residual": 1.2176216713829555,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q05": {
+          "population": {
+            "mean": 8.77566363454628,
+            "q05": 1.6951099815964703,
+            "q25": 5.254900169372559,
+            "q50": 9.224150037765503,
+            "q75": 12.256500148773194,
+            "q95": 15.036824889183046,
+            "std": 4.242364368795326
+          },
+          "qobs": 2.3681378602981566,
+          "qobs_standardized_residual": -1.5103666769829476,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q25": {
+          "population": {
+            "mean": 14.285478771750228,
+            "q05": 6.702962571382523,
+            "q25": 11.539999961853027,
+            "q50": 14.899999618530273,
+            "q75": 17.334375023841858,
+            "q95": 20.130499172210694,
+            "std": 4.0757255068185225
+          },
+          "qobs": 4.927131175994873,
+          "qobs_standardized_residual": -2.2961182199584407,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.q50": {
+          "population": {
+            "mean": 21.64517057631389,
+            "q05": 16.004750108718873,
+            "q25": 20.045000076293945,
+            "q50": 22.015000343322754,
+            "q75": 23.675000190734863,
+            "q95": 25.705249881744386,
+            "std": 2.98478821327796
+          },
+          "qobs": 12.85584831237793,
+          "qobs_standardized_residual": -2.9447054986468664,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.q75": {
+          "population": {
+            "mean": 31.60341818016696,
+            "q05": 26.378874230384827,
+            "q25": 29.290000915527344,
+            "q50": 31.417500019073486,
+            "q75": 33.90999984741211,
+            "q95": 37.248125314712524,
+            "std": 3.527536321012172
+          },
+          "qobs": 26.023181915283203,
+          "qobs_standardized_residual": -1.5819075289585094,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.q95": {
+          "population": {
+            "mean": 48.301720676383795,
+            "q05": 36.979849634170535,
+            "q25": 40.71537451744078,
+            "q50": 45.382000160217274,
+            "q75": 53.14074873924253,
+            "q95": 68.70074708938598,
+            "std": 10.427529286863521
+          },
+          "qobs": 75.32281494140625,
+          "qobs_standardized_residual": 2.5913227881376963,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.std": {
+          "population": {
+            "mean": 13.484207003167901,
+            "q05": 8.048696189924277,
+            "q25": 9.819828291839585,
+            "q50": 12.329485680309805,
+            "q75": 16.02864464073667,
+            "q95": 22.639050514423424,
+            "std": 4.75536595247431
+          },
+          "qobs": 33.480288747420445,
+          "qobs_standardized_residual": 4.20495119494393,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01605500_over_01606000.mean": {
+          "population": {
+            "mean": 0.5046708386154573,
+            "q05": 0.48255284388248787,
+            "q25": 0.5008624186684258,
+            "q50": 0.505703432330433,
+            "q75": 0.5108159477791001,
+            "q95": 0.5184375005183297,
+            "std": 0.012584477625680539
+          },
+          "qobs": 0.7025979855896842,
+          "qobs_standardized_residual": 15.727879444938305,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01605500_over_01606000.median": {
+          "population": {
+            "mean": 0.5014393959339336,
+            "q05": 0.4654158551383129,
+            "q25": 0.49925700595970635,
+            "q50": 0.5051680015446357,
+            "q75": 0.5100564725777402,
+            "q95": 0.5168736014650256,
+            "std": 0.016791580830831647
+          },
+          "qobs": 0.5111111142295083,
+          "qobs_standardized_residual": 0.5759861678905812,
+          "qobs_within_population_q05_q95": true
+        },
+        "ratio.01605500_over_01606500.mean": {
+          "population": {
+            "mean": 0.33118762904497573,
+            "q05": 0.31273225816154393,
+            "q25": 0.3298456712816685,
+            "q50": 0.3334189157877907,
+            "q75": 0.335968769048809,
+            "q95": 0.33950417433687147,
+            "std": 0.00987661220162505
+          },
+          "qobs": 0.27431215445355367,
+          "qobs_standardized_residual": -5.758601576162392,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01605500_over_01606500.median": {
+          "population": {
+            "mean": 0.3319177905475846,
+            "q05": 0.31281890690138897,
+            "q25": 0.3312826365676211,
+            "q50": 0.33461105515774436,
+            "q75": 0.3369175256881808,
+            "q95": 0.3399690145990014,
+            "std": 0.01059661036782234
+          },
+          "qobs": 0.2624797749482805,
+          "qobs_standardized_residual": -6.552851637365035,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01606000_over_01606500.mean": {
+          "population": {
+            "mean": 0.6643889505432387,
+            "q05": 0.6590224584590713,
+            "q25": 0.6626088722313193,
+            "q50": 0.6646549965004795,
+            "q75": 0.6664220967710377,
+            "q95": 0.6747608908391525,
+            "std": 0.00941967450752999
+          },
+          "qobs": 0.5003551572403246,
+          "qobs_standardized_residual": -17.413955564153266,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01606000_over_01606500.median": {
+          "population": {
+            "mean": 0.6633449486457865,
+            "q05": 0.6571185847806779,
+            "q25": 0.6615538894761314,
+            "q50": 0.6638074591853333,
+            "q75": 0.6659113732037055,
+            "q95": 0.6726650365550815,
+            "std": 0.00964656374247846
+          },
+          "qobs": 0.5143480183103037,
+          "qobs_standardized_residual": -15.44559641267643,
+          "qobs_within_population_q05_q95": false
+        }
+      },
+      "qobs_inside_population_q05_q95_fraction": 0.38666666666666666,
+      "sample_count": 4980,
+      "top_absolute_standardized_residuals": [
+        {
+          "feature": "ratio.01606000_over_01606500.mean",
+          "population_mean": 0.664388950543239,
+          "population_std": 0.00941967450752998,
+          "qobs": 0.5003551572403246,
+          "standardized_residual": -17.413955564153266
+        },
+        {
+          "feature": "ratio.01605500_over_01606000.mean",
+          "population_mean": 0.5046708386154573,
+          "population_std": 0.01258447762568054,
+          "qobs": 0.7025979855896842,
+          "standardized_residual": 15.727879444938305
+        },
+        {
+          "feature": "ratio.01606000_over_01606500.median",
+          "population_mean": 0.6633449486457835,
+          "population_std": 0.009646563742478458,
+          "qobs": 0.5143480183103037,
+          "standardized_residual": -15.44559641267643
+        },
+        {
+          "feature": "ratio.01605500_over_01606500.median",
+          "population_mean": 0.33191779054758447,
+          "population_std": 0.010596610367822345,
+          "qobs": 0.2624797749482805,
+          "standardized_residual": -6.552851637365035
+        },
+        {
+          "feature": "ratio.01605500_over_01606500.mean",
+          "population_mean": 0.3311876290449765,
+          "population_std": 0.009876612201625069,
+          "qobs": 0.27431215445355367,
+          "standardized_residual": -5.758601576162392
+        },
+        {
+          "feature": "01605500.cv",
+          "population_mean": 0.5654590017025763,
+          "population_std": 0.21088445019895974,
+          "qobs": 1.6089635919727998,
+          "standardized_residual": 4.948229180888989
+        },
+        {
+          "feature": "01606000.cv",
+          "population_mean": 0.5786243712760245,
+          "population_std": 0.2067733022111134,
+          "qobs": 1.521731551638487,
+          "standardized_residual": 4.561068427487606
+        },
+        {
+          "feature": "01606500.cv",
+          "population_mean": 0.5592308152908373,
+          "population_std": 0.20556832412739226,
+          "qobs": 1.487225691545682,
+          "standardized_residual": 4.5142892524616745
+        },
+        {
+          "feature": "01605500.lag1_acf",
+          "population_mean": 0.9117286695669384,
+          "population_std": 0.06400094099291777,
+          "qobs": 0.6375680982928302,
+          "standardized_residual": -4.283695942915063
+        },
+        {
+          "feature": "01606500.std",
+          "population_mean": 13.484207003167915,
+          "population_std": 4.75536595247431,
+          "qobs": 33.480288747420445,
+          "standardized_residual": 4.20495119494393
+        },
+        {
+          "feature": "01606000.low_flow_frequency",
+          "population_mean": 0.04998299808541952,
+          "population_std": 0.08010927944003982,
+          "qobs": 0.37641767696519357,
+          "standardized_residual": 4.0748672458613715
+        },
+        {
+          "feature": "01605500.monthly_climatology.06",
+          "population_mean": 10.442573452165352,
+          "population_std": 1.5676753936150083,
+          "qobs": 4.41571559324151,
+          "standardized_residual": -3.8444552255337148
+        },
+        {
+          "feature": "01605500.q50",
+          "population_mean": 7.09839990324524,
+          "population_std": 1.0862893817880996,
+          "qobs": 2.9449520111083984,
+          "standardized_residual": -3.823518817149818
+        },
+        {
+          "feature": "01606000.q50",
+          "population_mean": 14.362913559048051,
+          "population_std": 1.9689768667191143,
+          "qobs": 6.880993843078613,
+          "standardized_residual": -3.7999022956711945
+        },
+        {
+          "feature": "01605500.q75",
+          "population_mean": 10.603167618230643,
+          "population_std": 1.1227226132450026,
+          "qobs": 6.371290683746338,
+          "standardized_residual": -3.7692987426813476
+        }
+      ]
+    },
+    "confirmed_qobs_directed": {
+      "feature_count": 75,
+      "features": {
+        "01605500.cv": {
+          "population": {
+            "mean": 0.7383333427935499,
+            "q05": 0.32106735675778125,
+            "q25": 0.5008562371210845,
+            "q50": 0.7350327940083454,
+            "q75": 0.9332276628109577,
+            "q95": 1.1863820633858737,
+            "std": 0.2819550718549412
+          },
+          "qobs": 1.6089635919727998,
+          "qobs_standardized_residual": 3.087833261701947,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.high_flow_frequency": {
+          "population": {
+            "mean": 0.05944835117804621,
+            "q05": 0.0,
+            "q25": 0.019554165037152915,
+            "q50": 0.04673445443879547,
+            "q75": 0.1020727414939382,
+            "q95": 0.14732107938991004,
+            "std": 0.04900365487851093
+          },
+          "qobs": 0.0543605788032851,
+          "qobs_standardized_residual": -0.10382434508965976,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.lag1_acf": {
+          "population": {
+            "mean": 0.8972926637988035,
+            "q05": 0.7335106498129507,
+            "q25": 0.8597718017281712,
+            "q50": 0.9130507354801096,
+            "q75": 0.9615136366064316,
+            "q95": 0.9769190673951915,
+            "std": 0.07908978724686425
+          },
+          "qobs": 0.6375680982928302,
+          "qobs_standardized_residual": -3.2839203966409816,
+          "qobs_within_population_q05_q95": false
+        },
+        "01605500.low_flow_frequency": {
+          "population": {
+            "mean": 0.22385829502438737,
+            "q05": 0.0,
+            "q25": 0.0,
+            "q50": 0.08349628470864294,
+            "q75": 0.33906922174423154,
+            "q95": 0.8227219397731717,
+            "std": 0.2831784112758416
+          },
+          "qobs": 0.3410246382479468,
+          "qobs_standardized_residual": 0.4137545044329978,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.mean": {
+          "population": {
+            "mean": 6.907853363832652,
+            "q05": 0.9876611661916395,
+            "q25": 6.592851835312114,
+            "q50": 7.7371642529894515,
+            "q75": 8.598494915650793,
+            "q95": 9.943815130715638,
+            "std": 2.7375714866689616
+          },
+          "qobs": 5.511675966079691,
+          "qobs_standardized_residual": -0.5100058225152725,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.01": {
+          "population": {
+            "mean": 6.971355797607579,
+            "q05": 0.9590235753834659,
+            "q25": 6.878831818356492,
+            "q50": 7.845944235813782,
+            "q75": 8.506048384899367,
+            "q95": 9.879626263561336,
+            "std": 2.7500925844461204
+          },
+          "qobs": 6.046892955006542,
+          "qobs_standardized_residual": -0.3361569889790553,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.02": {
+          "population": {
+            "mean": 7.01355598622389,
+            "q05": 0.9212651711117213,
+            "q25": 7.066484835412767,
+            "q50": 7.927494952172944,
+            "q75": 8.431174255982794,
+            "q95": 9.615379304596873,
+            "std": 2.7467027187413287
+          },
+          "qobs": 6.69636216368338,
+          "qobs_standardized_residual": -0.11548167203397433,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.03": {
+          "population": {
+            "mean": 11.26491816992268,
+            "q05": 1.8635626304379669,
+            "q25": 10.116258060877223,
+            "q50": 11.772087549833659,
+            "q75": 14.193834130115773,
+            "q95": 17.141523164181116,
+            "std": 4.6367522629766045
+          },
+          "qobs": 11.36193897345099,
+          "qobs_standardized_residual": 0.020924301758150046,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.04": {
+          "population": {
+            "mean": 11.614253330918999,
+            "q05": 1.9179710947402886,
+            "q25": 10.872099976312546,
+            "q50": 12.690573779741923,
+            "q75": 14.755790480545588,
+            "q95": 16.24189666702634,
+            "std": 4.51479470690677
+          },
+          "qobs": 9.810958074104219,
+          "qobs_standardized_residual": -0.39941910405274544,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.05": {
+          "population": {
+            "mean": 12.035821163193436,
+            "q05": 1.9945430396133303,
+            "q25": 11.665935472409297,
+            "q50": 12.724711994970999,
+            "q75": 14.968251162410331,
+            "q95": 17.103867731775555,
+            "std": 4.676429138125527
+          },
+          "qobs": 9.075020804383238,
+          "qobs_standardized_residual": -0.6331327325526386,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.06": {
+          "population": {
+            "mean": 7.802781846323221,
+            "q05": 1.0660410413218087,
+            "q25": 5.552212867424601,
+            "q50": 8.035973817393893,
+            "q75": 10.963111910365877,
+            "q95": 12.407089041755313,
+            "std": 3.7042727224433194
+          },
+          "qobs": 4.41571559324151,
+          "qobs_standardized_residual": -0.9143674094405282,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.07": {
+          "population": {
+            "mean": 4.785059599366312,
+            "q05": 0.4729474492073338,
+            "q25": 1.7508035488512521,
+            "q50": 4.37799308541733,
+            "q75": 7.78096541831021,
+            "q95": 9.501266822287565,
+            "std": 3.1312771468494103
+          },
+          "qobs": 2.0836109867843065,
+          "qobs_standardized_residual": -0.8627306002919973,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.08": {
+          "population": {
+            "mean": 3.324727932132235,
+            "q05": 0.1920021119383475,
+            "q25": 0.8801269571077989,
+            "q50": 2.820463131649703,
+            "q75": 5.529394000356648,
+            "q95": 8.101086639149399,
+            "std": 2.6256528157444663
+          },
+          "qobs": 1.519316265247934,
+          "qobs_standardized_residual": -0.6876048714659948,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.09": {
+          "population": {
+            "mean": 3.4049707710129806,
+            "q05": 0.34415750131664286,
+            "q25": 1.8396630956303506,
+            "q50": 3.3734964288416363,
+            "q75": 4.8921333261898585,
+            "q95": 7.28931001027425,
+            "std": 2.149645338588534
+          },
+          "qobs": 2.728409085954939,
+          "qobs_standardized_residual": -0.3147317712894326,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.10": {
+          "population": {
+            "mean": 3.629345370637399,
+            "q05": 0.512567774425107,
+            "q25": 2.282689399982927,
+            "q50": 3.9611311112680743,
+            "q75": 4.923997702686468,
+            "q95": 6.759935940685359,
+            "std": 1.948692143145251
+          },
+          "qobs": 2.115294540532723,
+          "qobs_standardized_residual": -0.776957425230314,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.11": {
+          "population": {
+            "mean": 4.224423862955723,
+            "q05": 0.6339310598313542,
+            "q25": 3.575183115138983,
+            "q50": 4.423069049063183,
+            "q75": 5.401509512038458,
+            "q95": 7.012801912398565,
+            "std": 1.8916726363216116
+          },
+          "qobs": 3.9892234404881797,
+          "qobs_standardized_residual": -0.12433463272212536,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.monthly_climatology.12": {
+          "population": {
+            "mean": 6.813411163884446,
+            "q05": 1.074608500817928,
+            "q25": 6.314540315745613,
+            "q50": 7.467975833448946,
+            "q75": 8.387621655648205,
+            "q95": 9.714348945117766,
+            "std": 2.7066946653701693
+          },
+          "qobs": 6.365535779482758,
+          "qobs_standardized_residual": -0.16546948945955015,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q05": {
+          "population": {
+            "mean": 1.824141380098898,
+            "q05": 0.012856600210070611,
+            "q25": 0.1042600017040968,
+            "q50": 1.5546499729156493,
+            "q75": 3.223650002479553,
+            "q95": 5.323320050239563,
+            "std": 1.7674118651129016
+          },
+          "qobs": 0.8806539177894592,
+          "qobs_standardized_residual": -0.5338243342896021,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q25": {
+          "population": {
+            "mean": 3.2754566168307133,
+            "q05": 0.24886999726295472,
+            "q25": 1.0789999961853027,
+            "q50": 2.9567500948905945,
+            "q75": 5.172249913215637,
+            "q95": 6.909300088882445,
+            "std": 2.318073228847414
+          },
+          "qobs": 1.3677036762237549,
+          "qobs_standardized_residual": -0.8229907998012324,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q50": {
+          "population": {
+            "mean": 5.693627380537537,
+            "q05": 0.729390001296997,
+            "q25": 4.227499961853027,
+            "q50": 6.0920000076293945,
+            "q75": 7.642999887466431,
+            "q95": 9.388499927520751,
+            "std": 2.6593257016773246
+          },
+          "qobs": 2.9449520111083984,
+          "qobs_standardized_residual": -1.0335986177606817,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q75": {
+          "population": {
+            "mean": 9.344283000478205,
+            "q05": 1.490499985218048,
+            "q25": 9.21025037765503,
+            "q50": 10.46500015258789,
+            "q75": 11.40999984741211,
+            "q95": 13.09099988937378,
+            "std": 3.5752831630522617
+          },
+          "qobs": 6.371290683746338,
+          "qobs_standardized_residual": -0.8315403790825309,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.q95": {
+          "population": {
+            "mean": 15.900471681693807,
+            "q05": 2.813480000495908,
+            "q25": 13.917000007629383,
+            "q50": 16.229999542236328,
+            "q75": 19.777000617980946,
+            "q95": 25.22869989395139,
+            "std": 6.947376172436371
+          },
+          "qobs": 17.509721946716294,
+          "qobs_standardized_residual": 0.23163424940298527,
+          "qobs_within_population_q05_q95": true
+        },
+        "01605500.std": {
+          "population": {
+            "mean": 4.763921156109411,
+            "q05": 0.9262327063787681,
+            "q25": 3.1361884716223205,
+            "q50": 4.663453073306462,
+            "q75": 5.998462592890113,
+            "q95": 8.729327303159835,
+            "std": 2.547438502310324
+          },
+          "qobs": 8.868085960173731,
+          "qobs_standardized_residual": 1.611094752765246,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.cv": {
+          "population": {
+            "mean": 0.7409338262750821,
+            "q05": 0.3346263331887287,
+            "q25": 0.4923733643506693,
+            "q50": 0.7309987362030246,
+            "q75": 0.9706941988600306,
+            "q95": 1.1464037665284075,
+            "std": 0.2773228105180618
+          },
+          "qobs": 1.521731551638487,
+          "qobs_standardized_residual": 2.8154832410100368,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.high_flow_frequency": {
+          "population": {
+            "mean": 0.08487614465654766,
+            "q05": 0.015877982010168164,
+            "q25": 0.04751662104028158,
+            "q50": 0.07958545170121235,
+            "q75": 0.10715682440359797,
+            "q95": 0.1845913179507235,
+            "std": 0.051159471949558444
+          },
+          "qobs": 0.09640203363316387,
+          "qobs_standardized_residual": 0.22529335306627746,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.lag1_acf": {
+          "population": {
+            "mean": 0.8979055339295761,
+            "q05": 0.7509256608154026,
+            "q25": 0.8794704497387498,
+            "q50": 0.9182976181419384,
+            "q75": 0.9497712451451914,
+            "q95": 0.9746386316108974,
+            "std": 0.0782786526411489
+          },
+          "qobs": 0.7433937232979227,
+          "qobs_standardized_residual": -1.973869061594333,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.low_flow_frequency": {
+          "population": {
+            "mean": 0.13504549110469966,
+            "q05": 0.0,
+            "q25": 0.0,
+            "q50": 0.0745013687915526,
+            "q75": 0.2811888932342589,
+            "q95": 0.33856081345326555,
+            "std": 0.1374462076769492
+          },
+          "qobs": 0.37641767696519357,
+          "qobs_standardized_residual": 1.7561211032305108,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.mean": {
+          "population": {
+            "mean": 16.289808115973656,
+            "q05": 10.767393647057672,
+            "q25": 13.504534223371527,
+            "q50": 16.016539496045866,
+            "q75": 19.116108913182934,
+            "q95": 21.60391548860805,
+            "std": 3.4920594021075693
+          },
+          "qobs": 13.121106172839342,
+          "qobs_standardized_residual": -0.9074020737510656,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.01": {
+          "population": {
+            "mean": 16.804633548474992,
+            "q05": 11.51367050634551,
+            "q25": 14.623364031040174,
+            "q50": 17.13401841897569,
+            "q75": 18.857161302170994,
+            "q95": 22.11629031001148,
+            "std": 3.2475872059397513
+          },
+          "qobs": 15.808055791986703,
+          "qobs_standardized_residual": -0.3068671272831653,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.02": {
+          "population": {
+            "mean": 17.205651396058027,
+            "q05": 11.908612147364954,
+            "q25": 15.005752798884807,
+            "q50": 17.728651509140477,
+            "q75": 19.223388839249658,
+            "q95": 22.038135366247158,
+            "std": 3.090710970797636
+          },
+          "qobs": 17.639607736558624,
+          "qobs_standardized_residual": 0.14040663931399802,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.03": {
+          "population": {
+            "mean": 29.26356040623984,
+            "q05": 22.13442673463426,
+            "q25": 24.483317964087984,
+            "q50": 28.423034561394548,
+            "q75": 33.318246540386006,
+            "q95": 39.997289833989555,
+            "std": 5.951855686306927
+          },
+          "qobs": 30.40798706008542,
+          "qobs_standardized_residual": 0.19228064559403021,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.04": {
+          "population": {
+            "mean": 26.30798997678204,
+            "q05": 19.470952362105958,
+            "q25": 23.378214291163854,
+            "q50": 26.11895237423125,
+            "q75": 28.706842599596296,
+            "q95": 35.88016194888523,
+            "std": 4.905625376736667
+          },
+          "qobs": 24.30057378099078,
+          "qobs_standardized_residual": -0.40920699026688206,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.05": {
+          "population": {
+            "mean": 25.870237966375562,
+            "q05": 19.50532030663732,
+            "q25": 21.12041468774119,
+            "q50": 25.35953911108905,
+            "q75": 29.832788076268912,
+            "q95": 34.80952077109693,
+            "std": 5.009741760035678
+          },
+          "qobs": 21.840640296035097,
+          "qobs_standardized_residual": -0.8043523725086735,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.06": {
+          "population": {
+            "mean": 17.415359947355782,
+            "q05": 9.739699538775852,
+            "q25": 11.684616673844202,
+            "q50": 16.237738107499624,
+            "q75": 23.673738077708652,
+            "q95": 26.28282856986636,
+            "std": 5.882086996071792
+          },
+          "qobs": 9.461932705271812,
+          "qobs_standardized_residual": -1.3521437624767312,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.07": {
+          "population": {
+            "mean": 11.33695029700201,
+            "q05": 4.156934153333237,
+            "q25": 5.655495157851601,
+            "q50": 10.523387086006903,
+            "q75": 16.281202787627823,
+            "q95": 21.04077880876954,
+            "std": 5.941932391063151
+          },
+          "qobs": 3.9824774053788956,
+          "qobs_standardized_residual": -1.2377240950577748,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.08": {
+          "population": {
+            "mean": 7.972391890273031,
+            "q05": 2.1045965430373967,
+            "q25": 3.0319928614774607,
+            "q50": 7.0405069276484475,
+            "q75": 12.063036888975152,
+            "q95": 18.07338250419511,
+            "std": 5.275374003695536
+          },
+          "qobs": 2.033926007522416,
+          "qobs_standardized_residual": -1.125695709648371,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.monthly_climatology.09": {
+          "population": {
+            "mean": 7.599224015268723,
+            "q05": 2.5736984928058724,
+            "q25": 3.9854864227275053,
+            "q50": 7.040426915032523,
+            "q75": 10.53768097559611,
+            "q95": 16.146866668519518,
+            "std": 4.229312560034573
+          },
+          "qobs": 3.6755300713082155,
+          "qobs_standardized_residual": -0.9277379924666606,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.10": {
+          "population": {
+            "mean": 8.109838396069987,
+            "q05": 3.476630228778459,
+            "q25": 5.013510612367485,
+            "q50": 7.79592878869327,
+            "q75": 10.540898604327083,
+            "q95": 15.037677427370976,
+            "std": 3.673879079951263
+          },
+          "qobs": 4.033956633803482,
+          "qobs_standardized_residual": -1.109421859992348,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.11": {
+          "population": {
+            "mean": 10.957547448161172,
+            "q05": 6.763662437236025,
+            "q25": 8.42922582002159,
+            "q50": 10.776638096287137,
+            "q75": 13.07345235915411,
+            "q95": 16.24579998833792,
+            "std": 2.9881270904605395
+          },
+          "qobs": 8.504722142787207,
+          "qobs_standardized_residual": -0.820857089112608,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.monthly_climatology.12": {
+          "population": {
+            "mean": 16.621626595730145,
+            "q05": 11.441629681238382,
+            "q25": 14.664580639331572,
+            "q50": 16.549739588240875,
+            "q75": 18.925645134416044,
+            "q95": 21.230144226496122,
+            "std": 3.089658307715902
+          },
+          "qobs": 15.948472127936403,
+          "qobs_standardized_residual": -0.2178734347784204,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.q05": {
+          "population": {
+            "mean": 4.406155129571288,
+            "q05": 0.3575540015101433,
+            "q25": 0.7965550184249878,
+            "q50": 3.4446499586105346,
+            "q75": 7.023550033569336,
+            "q95": 12.32199993133545,
+            "std": 3.8733278966834472
+          },
+          "qobs": 0.49554482102394104,
+          "qobs_standardized_residual": -1.0096254210483504,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.q25": {
+          "population": {
+            "mean": 7.9278773654182,
+            "q05": 2.7701499462127686,
+            "q25": 3.5830000042915344,
+            "q50": 7.3500001430511475,
+            "q75": 11.505000114440918,
+            "q95": 15.537499713897704,
+            "std": 4.46255675450231
+          },
+          "qobs": 2.030317783355713,
+          "qobs_standardized_residual": -1.3215651713812697,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.q50": {
+          "population": {
+            "mean": 13.558018841833439,
+            "q05": 7.631400012969971,
+            "q25": 9.474499702453613,
+            "q50": 12.765000343322754,
+            "q75": 17.695000648498535,
+            "q95": 20.438000106811522,
+            "std": 4.3627739651877855
+          },
+          "qobs": 6.880993843078613,
+          "qobs_standardized_residual": -1.5304540304020606,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606000.q75": {
+          "population": {
+            "mean": 21.495047047453106,
+            "q05": 15.11550006866455,
+            "q25": 18.40999984741211,
+            "q50": 21.799999237060547,
+            "q75": 24.6299991607666,
+            "q95": 27.919500064849853,
+            "std": 4.238645000822427
+          },
+          "qobs": 15.687533378601074,
+          "qobs_standardized_residual": -1.3701344811196023,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.q95": {
+          "population": {
+            "mean": 37.23135849574825,
+            "q05": 27.438799362182614,
+            "q25": 31.707000255584706,
+            "q50": 35.86450004577633,
+            "q75": 41.033499526977536,
+            "q95": 49.90020050048827,
+            "std": 8.042075815132376
+          },
+          "qobs": 47.855472564697266,
+          "qobs_standardized_residual": 1.321066141773763,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606000.std": {
+          "population": {
+            "mean": 11.446184589160554,
+            "q05": 6.71661219219861,
+            "q25": 9.177732774322028,
+            "q50": 10.795959049871449,
+            "q75": 13.415210267873839,
+            "q95": 17.170406510773372,
+            "std": 3.6424550790658796
+          },
+          "qobs": 19.966801255608143,
+          "qobs_standardized_residual": 2.33925099458817,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.cv": {
+          "population": {
+            "mean": 0.7259551138960979,
+            "q05": 0.3061869251913575,
+            "q25": 0.48162414968350836,
+            "q50": 0.6922753255901053,
+            "q75": 0.9752121504114895,
+            "q95": 1.1385588418732695,
+            "std": 0.28465007756377636
+          },
+          "qobs": 1.487225691545682,
+          "qobs_standardized_residual": 2.674408467283906,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.high_flow_frequency": {
+          "population": {
+            "mean": 0.1255967709801433,
+            "q05": 0.017676965193586233,
+            "q25": 0.046147829487680876,
+            "q50": 0.10285490809542433,
+            "q75": 0.17070786077434494,
+            "q95": 0.29256941728588187,
+            "std": 0.08880877440021577
+          },
+          "qobs": 0.10539694955025421,
+          "qobs_standardized_residual": -0.22745299173771708,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.lag1_acf": {
+          "population": {
+            "mean": 0.9241407151606064,
+            "q05": 0.8158567516394323,
+            "q25": 0.9148069260668995,
+            "q50": 0.937600444110767,
+            "q75": 0.9673070982466226,
+            "q95": 0.9829566119563663,
+            "std": 0.06448865600761172
+          },
+          "qobs": 0.7150251858777685,
+          "qobs_standardized_residual": -3.242671536807266,
+          "qobs_within_population_q05_q95": false
+        },
+        "01606500.low_flow_frequency": {
+          "population": {
+            "mean": 0.13653234554054355,
+            "q05": 0.0,
+            "q25": 0.0,
+            "q50": 0.07547907704341025,
+            "q75": 0.26886976926085254,
+            "q95": 0.3529917872506844,
+            "std": 0.14351371578035987
+          },
+          "qobs": 0.31032459913961674,
+          "qobs_standardized_residual": 1.2109800979932337,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.mean": {
+          "population": {
+            "mean": 26.993331956993718,
+            "q05": 15.294880704543859,
+            "q25": 20.304379553453597,
+            "q50": 25.38544142359302,
+            "q75": 33.5498670257998,
+            "q95": 39.801334995574486,
+            "std": 8.146986741943287
+          },
+          "qobs": 22.51190854067629,
+          "qobs_standardized_residual": -0.5500712788994265,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.01": {
+          "population": {
+            "mean": 27.470487566043396,
+            "q05": 16.086033627074986,
+            "q25": 21.789085240957373,
+            "q50": 26.75550928917898,
+            "q75": 33.46350229940107,
+            "q95": 40.177387166352865,
+            "std": 7.7925118407219935
+          },
+          "qobs": 25.389380547308154,
+          "qobs_standardized_residual": -0.2670649799798601,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.02": {
+          "population": {
+            "mean": 27.949151267965842,
+            "q05": 16.494756041692966,
+            "q25": 22.553616164308607,
+            "q50": 27.300967131600235,
+            "q75": 34.13486611000215,
+            "q95": 39.54622727259241,
+            "std": 7.457176284726415
+          },
+          "qobs": 28.583568392377913,
+          "qobs_standardized_residual": 0.08507471195383569,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.03": {
+          "population": {
+            "mean": 46.478522261773264,
+            "q05": 31.01273138193491,
+            "q25": 34.992658896380306,
+            "q50": 46.74837782415926,
+            "q75": 51.443387194163236,
+            "q95": 67.07725057250344,
+            "std": 11.632791065134906
+          },
+          "qobs": 49.254936359994424,
+          "qobs_standardized_residual": 0.23867136293219082,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.04": {
+          "population": {
+            "mean": 43.95726486351291,
+            "q05": 28.79991047768366,
+            "q25": 35.162666670481364,
+            "q50": 44.7597142628261,
+            "q75": 49.83942852020264,
+            "q95": 65.69195238840013,
+            "std": 11.156495535681735
+          },
+          "qobs": 41.07028235821497,
+          "qobs_standardized_residual": -0.2587714480828245,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.05": {
+          "population": {
+            "mean": 44.48157174157252,
+            "q05": 29.696639191719793,
+            "q25": 33.02085250643541,
+            "q50": 44.98571423781083,
+            "q75": 53.39536865515643,
+            "q95": 66.36411980132354,
+            "std": 12.171974296588395
+          },
+          "qobs": 37.87991531763208,
+          "qobs_standardized_residual": -0.542365294493825,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.06": {
+          "population": {
+            "mean": 29.679534920212845,
+            "q05": 14.32590097631727,
+            "q25": 17.47348813102359,
+            "q50": 27.586095217296055,
+            "q75": 40.076690487634565,
+            "q95": 49.23564285369146,
+            "std": 12.504300559949094
+          },
+          "qobs": 17.934724274703434,
+          "qobs_standardized_residual": -0.939261703539635,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.07": {
+          "population": {
+            "mean": 19.047451128428783,
+            "q05": 5.848064741780681,
+            "q25": 8.59006010991637,
+            "q50": 16.725066828837594,
+            "q75": 28.76156683451569,
+            "q95": 39.06687551489623,
+            "std": 11.709555789418133
+          },
+          "qobs": 8.258562659338322,
+          "qobs_standardized_residual": -0.9213747014075738,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.08": {
+          "population": {
+            "mean": 13.410758407209425,
+            "q05": 2.8203576068999032,
+            "q25": 4.202819566263856,
+            "q50": 11.246843312742524,
+            "q75": 19.62092168210289,
+            "q95": 33.530990800989386,
+            "std": 10.048397907154424
+          },
+          "qobs": 5.034944115421189,
+          "qobs_standardized_residual": -0.8335472350099397,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.09": {
+          "population": {
+            "mean": 13.037602026542093,
+            "q05": 3.87076056886287,
+            "q25": 6.111235252590406,
+            "q50": 11.881576175916763,
+            "q75": 17.82137141681853,
+            "q95": 30.052228548867358,
+            "std": 8.146403264360877
+          },
+          "qobs": 8.760039029234932,
+          "qobs_standardized_residual": -0.5250860850482041,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.10": {
+          "population": {
+            "mean": 13.714218969715812,
+            "q05": 5.027224329086493,
+            "q25": 7.321822565272107,
+            "q50": 12.10175576242983,
+            "q75": 17.485546120850174,
+            "q95": 27.93801378786289,
+            "std": 7.2792088311757475
+          },
+          "qobs": 7.707545517776419,
+          "qobs_standardized_residual": -0.8251821854888572,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.11": {
+          "population": {
+            "mean": 17.539164917836672,
+            "q05": 9.233206155002117,
+            "q25": 12.131713495213752,
+            "q50": 16.56142380862009,
+            "q75": 21.99216425986517,
+            "q95": 29.582650499798,
+            "std": 6.324053235834547
+          },
+          "qobs": 14.91952615862801,
+          "qobs_standardized_residual": -0.41423414090899263,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.monthly_climatology.12": {
+          "population": {
+            "mean": 27.1166620454123,
+            "q05": 16.55219291701295,
+            "q25": 21.950811085338415,
+            "q50": 27.111543760321656,
+            "q75": 31.736652968459964,
+            "q95": 38.226309238161356,
+            "std": 7.182623859941399
+          },
+          "qobs": 25.643579604438923,
+          "qobs_standardized_residual": -0.20508973735753905,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q05": {
+          "population": {
+            "mean": 7.502066890445519,
+            "q05": 0.5350979864597321,
+            "q25": 1.1616000056266784,
+            "q50": 4.929499959945679,
+            "q75": 11.312999868392945,
+            "q95": 22.784599266052243,
+            "std": 7.124074871480861
+          },
+          "qobs": 2.3681378602981566,
+          "qobs_standardized_residual": -0.7206450132493044,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q25": {
+          "population": {
+            "mean": 13.371014167677682,
+            "q05": 3.8048500180244447,
+            "q25": 5.72350001335144,
+            "q50": 12.609999656677246,
+            "q75": 20.299999237060547,
+            "q95": 28.839999771118162,
+            "std": 8.7115674816467
+          },
+          "qobs": 4.927131175994873,
+          "qobs_standardized_residual": -0.9692725229382839,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q50": {
+          "population": {
+            "mean": 22.651226322605925,
+            "q05": 10.776000118255615,
+            "q25": 14.654999732971191,
+            "q50": 21.059999465942383,
+            "q75": 31.355000495910645,
+            "q95": 37.562999343872065,
+            "std": 9.210458074119853
+          },
+          "qobs": 12.85584831237793,
+          "qobs_standardized_residual": -1.0635060635856632,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q75": {
+          "population": {
+            "mean": 35.94198114467117,
+            "q05": 21.618999862670897,
+            "q25": 28.65999984741211,
+            "q50": 34.90250015258789,
+            "q75": 43.697500228881836,
+            "q95": 51.56699867248535,
+            "std": 10.124773795610823
+          },
+          "qobs": 26.023181915283203,
+          "qobs_standardized_residual": -0.9796563784652499,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.q95": {
+          "population": {
+            "mean": 61.01799024545919,
+            "q05": 40.95979919433592,
+            "q25": 47.423498916625974,
+            "q50": 59.06700153350829,
+            "q75": 67.57149963378902,
+            "q95": 90.88849983215326,
+            "std": 15.782978251726448
+          },
+          "qobs": 75.32281494140625,
+          "qobs_standardized_residual": 0.906345080617613,
+          "qobs_within_population_q05_q95": true
+        },
+        "01606500.std": {
+          "population": {
+            "mean": 18.160286956031626,
+            "q05": 10.55111863179781,
+            "q25": 14.553206635179587,
+            "q50": 16.68307794301031,
+            "q75": 20.30358454987856,
+            "q95": 29.671723397024685,
+            "std": 6.361566048668194
+          },
+          "qobs": 33.480288747420445,
+          "qobs_standardized_residual": 2.4082123291946482,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01605500_over_01606000.mean": {
+          "population": {
+            "mean": 0.42027964547530733,
+            "q05": 0.09884859734118683,
+            "q25": 0.4292065277274138,
+            "q50": 0.4482608224408261,
+            "q75": 0.49554872281813517,
+            "q95": 0.521363042642094,
+            "std": 0.15921122984030048
+          },
+          "qobs": 0.7025979855896842,
+          "qobs_standardized_residual": 1.7732313254382934,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01605500_over_01606000.median": {
+          "population": {
+            "mean": 0.4017651348658589,
+            "q05": 0.09104347528731739,
+            "q25": 0.42333562766675537,
+            "q50": 0.443106832905803,
+            "q75": 0.48394717681924215,
+            "q95": 0.5103543179816284,
+            "std": 0.1362652305422561
+          },
+          "qobs": 0.5111111142295083,
+          "qobs_standardized_residual": 0.8024495972194541,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01605500_over_01606500.mean": {
+          "population": {
+            "mean": 0.24746787646035162,
+            "q05": 0.06760219349589384,
+            "q25": 0.23680188731992385,
+            "q50": 0.2408360318860255,
+            "q75": 0.32775595236765037,
+            "q95": 0.33645186021286555,
+            "std": 0.08696457433981462
+          },
+          "qobs": 0.27431215445355367,
+          "qobs_standardized_residual": 0.30868061158222726,
+          "qobs_within_population_q05_q95": true
+        },
+        "ratio.01605500_over_01606500.median": {
+          "population": {
+            "mean": 0.2472290628523118,
+            "q05": 0.06542652147969034,
+            "q25": 0.23596251563083526,
+            "q50": 0.24200513187500663,
+            "q75": 0.3255244710224868,
+            "q95": 0.33707798577737536,
+            "std": 0.08756822443666122
+          },
+          "qobs": 0.2624797749482805,
+          "qobs_standardized_residual": 0.17415806011916615,
+          "qobs_within_population_q05_q95": true
+        },
+        "ratio.01606000_over_01606500.mean": {
+          "population": {
+            "mean": 0.6309357592269761,
+            "q05": 0.5426170489875114,
+            "q25": 0.5474415036508198,
+            "q50": 0.6621771188531335,
+            "q75": 0.6853877418385501,
+            "q95": 0.727296158924285,
+            "std": 0.07117662238539378
+          },
+          "qobs": 0.5003551572403246,
+          "qobs_standardized_residual": -1.834599586358685,
+          "qobs_within_population_q05_q95": false
+        },
+        "ratio.01606000_over_01606500.median": {
+          "population": {
+            "mean": 0.6269838505819922,
+            "q05": 0.5406042078335359,
+            "q25": 0.5461789215992727,
+            "q50": 0.6610251308265367,
+            "q75": 0.6804126675050873,
+            "q95": 0.7233365086880985,
+            "std": 0.07073926722459645
+          },
+          "qobs": 0.5143480183103037,
+          "qobs_standardized_residual": -1.5922674448135161,
+          "qobs_within_population_q05_q95": false
+        }
+      },
+      "qobs_inside_population_q05_q95_fraction": 0.7466666666666667,
+      "sample_count": 53,
+      "top_absolute_standardized_residuals": [
+        {
+          "feature": "01605500.lag1_acf",
+          "population_mean": 0.8972926637988036,
+          "population_std": 0.07908978724686426,
+          "qobs": 0.6375680982928302,
+          "standardized_residual": -3.2839203966409816
+        },
+        {
+          "feature": "01606500.lag1_acf",
+          "population_mean": 0.924140715160606,
+          "population_std": 0.06448865600761175,
+          "qobs": 0.7150251858777685,
+          "standardized_residual": -3.242671536807266
+        },
+        {
+          "feature": "01605500.cv",
+          "population_mean": 0.7383333427935499,
+          "population_std": 0.2819550718549412,
+          "qobs": 1.6089635919727998,
+          "standardized_residual": 3.087833261701947
+        },
+        {
+          "feature": "01606000.cv",
+          "population_mean": 0.740933826275082,
+          "population_std": 0.27732281051806185,
+          "qobs": 1.521731551638487,
+          "standardized_residual": 2.8154832410100368
+        },
+        {
+          "feature": "01606500.cv",
+          "population_mean": 0.725955113896098,
+          "population_std": 0.28465007756377636,
+          "qobs": 1.487225691545682,
+          "standardized_residual": 2.674408467283906
+        },
+        {
+          "feature": "01606500.std",
+          "population_mean": 18.160286956031623,
+          "population_std": 6.361566048668193,
+          "qobs": 33.480288747420445,
+          "standardized_residual": 2.4082123291946482
+        },
+        {
+          "feature": "01606000.std",
+          "population_mean": 11.446184589160554,
+          "population_std": 3.6424550790658796,
+          "qobs": 19.966801255608143,
+          "standardized_residual": 2.33925099458817
+        },
+        {
+          "feature": "01606000.lag1_acf",
+          "population_mean": 0.8979055339295761,
+          "population_std": 0.07827865264114889,
+          "qobs": 0.7433937232979227,
+          "standardized_residual": -1.973869061594333
+        },
+        {
+          "feature": "ratio.01606000_over_01606500.mean",
+          "population_mean": 0.6309357592269764,
+          "population_std": 0.0711766223853938,
+          "qobs": 0.5003551572403246,
+          "standardized_residual": -1.834599586358685
+        },
+        {
+          "feature": "ratio.01605500_over_01606000.mean",
+          "population_mean": 0.4202796454753075,
+          "population_std": 0.15921122984030045,
+          "qobs": 0.7025979855896842,
+          "standardized_residual": 1.7732313254382934
+        },
+        {
+          "feature": "01606000.low_flow_frequency",
+          "population_mean": 0.13504549110469966,
+          "population_std": 0.13744620767694918,
+          "qobs": 0.37641767696519357,
+          "standardized_residual": 1.7561211032305108
+        },
+        {
+          "feature": "01605500.std",
+          "population_mean": 4.7639211561094115,
+          "population_std": 2.547438502310324,
+          "qobs": 8.868085960173731,
+          "standardized_residual": 1.611094752765246
+        },
+        {
+          "feature": "ratio.01606000_over_01606500.median",
+          "population_mean": 0.6269838505819925,
+          "population_std": 0.07073926722459646,
+          "qobs": 0.5143480183103037,
+          "standardized_residual": -1.5922674448135161
+        },
+        {
+          "feature": "01606000.q50",
+          "population_mean": 13.558018841833439,
+          "population_std": 4.3627739651877855,
+          "qobs": 6.880993843078613,
+          "standardized_residual": -1.5304540304020606
+        },
+        {
+          "feature": "01606000.q75",
+          "population_mean": 21.495047047453106,
+          "population_std": 4.238645000822427,
+          "qobs": 15.687533378601074,
+          "standardized_residual": -1.3701344811196023
+        }
+      ]
+    },
+    "definition": {
+      "flow_thresholds": {
+        "01605500": {
+          "q05": 1.8420000076293945,
+          "q95": 16.600000381469727
+        },
+        "01606000": {
+          "q05": 4.2179999351501465,
+          "q95": 32.22999954223633
+        },
+        "01606500": {
+          "q05": 6.270999908447266,
+          "q95": 48.869998931884766
+        }
+      },
+      "gauge_ratio_denominator_floor": 1e-08,
+      "high_flow_frequency": "fraction of daily values above broad pooled per-gauge Q95",
+      "low_flow_frequency": "fraction of daily values below broad pooled per-gauge Q05",
+      "standardized_residual_reference": "broad feature mean and sample standard deviation"
+    },
+    "qobs_features": {
+      "01605500.cv": 1.6089635919727998,
+      "01605500.high_flow_frequency": 0.0543605788032851,
+      "01605500.lag1_acf": 0.6375680982928302,
+      "01605500.low_flow_frequency": 0.3410246382479468,
+      "01605500.mean": 5.511675966079691,
+      "01605500.monthly_climatology.01": 6.046892955006542,
+      "01605500.monthly_climatology.02": 6.69636216368338,
+      "01605500.monthly_climatology.03": 11.36193897345099,
+      "01605500.monthly_climatology.04": 9.810958074104219,
+      "01605500.monthly_climatology.05": 9.075020804383238,
+      "01605500.monthly_climatology.06": 4.41571559324151,
+      "01605500.monthly_climatology.07": 2.0836109867843065,
+      "01605500.monthly_climatology.08": 1.519316265247934,
+      "01605500.monthly_climatology.09": 2.728409085954939,
+      "01605500.monthly_climatology.10": 2.115294540532723,
+      "01605500.monthly_climatology.11": 3.9892234404881797,
+      "01605500.monthly_climatology.12": 6.365535779482758,
+      "01605500.q05": 0.8806539177894592,
+      "01605500.q25": 1.3677036762237549,
+      "01605500.q50": 2.9449520111083984,
+      "01605500.q75": 6.371290683746338,
+      "01605500.q95": 17.509721946716294,
+      "01605500.std": 8.868085960173731,
+      "01606000.cv": 1.521731551638487,
+      "01606000.high_flow_frequency": 0.09640203363316387,
+      "01606000.lag1_acf": 0.7433937232979227,
+      "01606000.low_flow_frequency": 0.37641767696519357,
+      "01606000.mean": 13.121106172839342,
+      "01606000.monthly_climatology.01": 15.808055791986703,
+      "01606000.monthly_climatology.02": 17.639607736558624,
+      "01606000.monthly_climatology.03": 30.40798706008542,
+      "01606000.monthly_climatology.04": 24.30057378099078,
+      "01606000.monthly_climatology.05": 21.840640296035097,
+      "01606000.monthly_climatology.06": 9.461932705271812,
+      "01606000.monthly_climatology.07": 3.9824774053788956,
+      "01606000.monthly_climatology.08": 2.033926007522416,
+      "01606000.monthly_climatology.09": 3.6755300713082155,
+      "01606000.monthly_climatology.10": 4.033956633803482,
+      "01606000.monthly_climatology.11": 8.504722142787207,
+      "01606000.monthly_climatology.12": 15.948472127936403,
+      "01606000.q05": 0.49554482102394104,
+      "01606000.q25": 2.030317783355713,
+      "01606000.q50": 6.880993843078613,
+      "01606000.q75": 15.687533378601074,
+      "01606000.q95": 47.855472564697266,
+      "01606000.std": 19.966801255608143,
+      "01606500.cv": 1.487225691545682,
+      "01606500.high_flow_frequency": 0.10539694955025421,
+      "01606500.lag1_acf": 0.7150251858777685,
+      "01606500.low_flow_frequency": 0.31032459913961674,
+      "01606500.mean": 22.51190854067629,
+      "01606500.monthly_climatology.01": 25.389380547308154,
+      "01606500.monthly_climatology.02": 28.583568392377913,
+      "01606500.monthly_climatology.03": 49.254936359994424,
+      "01606500.monthly_climatology.04": 41.07028235821497,
+      "01606500.monthly_climatology.05": 37.87991531763208,
+      "01606500.monthly_climatology.06": 17.934724274703434,
+      "01606500.monthly_climatology.07": 8.258562659338322,
+      "01606500.monthly_climatology.08": 5.034944115421189,
+      "01606500.monthly_climatology.09": 8.760039029234932,
+      "01606500.monthly_climatology.10": 7.707545517776419,
+      "01606500.monthly_climatology.11": 14.91952615862801,
+      "01606500.monthly_climatology.12": 25.643579604438923,
+      "01606500.q05": 2.3681378602981566,
+      "01606500.q25": 4.927131175994873,
+      "01606500.q50": 12.85584831237793,
+      "01606500.q75": 26.023181915283203,
+      "01606500.q95": 75.32281494140625,
+      "01606500.std": 33.480288747420445,
+      "ratio.01605500_over_01606000.mean": 0.7025979855896842,
+      "ratio.01605500_over_01606000.median": 0.5111111142295083,
+      "ratio.01605500_over_01606500.mean": 0.27431215445355367,
+      "ratio.01605500_over_01606500.median": 0.2624797749482805,
+      "ratio.01606000_over_01606500.mean": 0.5003551572403246,
+      "ratio.01606000_over_01606500.median": 0.5143480183103037
+    },
+    "qobs_vs_confirmed_qobs_directed_standardized_residuals": {
+      "01605500.cv": 3.087833261701947,
+      "01605500.high_flow_frequency": -0.10382434508965976,
+      "01605500.lag1_acf": -3.2839203966409816,
+      "01605500.low_flow_frequency": 0.4137545044329978,
+      "01605500.mean": -0.5100058225152725,
+      "01605500.monthly_climatology.01": -0.3361569889790553,
+      "01605500.monthly_climatology.02": -0.11548167203397433,
+      "01605500.monthly_climatology.03": 0.020924301758150046,
+      "01605500.monthly_climatology.04": -0.39941910405274544,
+      "01605500.monthly_climatology.05": -0.6331327325526386,
+      "01605500.monthly_climatology.06": -0.9143674094405282,
+      "01605500.monthly_climatology.07": -0.8627306002919973,
+      "01605500.monthly_climatology.08": -0.6876048714659948,
+      "01605500.monthly_climatology.09": -0.3147317712894326,
+      "01605500.monthly_climatology.10": -0.776957425230314,
+      "01605500.monthly_climatology.11": -0.12433463272212536,
+      "01605500.monthly_climatology.12": -0.16546948945955015,
+      "01605500.q05": -0.5338243342896021,
+      "01605500.q25": -0.8229907998012324,
+      "01605500.q50": -1.0335986177606817,
+      "01605500.q75": -0.8315403790825309,
+      "01605500.q95": 0.23163424940298527,
+      "01605500.std": 1.611094752765246,
+      "01606000.cv": 2.8154832410100368,
+      "01606000.high_flow_frequency": 0.22529335306627746,
+      "01606000.lag1_acf": -1.973869061594333,
+      "01606000.low_flow_frequency": 1.7561211032305108,
+      "01606000.mean": -0.9074020737510656,
+      "01606000.monthly_climatology.01": -0.3068671272831653,
+      "01606000.monthly_climatology.02": 0.14040663931399802,
+      "01606000.monthly_climatology.03": 0.19228064559403021,
+      "01606000.monthly_climatology.04": -0.40920699026688206,
+      "01606000.monthly_climatology.05": -0.8043523725086735,
+      "01606000.monthly_climatology.06": -1.3521437624767312,
+      "01606000.monthly_climatology.07": -1.2377240950577748,
+      "01606000.monthly_climatology.08": -1.125695709648371,
+      "01606000.monthly_climatology.09": -0.9277379924666606,
+      "01606000.monthly_climatology.10": -1.109421859992348,
+      "01606000.monthly_climatology.11": -0.820857089112608,
+      "01606000.monthly_climatology.12": -0.2178734347784204,
+      "01606000.q05": -1.0096254210483504,
+      "01606000.q25": -1.3215651713812697,
+      "01606000.q50": -1.5304540304020606,
+      "01606000.q75": -1.3701344811196023,
+      "01606000.q95": 1.321066141773763,
+      "01606000.std": 2.33925099458817,
+      "01606500.cv": 2.674408467283906,
+      "01606500.high_flow_frequency": -0.22745299173771708,
+      "01606500.lag1_acf": -3.242671536807266,
+      "01606500.low_flow_frequency": 1.2109800979932337,
+      "01606500.mean": -0.5500712788994265,
+      "01606500.monthly_climatology.01": -0.2670649799798601,
+      "01606500.monthly_climatology.02": 0.08507471195383569,
+      "01606500.monthly_climatology.03": 0.23867136293219082,
+      "01606500.monthly_climatology.04": -0.2587714480828245,
+      "01606500.monthly_climatology.05": -0.542365294493825,
+      "01606500.monthly_climatology.06": -0.939261703539635,
+      "01606500.monthly_climatology.07": -0.9213747014075738,
+      "01606500.monthly_climatology.08": -0.8335472350099397,
+      "01606500.monthly_climatology.09": -0.5250860850482041,
+      "01606500.monthly_climatology.10": -0.8251821854888572,
+      "01606500.monthly_climatology.11": -0.41423414090899263,
+      "01606500.monthly_climatology.12": -0.20508973735753905,
+      "01606500.q05": -0.7206450132493044,
+      "01606500.q25": -0.9692725229382839,
+      "01606500.q50": -1.0635060635856632,
+      "01606500.q75": -0.9796563784652499,
+      "01606500.q95": 0.906345080617613,
+      "01606500.std": 2.4082123291946482,
+      "ratio.01605500_over_01606000.mean": 1.7732313254382934,
+      "ratio.01605500_over_01606000.median": 0.8024495972194541,
+      "ratio.01605500_over_01606500.mean": 0.30868061158222726,
+      "ratio.01605500_over_01606500.median": 0.17415806011916615,
+      "ratio.01606000_over_01606500.mean": -1.834599586358685,
+      "ratio.01606000_over_01606500.median": -1.5922674448135161
+    }
+  },
+  "input_hashes": {
+    "a0_metadata_sha256": "15e90cb72f3fdc505ac9c14adf08038a7b741ff5f2614f9e858bbfe5477266c6",
+    "a0_provenance_summary_sha256": "164d03c68cfe8fab9b52b41b234d48acf6eecfec57fd29246521a78f5d43da8c",
+    "a1_gate_sha256": "72c6baa395497291080bbd21247bc4f2973819a8a095c650e90acbae10261392"
+  },
+  "nearest20": {
+    "broad": {
+      "best_mean_nse": 0.491918939371039,
+      "median_mean_nse": 0.4416044484560735,
+      "n": 20,
+      "rows": [
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5819583606079766,
+              "nse": 0.3834606472589517,
+              "rmse": 6.962542028654676
+            },
+            "01606000": {
+              "kge": 0.6127131611096635,
+              "nse": 0.5684516693094264,
+              "rmse": 13.115376132576582
+            },
+            "01606500": {
+              "kge": 0.5400929398473748,
+              "nse": 0.5238445015447388,
+              "rmse": 23.100486763942214
+            }
+          },
+          "mean_nse": 0.491918939371039,
+          "pca_distance": 30.697904586791992,
+          "population_index": 653,
+          "rank": 1,
+          "simulation_id": "DEEPCAL5K-SOBOL-0174",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5845556733239832,
+              "nse": 0.38139658446821256,
+              "rmse": 6.97418695932624
+            },
+            "01606000": {
+              "kge": 0.5861617183795202,
+              "nse": 0.49142852848097085,
+              "rmse": 14.237771769151669
+            },
+            "01606500": {
+              "kge": 0.4906730749214038,
+              "nse": 0.45855324770437655,
+              "rmse": 24.63341400378759
+            }
+          },
+          "mean_nse": 0.44379278688451995,
+          "pca_distance": 30.891056060791016,
+          "population_index": 1046,
+          "rank": 2,
+          "simulation_id": "DEEPCAL5K-SOBOL-0567",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.42268381170095604,
+              "nse": 0.3803761219053853,
+              "rmse": 6.979936979362002
+            },
+            "01606000": {
+              "kge": 0.434493811631655,
+              "nse": 0.49445245578064556,
+              "rmse": 14.195380306925351
+            },
+            "01606500": {
+              "kge": 0.3316959240061663,
+              "nse": 0.41860675554234994,
+              "rmse": 25.525938582745496
+            }
+          },
+          "mean_nse": 0.4311451110761269,
+          "pca_distance": 31.55828094482422,
+          "population_index": 2328,
+          "rank": 3,
+          "simulation_id": "DEEPCAL5K-SOBOL-1849",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5343335885454412,
+              "nse": 0.35204392653596217,
+              "rmse": 7.137731567398551
+            },
+            "01606000": {
+              "kge": 0.5965507667335284,
+              "nse": 0.49159011457595014,
+              "rmse": 14.23550973830535
+            },
+            "01606500": {
+              "kge": 0.5338450662163878,
+              "nse": 0.4800453556608224,
+              "rmse": 24.13956614017725
+            }
+          },
+          "mean_nse": 0.44122646559091155,
+          "pca_distance": 32.13169860839844,
+          "population_index": 4612,
+          "rank": 4,
+          "simulation_id": "DEEPCAL5K-SOBOL-4133",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5116190644998104,
+              "nse": 0.40084152360085157,
+              "rmse": 6.863699834541455
+            },
+            "01606000": {
+              "kge": 0.502335159018281,
+              "nse": 0.5176187171549513,
+              "rmse": 13.86632112653831
+            },
+            "01606500": {
+              "kge": 0.42478454206704297,
+              "nse": 0.4659327266585299,
+              "rmse": 24.464971399797513
+            }
+          },
+          "mean_nse": 0.46146432247144425,
+          "pca_distance": 32.1774787902832,
+          "population_index": 2952,
+          "rank": 5,
+          "simulation_id": "DEEPCAL5K-SOBOL-2473",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.331598775733447,
+              "nse": 0.3208095950527845,
+              "rmse": 7.3077418901366675
+            },
+            "01606000": {
+              "kge": 0.3998442484023321,
+              "nse": 0.4662716198640109,
+              "rmse": 14.585663092592789
+            },
+            "01606500": {
+              "kge": 0.28315882454171637,
+              "nse": 0.37798849203842844,
+              "rmse": 26.402553982629442
+            }
+          },
+          "mean_nse": 0.3883565689850746,
+          "pca_distance": 32.31804275512695,
+          "population_index": 2920,
+          "rank": 6,
+          "simulation_id": "DEEPCAL5K-SOBOL-2441",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5111903902062123,
+              "nse": 0.36959341871122586,
+              "rmse": 7.040407516102537
+            },
+            "01606000": {
+              "kge": 0.5490566760937148,
+              "nse": 0.5188964023703486,
+              "rmse": 13.847945060422486
+            },
+            "01606500": {
+              "kge": 0.48918145525460066,
+              "nse": 0.48785282968264365,
+              "rmse": 23.957644603776547
+            }
+          },
+          "mean_nse": 0.45878088358807273,
+          "pca_distance": 32.59196472167969,
+          "population_index": 1157,
+          "rank": 7,
+          "simulation_id": "DEEPCAL5K-SOBOL-0678",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5253632820020755,
+              "nse": 0.3748901643949376,
+              "rmse": 7.010767985567915
+            },
+            "01606000": {
+              "kge": 0.5012462153740275,
+              "nse": 0.4668930819729088,
+              "rmse": 14.577168999501708
+            },
+            "01606500": {
+              "kge": 0.39871834440660237,
+              "nse": 0.4192271808520479,
+              "rmse": 25.512315130979623
+            }
+          },
+          "mean_nse": 0.4203368090732981,
+          "pca_distance": 32.9088020324707,
+          "population_index": 156,
+          "rank": 8,
+          "simulation_id": "DEEPCAL500-SOBOL-0077",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5317702199662215,
+              "nse": 0.33708655198128623,
+              "rmse": 7.219645001826698
+            },
+            "01606000": {
+              "kge": 0.5884872362336986,
+              "nse": 0.529368405115439,
+              "rmse": 13.696404360941939
+            },
+            "01606500": {
+              "kge": 0.524320631341471,
+              "nse": 0.496461542478136,
+              "rmse": 23.755438529778598
+            }
+          },
+          "mean_nse": 0.4543054998582871,
+          "pca_distance": 33.10614013671875,
+          "population_index": 3180,
+          "rank": 9,
+          "simulation_id": "DEEPCAL5K-SOBOL-2701",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.4609953982315652,
+              "nse": 0.36221312689758467,
+              "rmse": 7.0814993051333275
+            },
+            "01606000": {
+              "kge": 0.47057379146777667,
+              "nse": 0.4202976236428355,
+              "rmse": 15.200874377724706
+            },
+            "01606500": {
+              "kge": 0.37898909200525144,
+              "nse": 0.3883206878275429,
+              "rmse": 26.18235008588433
+            }
+          },
+          "mean_nse": 0.39027714612265435,
+          "pca_distance": 33.192543029785156,
+          "population_index": 4068,
+          "rank": 10,
+          "simulation_id": "DEEPCAL5K-SOBOL-3589",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.561067554524366,
+              "nse": 0.3701417695410718,
+              "rmse": 7.037344847255396
+            },
+            "01606000": {
+              "kge": 0.5847893070159809,
+              "nse": 0.543169304782606,
+              "rmse": 13.494092045113941
+            },
+            "01606500": {
+              "kge": 0.566749308152108,
+              "nse": 0.534589658927557,
+              "rmse": 22.838351024800186
+            }
+          },
+          "mean_nse": 0.48263357775041166,
+          "pca_distance": 33.593082427978516,
+          "population_index": 2604,
+          "rank": 11,
+          "simulation_id": "DEEPCAL5K-SOBOL-2125",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.6068782893485053,
+              "nse": 0.3504107745194872,
+              "rmse": 7.146721115571436
+            },
+            "01606000": {
+              "kge": 0.6809814590817658,
+              "nse": 0.578635905705899,
+              "rmse": 12.959695343826619
+            },
+            "01606500": {
+              "kge": 0.6136127756695939,
+              "nse": 0.5438615827868519,
+              "rmse": 22.60971328167794
+            }
+          },
+          "mean_nse": 0.49096942100407936,
+          "pca_distance": 33.76216506958008,
+          "population_index": 42,
+          "rank": 12,
+          "simulation_id": "DEEPCAL100-SOBOL-0043",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.587945098870517,
+              "nse": 0.4017885884766368,
+              "rmse": 6.858273106859851
+            },
+            "01606000": {
+              "kge": 0.5722604368176185,
+              "nse": 0.5461858683470102,
+              "rmse": 13.449465877100717
+            },
+            "01606500": {
+              "kge": 0.4853856590190543,
+              "nse": 0.4983995772272304,
+              "rmse": 23.70967911549952
+            }
+          },
+          "mean_nse": 0.4821246780169591,
+          "pca_distance": 33.904083251953125,
+          "population_index": 2806,
+          "rank": 13,
+          "simulation_id": "DEEPCAL5K-SOBOL-2327",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.533468544966996,
+              "nse": 0.3687145204742177,
+              "rmse": 7.045313593162174
+            },
+            "01606000": {
+              "kge": 0.5586781389874438,
+              "nse": 0.5195872509662918,
+              "rmse": 13.837998896717085
+            },
+            "01606500": {
+              "kge": 0.5198644327079516,
+              "nse": 0.5135141818023425,
+              "rmse": 23.349727771680374
+            }
+          },
+          "mean_nse": 0.467271984414284,
+          "pca_distance": 33.916385650634766,
+          "population_index": 1834,
+          "rank": 14,
+          "simulation_id": "DEEPCAL5K-SOBOL-1355",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.39866246740481304,
+              "nse": 0.2799027722589684,
+              "rmse": 7.524592721943581
+            },
+            "01606000": {
+              "kge": 0.42059675460917334,
+              "nse": 0.4095929169312753,
+              "rmse": 15.34058103555242
+            },
+            "01606500": {
+              "kge": 0.3217357643973794,
+              "nse": 0.3507841658998706,
+              "rmse": 26.973747088795996
+            }
+          },
+          "mean_nse": 0.34675995169670476,
+          "pca_distance": 33.92074203491211,
+          "population_index": 798,
+          "rank": 15,
+          "simulation_id": "DEEPCAL5K-SOBOL-0319",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.49112751886360195,
+              "nse": 0.31869463054379976,
+              "rmse": 7.3191110152912655
+            },
+            "01606000": {
+              "kge": 0.5062564080823266,
+              "nse": 0.45836428153065656,
+              "rmse": 14.69331123051982
+            },
+            "01606500": {
+              "kge": 0.44728242539989194,
+              "nse": 0.43054921258920464,
+              "rmse": 25.262412849342354
+            }
+          },
+          "mean_nse": 0.40253604155455364,
+          "pca_distance": 34.018455505371094,
+          "population_index": 944,
+          "rank": 16,
+          "simulation_id": "DEEPCAL5K-SOBOL-0465",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.507324516719521,
+              "nse": 0.33276977784853823,
+              "rmse": 7.243113378609804
+            },
+            "01606000": {
+              "kge": 0.5643117108366383,
+              "nse": 0.5070502359080068,
+              "rmse": 14.017396599569034
+            },
+            "01606500": {
+              "kge": 0.5116874357457382,
+              "nse": 0.48612728020716156,
+              "rmse": 23.99797025700211
+            }
+          },
+          "mean_nse": 0.4419824313212355,
+          "pca_distance": 34.373226165771484,
+          "population_index": 290,
+          "rank": 17,
+          "simulation_id": "DEEPCAL500-SOBOL-0211",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.48415355617618683,
+              "nse": 0.30043169000744063,
+              "rmse": 7.416559627010493
+            },
+            "01606000": {
+              "kge": 0.592636925323921,
+              "nse": 0.5132071047705382,
+              "rmse": 13.929583952282396
+            },
+            "01606500": {
+              "kge": 0.5399726702453513,
+              "nse": 0.48915815434147014,
+              "rmse": 23.927094346149797
+            }
+          },
+          "mean_nse": 0.434265649706483,
+          "pca_distance": 34.667911529541016,
+          "population_index": 4884,
+          "rank": 18,
+          "simulation_id": "DEEPCAL5K-SOBOL-4405",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.46064128819973604,
+              "nse": 0.29298094361579685,
+              "rmse": 7.455950025926977
+            },
+            "01606000": {
+              "kge": 0.5157765033647604,
+              "nse": 0.4449328216713746,
+              "rmse": 14.874377643485209
+            },
+            "01606500": {
+              "kge": 0.4651416441642623,
+              "nse": 0.42941974587024023,
+              "rmse": 25.28745357354311
+            }
+          },
+          "mean_nse": 0.3891111703858039,
+          "pca_distance": 34.70188522338867,
+          "population_index": 271,
+          "rank": 19,
+          "simulation_id": "DEEPCAL500-SOBOL-0192",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.41728834155564565,
+              "nse": 0.30159831992599584,
+              "rmse": 7.410372961240715
+            },
+            "01606000": {
+              "kge": 0.511266394711237,
+              "nse": 0.4364356134728006,
+              "rmse": 14.987796924210173
+            },
+            "01606500": {
+              "kge": 0.3841331882191308,
+              "nse": 0.3870929043665374,
+              "rmse": 26.208613963599017
+            }
+          },
+          "mean_nse": 0.3750422792551113,
+          "pca_distance": 34.76810836791992,
+          "population_index": 366,
+          "rank": 20,
+          "simulation_id": "DEEPCAL500-SOBOL-0287",
+          "source": "observation_independent_broad",
+          "source_kind": "broad_pool"
+        }
+      ]
+    },
+    "confirmed_qobs_directed": {
+      "best_mean_nse": 0.4992979169457197,
+      "median_mean_nse": 0.3559772362962887,
+      "n": 20,
+      "rows": [
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5114699383275306,
+              "nse": 0.3876711978865318,
+              "rmse": 6.938726549875147
+            },
+            "01606000": {
+              "kge": 0.5906554868437277,
+              "nse": 0.5634689305966529,
+              "rmse": 13.190875134299556
+            },
+            "01606500": {
+              "kge": 0.47864085177616356,
+              "nse": 0.49421819362480235,
+              "rmse": 23.808296966829385
+            }
+          },
+          "mean_nse": 0.48178610736932903,
+          "pca_distance": 30.751131057739258,
+          "population_index": 27,
+          "rank": 1,
+          "simulation_id": "archive-index:000014:worker_05",
+          "source": "R3_4096 calibration and sensitivity",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.47217419552634077,
+              "nse": 0.3634874565303804,
+              "rmse": 7.0744211752907065
+            },
+            "01606000": {
+              "kge": 0.5880183977084876,
+              "nse": 0.5480886954975253,
+              "rmse": 13.421239682676603
+            },
+            "01606500": {
+              "kge": 0.5112976020552729,
+              "nse": 0.4994307202634305,
+              "rmse": 23.685296512492403
+            }
+          },
+          "mean_nse": 0.470335624097112,
+          "pca_distance": 32.34080123901367,
+          "population_index": 25,
+          "rank": 2,
+          "simulation_id": "archive-index:000012:worker_03",
+          "source": "R3_4096 calibration and sensitivity",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.4260867818873362,
+              "nse": 0.368618751132205,
+              "rmse": 7.045847978540165
+            },
+            "01606000": {
+              "kge": 0.5395328931788455,
+              "nse": 0.5555888551491932,
+              "rmse": 13.309400700995312
+            },
+            "01606500": {
+              "kge": 0.49406676461907995,
+              "nse": 0.5193983137503451,
+              "rmse": 23.208088639145963
+            }
+          },
+          "mean_nse": 0.4812019733439144,
+          "pca_distance": 36.91709518432617,
+          "population_index": 28,
+          "rank": 3,
+          "simulation_id": "archive-index:000015:worker_06",
+          "source": "R3_4096 calibration and sensitivity",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.45675302793133055,
+              "nse": 0.4152091301294827,
+              "rmse": 6.780905944019665
+            },
+            "01606000": {
+              "kge": 0.5978712960827162,
+              "nse": 0.568605961996359,
+              "rmse": 13.113031334336751
+            },
+            "01606500": {
+              "kge": 0.49482522820235175,
+              "nse": 0.5140786587113173,
+              "rmse": 23.33617731734634
+            }
+          },
+          "mean_nse": 0.4992979169457197,
+          "pca_distance": 37.038063049316406,
+          "population_index": 26,
+          "rank": 4,
+          "simulation_id": "archive-index:000013:worker_04",
+          "source": "R3_4096 calibration and sensitivity",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5468410881078523,
+              "nse": 0.28875334864878177,
+              "rmse": 7.47820809492245
+            },
+            "01606000": {
+              "kge": 0.6638749552129795,
+              "nse": 0.5222970058847258,
+              "rmse": 13.798917282705707
+            },
+            "01606500": {
+              "kge": 0.6350870337150561,
+              "nse": 0.5179519969730673,
+              "rmse": 23.242983473466566
+            }
+          },
+          "mean_nse": 0.443000783835525,
+          "pca_distance": 38.0620002746582,
+          "population_index": 35,
+          "rank": 5,
+          "simulation_id": "archive-index:000037:PILOT-PROPOSAL-Random-42-0172",
+          "source": "Knowledge-guided calibration V1/V2",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5833097133407071,
+              "nse": 0.35397317429536057,
+              "rmse": 7.1270975764179365
+            },
+            "01606000": {
+              "kge": 0.6343684346012526,
+              "nse": 0.5525899679472515,
+              "rmse": 13.35423112909237
+            },
+            "01606500": {
+              "kge": 0.5591458425813821,
+              "nse": 0.5122360426787029,
+              "rmse": 23.38038089952567
+            }
+          },
+          "mean_nse": 0.47293306164043836,
+          "pca_distance": 38.90019226074219,
+          "population_index": 9,
+          "rank": 6,
+          "simulation_id": "DEEPCAL100-HIST-FP-0010",
+          "source": "historical_maximin_farthest_point",
+          "source_kind": "feature_qsim_csv"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.3705761893704822,
+              "nse": 0.20397331427498122,
+              "rmse": 7.911361731793438
+            },
+            "01606000": {
+              "kge": 0.5015313371636109,
+              "nse": 0.38689245062824773,
+              "rmse": 15.632713241947616
+            },
+            "01606500": {
+              "kge": 0.5012772224462996,
+              "nse": 0.4115951567866416,
+              "rmse": 25.67939861447426
+            }
+          },
+          "mean_nse": 0.33415364056329017,
+          "pca_distance": 40.72930145263672,
+          "population_index": 0,
+          "rank": 7,
+          "simulation_id": "DEEPCAL100-HIST-FP-0001",
+          "source": "historical_maximin_farthest_point",
+          "source_kind": "feature_qsim_csv"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.4184409915420775,
+              "nse": 0.36564243705175603,
+              "rmse": 7.062435421457772
+            },
+            "01606000": {
+              "kge": 0.5299504356828457,
+              "nse": 0.5461348950560365,
+              "rmse": 13.450221191049643
+            },
+            "01606500": {
+              "kge": 0.45798433141471806,
+              "nse": 0.4938530931291125,
+              "rmse": 23.816888470928884
+            }
+          },
+          "mean_nse": 0.4685434750789684,
+          "pca_distance": 40.909141540527344,
+          "population_index": 47,
+          "rank": 8,
+          "simulation_id": "archive-index:000049:V2-PROPOSAL-BO-42-0051",
+          "source": "Knowledge-guided calibration V1/V2",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.429883664679406,
+              "nse": 0.18643374111438282,
+              "rmse": 7.998045916266312
+            },
+            "01606000": {
+              "kge": 0.550253905302867,
+              "nse": 0.3799728053892659,
+              "rmse": 15.7206825758151
+            },
+            "01606500": {
+              "kge": 0.5753793273594845,
+              "nse": 0.39583874455582035,
+              "rmse": 26.020950992571247
+            }
+          },
+          "mean_nse": 0.32074843035315637,
+          "pca_distance": 42.65313720703125,
+          "population_index": 14,
+          "rank": 9,
+          "simulation_id": "DEEPCAL100-HIST-FP-0015",
+          "source": "historical_maximin_farthest_point",
+          "source_kind": "feature_qsim_csv"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.4934750926546331,
+              "nse": 0.2577577993535476,
+              "rmse": 7.639417585931376
+            },
+            "01606000": {
+              "kge": 0.5840176464985422,
+              "nse": 0.4640861213321579,
+              "rmse": 14.615495101585907
+            },
+            "01606500": {
+              "kge": 0.5237133381574832,
+              "nse": 0.4115585754021561,
+              "rmse": 25.68019685174646
+            }
+          },
+          "mean_nse": 0.3778008320292872,
+          "pca_distance": 43.18224334716797,
+          "population_index": 32,
+          "rank": 10,
+          "simulation_id": "archive-index:000034:PILOT-PROPOSAL-BO-42-0094",
+          "source": "Knowledge-guided calibration V1/V2",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.2972425163554985,
+              "nse": 0.24944973663582937,
+              "rmse": 7.682053360940191
+            },
+            "01606000": {
+              "kge": 0.24326544474536693,
+              "nse": 0.2873385552044848,
+              "rmse": 16.85418131152649
+            },
+            "01606500": {
+              "kge": 0.19672677639481062,
+              "nse": 0.26277077955628636,
+              "rmse": 28.74405264204883
+            }
+          },
+          "mean_nse": 0.26651969046553353,
+          "pca_distance": 44.1268310546875,
+          "population_index": 2,
+          "rank": 11,
+          "simulation_id": "DEEPCAL100-HIST-FP-0003",
+          "source": "historical_maximin_farthest_point",
+          "source_kind": "feature_qsim_csv"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.36271319498249843,
+              "nse": 0.1526042830746428,
+              "rmse": 8.162638457014484
+            },
+            "01606000": {
+              "kge": 0.4785963556498022,
+              "nse": 0.20209428023974763,
+              "rmse": 17.833714870965913
+            },
+            "01606500": {
+              "kge": 0.48477190940321224,
+              "nse": 0.27222788502641526,
+              "rmse": 28.559094601411115
+            }
+          },
+          "mean_nse": 0.20897548278026856,
+          "pca_distance": 44.28028869628906,
+          "population_index": 31,
+          "rank": 12,
+          "simulation_id": "archive-index:000033:PILOT-PROPOSAL-BO-42-0034",
+          "source": "Knowledge-guided calibration V1/V2",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.42190332320240753,
+              "nse": 0.19529308036379311,
+              "rmse": 7.954379306783135
+            },
+            "01606000": {
+              "kge": 0.5137914339521994,
+              "nse": 0.3961838264757004,
+              "rmse": 15.51380757698144
+            },
+            "01606500": {
+              "kge": 0.46478085638563627,
+              "nse": 0.3182243795631684,
+              "rmse": 27.64187272850017
+            }
+          },
+          "mean_nse": 0.30323376213422065,
+          "pca_distance": 44.64562225341797,
+          "population_index": 36,
+          "rank": 13,
+          "simulation_id": "archive-index:000038:COMMON-ANCHOR-20260910-0001",
+          "source": "Knowledge-guided calibration V1/V2",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.5549011872376497,
+              "nse": 0.3704432553737349,
+              "rmse": 7.0356604096980035
+            },
+            "01606000": {
+              "kge": 0.6559443976862577,
+              "nse": 0.5304682068627392,
+              "rmse": 13.680391687605683
+            },
+            "01606500": {
+              "kge": 0.5325530541679973,
+              "nse": 0.4874119214679201,
+              "rmse": 23.96795497006353
+            }
+          },
+          "mean_nse": 0.4627744612347981,
+          "pca_distance": 45.00090026855469,
+          "population_index": 30,
+          "rank": 14,
+          "simulation_id": "archive-index:000017:worker_08",
+          "source": "R3_4096 calibration and sensitivity",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": -0.2767597951142433,
+              "nse": -0.13515273284324336,
+              "rmse": 9.447449479720719
+            },
+            "01606000": {
+              "kge": 0.4642418013688412,
+              "nse": 0.5280317693131942,
+              "rmse": 13.715840077330396
+            },
+            "01606500": {
+              "kge": 0.3598931831853993,
+              "nse": 0.4486406015843213,
+              "rmse": 24.857881899492167
+            }
+          },
+          "mean_nse": 0.2805065460180907,
+          "pca_distance": 45.92278289794922,
+          "population_index": 20,
+          "rank": 15,
+          "simulation_id": "archive-index:000007:worker_04",
+          "source": "R2 calibration",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.36220309576994825,
+              "nse": 0.22870630611171494,
+              "rmse": 7.78748671837542
+            },
+            "01606000": {
+              "kge": 0.41083515081401367,
+              "nse": 0.17317286971084767,
+              "rmse": 18.15404421536445
+            },
+            "01606500": {
+              "kge": 0.32563672048462255,
+              "nse": 0.2228351230700112,
+              "rmse": 29.512317321431766
+            }
+          },
+          "mean_nse": 0.20823809963085793,
+          "pca_distance": 46.107269287109375,
+          "population_index": 3,
+          "rank": 16,
+          "simulation_id": "DEEPCAL100-HIST-FP-0004",
+          "source": "historical_maximin_farthest_point",
+          "source_kind": "feature_qsim_csv"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": 0.35714141001644006,
+              "nse": 0.33660017806155684,
+              "rmse": 7.222293012065138
+            },
+            "01606000": {
+              "kge": 0.480736485583951,
+              "nse": 0.5313372290308795,
+              "rmse": 13.66772580444858
+            },
+            "01606500": {
+              "kge": 0.4725264822310239,
+              "nse": 0.5105138788838949,
+              "rmse": 23.421619460104843
+            }
+          },
+          "mean_nse": 0.4594837619921104,
+          "pca_distance": 47.12009811401367,
+          "population_index": 29,
+          "rank": 17,
+          "simulation_id": "archive-index:000016:worker_07",
+          "source": "R3_4096 calibration and sensitivity",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": -0.28921205693185437,
+              "nse": -0.14794687488528457,
+              "rmse": 9.500540720341819
+            },
+            "01606000": {
+              "kge": 0.48229412421663276,
+              "nse": 0.5500406667698692,
+              "rmse": 13.392222677717752
+            },
+            "01606500": {
+              "kge": 0.3548546008162302,
+              "nse": 0.4557178475386171,
+              "rmse": 24.697828818549013
+            }
+          },
+          "mean_nse": 0.28593721314106724,
+          "pca_distance": 47.1243896484375,
+          "population_index": 23,
+          "rank": 18,
+          "simulation_id": "archive-index:000010:worker_07",
+          "source": "R2 calibration",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": -0.2817399397580016,
+              "nse": -0.14162348452579332,
+              "rmse": 9.47433803264335
+            },
+            "01606000": {
+              "kge": 0.45561521380037817,
+              "nse": 0.5280320571318291,
+              "rmse": 13.715835895189828
+            },
+            "01606500": {
+              "kge": 0.3385003095220198,
+              "nse": 0.4384558069655563,
+              "rmse": 25.086420614922886
+            }
+          },
+          "mean_nse": 0.2749547931905307,
+          "pca_distance": 47.666595458984375,
+          "population_index": 18,
+          "rank": 19,
+          "simulation_id": "archive-index:000005:worker_02",
+          "source": "R2 calibration",
+          "source_kind": "existing_channel_sd_day"
+        },
+        {
+          "gauges": {
+            "01605500": {
+              "kge": -0.30815962889240756,
+              "nse": -0.16056281524559135,
+              "rmse": 9.55260355717512
+            },
+            "01606000": {
+              "kge": 0.46010554174681906,
+              "nse": 0.5281976955149967,
+              "rmse": 13.713428879755442
+            },
+            "01606500": {
+              "kge": 0.3388265406136095,
+              "nse": 0.4365540382731996,
+              "rmse": 25.128864508741927
+            }
+          },
+          "mean_nse": 0.268062972847535,
+          "pca_distance": 47.809268951416016,
+          "population_index": 24,
+          "rank": 20,
+          "simulation_id": "archive-index:000011:worker_08",
+          "source": "R2 calibration",
+          "source_kind": "existing_channel_sd_day"
+        }
+      ]
+    },
+    "metric_source": "persisted existing development qsim versus qobs; no new Real-SWAT run"
+  },
+  "new_real_swat_runs": 0,
+  "pca_embedding": {
+    "broad_embedding_mean": [
+      0.07255382090806961,
+      0.03239123895764351,
+      0.015612190589308739,
+      -0.037754517048597336,
+      0.004178747534751892,
+      -0.007397092413157225,
+      -0.004768148064613342,
+      -0.0003194304299540818,
+      -0.015172803774476051,
+      0.0006024467293173075,
+      0.0036735013127326965,
+      -0.0056880018673837185,
+      -0.00402417778968811,
+      0.01461072452366352,
+      0.004011324141174555,
+      -0.006563057191669941,
+      -0.005285243503749371,
+      -0.007005412597209215,
+      0.014079482294619083,
+      -0.004271059762686491,
+      -0.003957618027925491,
+      0.004562804009765387,
+      0.0017285664798691869,
+      0.00012820948904845864,
+      0.0009325034916400909,
+      -0.003177126171067357,
+      0.002582525834441185,
+      -0.002922946587204933,
+      0.0001169529787148349,
+      0.001234095892868936,
+      0.0013258070684969425,
+      -0.002697675721719861,
+      -0.0005883050616830587,
+      0.003640869166702032,
+      0.0054035852663218975,
+      0.0009894163813441992,
+      -0.00199062074534595,
+      -0.00023475545458495617,
+      0.0055273850448429585,
+      0.004843020346015692,
+      -0.0009726400603540242,
+      -0.0051539596170187,
+      -0.004405566956847906,
+      -0.0004958846839144826,
+      -0.0021991818211972713,
+      -0.0006300744134932756,
+      0.002229704288765788,
+      -0.0034824535250663757,
+      -0.0011202218011021614,
+      -0.0047338916920125484,
+      -0.0008395163458772004,
+      -0.001389607903547585,
+      0.0024117843713611364,
+      -0.002070714021101594,
+      0.0014944600407034159,
+      9.233698074240237e-05,
+      -0.0034401242155581713,
+      -0.0012573678977787495,
+      0.001955955056473613,
+      0.0007187158917076886,
+      -0.002854189369827509,
+      -0.001271965098567307,
+      0.00010650543117662892,
+      0.0029849009588360786
+    ],
+    "broad_embedding_std": [
+      21.745338439941406,
+      7.996333599090576,
+      7.302839279174805,
+      3.978440523147583,
+      3.2352256774902344,
+      2.8652453422546387,
+      2.161377191543579,
+      1.8094629049301147,
+      1.6111795902252197,
+      1.3995211124420166,
+      1.2037745714187622,
+      1.1709190607070923,
+      1.0190377235412598,
+      0.9817748069763184,
+      0.9089438319206238,
+      0.8514488935470581,
+      0.817758321762085,
+      0.7999723553657532,
+      0.7860143780708313,
+      0.7534807920455933,
+      0.6928751468658447,
+      0.66353440284729,
+      0.6189191937446594,
+      0.6057469248771667,
+      0.5686606764793396,
+      0.5494470000267029,
+      0.5556721091270447,
+      0.541393518447876,
+      0.5147174596786499,
+      0.5023483037948608,
+      0.4946061968803406,
+      0.48270249366760254,
+      0.46453744173049927,
+      0.4514387845993042,
+      0.443311870098114,
+      0.42041778564453125,
+      0.42160525918006897,
+      0.40738311409950256,
+      0.39749476313591003,
+      0.3943554759025574,
+      0.3812761604785919,
+      0.37528544664382935,
+      0.37812700867652893,
+      0.37017932534217834,
+      0.35676977038383484,
+      0.3578830361366272,
+      0.35913971066474915,
+      0.3562360405921936,
+      0.34972819685935974,
+      0.33665743470191956,
+      0.33289939165115356,
+      0.3313801884651184,
+      0.3268900513648987,
+      0.32232168316841125,
+      0.31579840183258057,
+      0.3120075762271881,
+      0.30595341324806213,
+      0.3041113018989563,
+      0.29783913493156433,
+      0.2948633134365082,
+      0.29471009969711304,
+      0.28670838475227356,
+      0.2899618446826935,
+      0.2819838523864746
+    ],
+    "directed_embedding_mean": [
+      -20.05754852294922,
+      5.060318946838379,
+      -3.220524311065674,
+      -0.037323251366615295,
+      -1.3162871599197388,
+      -1.3023017644882202,
+      -1.2620140314102173,
+      1.3888640403747559,
+      -1.1307648420333862,
+      -1.3974230289459229,
+      -0.800643801689148,
+      0.7283348441123962,
+      2.5224106311798096,
+      -1.0831328630447388,
+      -3.5138137340545654,
+      -2.330137252807617,
+      -0.802747905254364,
+      2.0137195587158203,
+      -0.2778557538986206,
+      -2.083869695663452,
+      -3.0693681240081787,
+      -2.4233853816986084,
+      2.963822841644287,
+      -0.5297362208366394,
+      -1.4402329921722412,
+      -1.294762372970581,
+      2.455526113510132,
+      -1.4210011959075928,
+      -1.0599713325500488,
+      -0.8421671390533447,
+      -0.25494274497032166,
+      0.051494427025318146,
+      1.2785848379135132,
+      0.12378741800785065,
+      -0.8782855868339539,
+      -0.5037164688110352,
+      0.1657770425081253,
+      0.08417557924985886,
+      0.7558633089065552,
+      0.007700006943196058,
+      -0.259217768907547,
+      0.2694973945617676,
+      -0.6227052807807922,
+      0.02396957390010357,
+      0.2752078175544739,
+      0.1845666468143463,
+      0.008847340010106564,
+      0.08696556091308594,
+      -0.3209010362625122,
+      -0.2422267645597458,
+      -0.27262696623802185,
+      -0.1472400724887848,
+      -0.7432469725608826,
+      -0.06941800564527512,
+      -0.07338542491197586,
+      0.2193509191274643,
+      0.29741159081459045,
+      0.12885050475597382,
+      -0.754192590713501,
+      -0.4788169860839844,
+      -0.2809889316558838,
+      -0.04257964715361595,
+      -0.29274439811706543,
+      -0.5565518736839294
+    ],
+    "directed_embedding_std": [
+      33.998783111572266,
+      8.225730895996094,
+      20.79463005065918,
+      7.022044658660889,
+      6.443007946014404,
+      4.989157199859619,
+      6.041430950164795,
+      2.770480155944824,
+      4.670935153961182,
+      4.867705345153809,
+      2.1999764442443848,
+      1.7485581636428833,
+      2.8667843341827393,
+      1.5984936952590942,
+      3.1561119556427,
+      3.0424203872680664,
+      2.018195390701294,
+      3.949462890625,
+      3.050461769104004,
+      1.7906324863433838,
+      3.473600149154663,
+      3.9703662395477295,
+      4.108424186706543,
+      1.5814229249954224,
+      2.035552501678467,
+      1.3364390134811401,
+      2.7220988273620605,
+      1.7847040891647339,
+      1.2776901721954346,
+      1.8353908061981201,
+      0.8062422871589661,
+      0.9769048094749451,
+      1.5675081014633179,
+      0.8416005969047546,
+      1.5326427221298218,
+      1.0605971813201904,
+      0.7655433416366577,
+      0.6963188648223877,
+      1.357202172279358,
+      0.5518155694007874,
+      0.7940940856933594,
+      1.3297022581100464,
+      1.0300776958465576,
+      0.7045639753341675,
+      0.8767586350440979,
+      0.9734204411506653,
+      0.7766268849372864,
+      0.5999521613121033,
+      0.9589619040489197,
+      0.6334390044212341,
+      0.8540295958518982,
+      0.8141912817955017,
+      1.5672465562820435,
+      0.5564984083175659,
+      0.8229880928993225,
+      0.6161549687385559,
+      1.325271725654602,
+      0.7366538047790527,
+      1.2700523138046265,
+      1.3672046661376953,
+      0.6047618389129639,
+      0.650150716304779,
+      0.43478575348854065,
+      1.3844914436340332
+    ],
+    "model_path": "D:\\SWAT+_3V3\\Q\\projects\\SWATPlus-PISO-Cal\\artifacts\\a1\\models\\ridge.pkl",
+    "model_sha256": "1809e52007fd6364c35b51e56c99469d94234179d7fe03db8864ef75c7437a8b",
+    "pca_components": 64,
+    "pca_explained_variance_ratio_sum": 0.9864495396614075,
+    "qobs_embedding": [
+      -50.12400817871094,
+      16.6473388671875,
+      -19.546722412109375,
+      -9.855696678161621,
+      -2.441831588745117,
+      -7.047723770141602,
+      -0.9371709823608398,
+      2.2812387943267822,
+      1.270575761795044,
+      2.6530561447143555,
+      -4.30825662612915,
+      4.695825576782227,
+      8.72379207611084,
+      -2.2044601440429688,
+      3.6989097595214844,
+      1.3365883827209473,
+      1.7294788360595703,
+      -0.4307616055011749,
+      3.389601230621338,
+      -4.897120475769043,
+      -7.021832466125488,
+      -7.028757095336914,
+      0.434032678604126,
+      3.0063071250915527,
+      -5.734307289123535,
+      5.008693695068359,
+      10.615392684936523,
+      2.913848638534546,
+      -3.6306028366088867,
+      -0.6098291873931885,
+      -0.6686298251152039,
+      -5.5327887535095215,
+      -1.6250241994857788,
+      -1.7593271732330322,
+      -0.8412037491798401,
+      -3.494818687438965,
+      4.201415061950684,
+      -0.7781640291213989,
+      1.56889009475708,
+      1.5610507726669312,
+      -0.008004486560821533,
+      -2.3274407386779785,
+      -0.08069305121898651,
+      1.0874112844467163,
+      -1.370718002319336,
+      0.030285436660051346,
+      -0.22562909126281738,
+      0.1616470366716385,
+      -3.577829360961914,
+      1.39898681640625,
+      0.28816747665405273,
+      -1.1290243864059448,
+      -3.750494956970215,
+      -1.6943309307098389,
+      -3.0112555027008057,
+      -2.6343467235565186,
+      1.0506680011749268,
+      -1.63740074634552,
+      0.2105768918991089,
+      2.0440211296081543,
+      -2.7271971702575684,
+      0.027435079216957092,
+      2.3032126426696777,
+      0.808314859867096
+    ],
+    "qobs_to_broad": {
+      "covariance_condition_number": 6056.5087592686705,
+      "distance": 30.697904586791992,
+      "mahalanobis_distance": 47.98654111829464,
+      "nearest_population_index": 653,
+      "nearest_simulation_id": "DEEPCAL5K-SOBOL-0174",
+      "percentile": 100.0,
+      "rank_ascending_1_based": 4981,
+      "reference_max": 29.572025299072266,
+      "reference_mean": 4.82475773852513,
+      "reference_median": 3.9811900854110718,
+      "reference_min": 1.066229224205017,
+      "reference_n": 4980,
+      "reference_std": 2.953561704919448
+    },
+    "qobs_to_confirmed_qobs_directed": {
+      "covariance_condition_number": 4742838155.095692,
+      "distance": 30.751131057739258,
+      "mahalanobis_distance": 12973.934589016379,
+      "nearest_population_index": 27,
+      "nearest_simulation_id": "archive-index:000014:worker_05",
+      "percentile": 98.11320754716981,
+      "rank_ascending_1_based": 53,
+      "reference_max": 38.19923782348633,
+      "reference_mean": 13.809189553530711,
+      "reference_median": 12.529427528381348,
+      "reference_min": 5.289590358734131,
+      "reference_n": 53,
+      "reference_std": 7.084337531834548
+    },
+    "space": "A1 frozen Ridge PCA on train-fitted GaugeFlowScaler(log1p), input stride=7"
+  },
+  "posterior_training_started": false,
+  "provenance_classification": {
+    "all_classified_rows_excluded_from_a1_a2_training": true,
+    "by_source": {
+      "Knowledge-guided calibration V1/V2": {
+        "confirmed_qobs_directed": 1348,
+        "unknown": 1
+      },
+      "R1_1000 calibration": {
+        "confirmed_qobs_directed": 728
+      },
+      "R2 calibration": {
+        "confirmed_qobs_directed": 530
+      },
+      "R3_4096 calibration and sensitivity": {
+        "confirmed_qobs_directed": 2993
+      },
+      "R4_FAST_2048 calibration": {
+        "confirmed_qobs_directed": 2048
+      },
+      "historical_maximin_farthest_point": {
+        "confirmed_qobs_directed": 17
+      }
+    },
+    "confirmed_qobs_directed_n": 7664,
+    "optimizer_trace_manifest_sha256": "3ab205ad69e7d856c5f90ee0e97e7d8aa69015816a4e348628b02597e05be29d",
+    "scanned_n": 7665,
+    "source_proof": {
+      "Knowledge-guided calibration V1/V2": {
+        "files": [
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\runner.py",
+            "sha256": "047bd28a192162ec359bd861f4ab90565e9bdff33b8aa16a073a7021ba123bcd"
+          },
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\KNOWLEDGE_GUIDED_CALIBRATION_EXECUTION\\runner_v2.py",
+            "sha256": "8bcef3d77738b8be8a65d7583331ccf7d9a1a1625cd26e3ca28e330a6ce947be"
+          }
+        ],
+        "proof": "V1 extract_metrics calls r3.load_observed for development dates; V2 reuses V1 metrics/objective."
+      },
+      "R1_1000 calibration": {
+        "files": [
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_local_R1_1000\\scripts\\calibration_engine.py",
+            "sha256": "c17bf0c5c7d31c03aa14c3bff2c87f23415e00bf5da3c602f0751288a7efa385"
+          }
+        ],
+        "proof": "OBSERVED clean_csv + load_observed(2003-2016) + objective(mean development NSE)."
+      },
+      "R2 calibration": {
+        "files": [
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R2\\r2_calibration.py",
+            "sha256": "c545f4ad55bf10092b1917504bf3afc4f086c6d531f4b3cdde9344bbdbf3f68f"
+          }
+        ],
+        "proof": "OBSERVED clean_csv + load_observed(2003-2016) + fitness from three-gauge NSE."
+      },
+      "R3_4096 calibration and sensitivity": {
+        "files": [
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\r3_calibration.py",
+            "sha256": "8bba2cccd401147599050ef36e59e62af3007e2e6a232b06b9b23524616880ed"
+          }
+        ],
+        "proof": "OBSERVED clean_csv + load_observed(2003-2016) + evaluate_output/aggregates."
+      },
+      "R4_FAST_2048 calibration": {
+        "files": [
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R4_FAST_2048\\r4_fast.py",
+            "sha256": "6a815c93728c15d1c0ceeea4caff5b9093153bc97173c0972a89beea06fb9025"
+          },
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\calibration_R3_4096\\r3_calibration.py",
+            "sha256": "8bba2cccd401147599050ef36e59e62af3007e2e6a232b06b9b23524616880ed"
+          }
+        ],
+        "proof": "R4 calls the inherited R3 evaluate_output, whose objective reads development qobs."
+      },
+      "historical_maximin_farthest_point": {
+        "files": [
+          {
+            "exists": true,
+            "path": "D:\\SWAT+_3V3\\A_SouthBranchPotomac\\DEEP_CAL_SWAT\\04_real_swat_runs\\deepcal_standardized_smoke.py",
+            "sha256": "01a706af77a0adf98e1af5b736129aee809632bf81b279595f3aa3ff537b939a"
+          }
+        ],
+        "proof": "Standardized historical runner loads development observations and persists qobs-based metrics.json."
+      }
+    },
+    "synthetic_reference_n": 0,
+    "unknown_n": 1,
+    "unknown_pool_rows_in_a0_outside_optimizer_trace": 27
+  },
+  "reference_distribution": {
+    "n": 4980,
+    "name": "A0 observation-independent broad qsim",
+    "period": [
+      "2003-01-01",
+      "2016-12-31"
+    ],
+    "qobs_sha256": "fa70d39793a41cf72bb1788d95ca814cd6f64f94974f168d83d2c0b8166bcdc1",
+    "qsim_sha256": "ad4a2447608c6ce95f8969a7734da99e022ed9db050ba279b1ee7f74a30490e9",
+    "shape": [
+      4980,
+      3,
+      5114
+    ]
+  },
+  "schema": "a1.5-sim-obs-mismatch-attribution-v1",
+  "stage": "A1_5_SIM_OBS_MISMATCH_ATTRIBUTION",
+  "status": "COMPLETE",
+  "training_data_mutated": false
+}
