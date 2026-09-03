@@ -1,0 +1,42 @@
+{
+  "provenance": {
+    "paper_doi": "10.1038/s41467-026-70417-z",
+    "source_data_file": "41467_2026_70417_MOESM4_ESM.xlsx",
+    "source_data_sha256": "1bbbe011e8ad7841703c3b80a5e815295b8aeb5ec8c216fba183eaad6a07c924",
+    "audit_date": "2026-09-03"
+  },
+  "workbook": {
+    "sheet_count": 45,
+    "formula_cells": 0,
+    "external_links": 0,
+    "defined_names": 0
+  },
+  "fig1_ols_source_checks": {
+    "count_anomaly_slope_per_year": 6.629026286560504,
+    "severity_anomaly_slope_per_year": 0.012110820518049147,
+    "onset_speed_anomaly_slope_per_pentad_per_year": 0.018359442329258208
+  },
+  "figS2_source_check": {
+    "flash_drought_ratio_anomaly_ols_slope_per_year": 0.1360669500833783,
+    "note": "paper reports Sen slope ~0.142; OLS and Sen are expected to differ"
+  },
+  "figS21_rf_groups": {
+    "flash_hotspots_n": 437,
+    "slow_hotspots_n": 486,
+    "flash_non_hotspots_n": 370,
+    "slow_non_hotspots_n": 722,
+    "max_final_vif": 4.7252446178593
+  },
+  "figS15_cmip6_exclusion_check": {
+    "excluded_model": "CMCC-CM2-SR5",
+    "excluded_model_std": 9.70872692649668,
+    "excluded_model_rmsd": 6.35091218252504,
+    "excluded_model_correlation": 0.820855664171628
+  },
+  "mfdi_reverse_engineering": {
+    "state": "NOT_EXACT",
+    "literal_equation_correlation_approx": 0.977,
+    "literal_equation_mae_approx": 3.8,
+    "action": "resolve from Code Ocean; do not treat literal reconstruction as exact"
+  }
+}
