@@ -1,0 +1,96 @@
+{
+  "paper": {
+    "doi": "10.1038/s41467-026-70417-z",
+    "journal": "Nature Communications",
+    "year": 2026,
+    "article_number": 4050,
+    "primary_software": "MATLAB R2020b"
+  },
+  "historical_analysis": {
+    "start_year": 1950,
+    "end_year": 2023,
+    "analysis_resolution_deg": 1.0,
+    "temporal_step_days": 5,
+    "soil_moisture_sources": ["ERA5_Land", "GLDAS_CLSM"],
+    "era5_land_depth_weights": [0.07, 0.21, 0.72],
+    "era5_land_depths_cm": [[0, 7], [7, 28], [28, 100]],
+    "combined_sm_rule": "mean of ERA5-Land depth-weighted 0-1m SM and GLDAS_CLSM 0-1m SM",
+    "deseasonalize_before_percentile": true,
+    "detrend_before_percentile": true
+  },
+  "drought_definition": {
+    "upper_percentile": 40,
+    "lower_percentile": 20,
+    "flash_min_decline_percentile_points_per_pentad": 5,
+    "minimum_event_duration_pentads": 4,
+    "flash_rule": "onset must decline from >40th toward/below 20th with no less than 5 percentile points per pentad; after below 20th onset ends when decline falls below criterion; event terminates when SM rises above 20th",
+    "slow_rule": "onset declines from >40th toward/below 20th and includes at least one pentad below the flash decline-rate criterion; after below 20th onset ends when SM begins increasing; event terminates when SM rises above 20th",
+    "edge_cases": "AUTHOR_CODE_REQUIRED"
+  },
+  "drought_metrics": {
+    "onset_speed": "(40th percentile - lowest percentile at onset) / onset length",
+    "severity": "40th percentile - lowest percentile at onset",
+    "flash_drought_ratio": "flash count / (flash count + slow count)",
+    "change_point_method": "BEAST"
+  },
+  "vegetation": {
+    "primary_productivity": "FluxSat GPP",
+    "primary_period": [2001, 2019],
+    "validation_proxy": "CSIF SIF",
+    "flux_validation": "FLUXNET2015",
+    "growing_season_threshold": "minimum multiyear-mean pentad GPP + 30% seasonal amplitude",
+    "tropical_year_round_condition": "minimum GPP > 10 g C m-2 d-1 (peer-review clarification)",
+    "recovery_horizon_years": 2,
+    "minimum_separation_between_drought_events_years": 2,
+    "resilience": "mean vegetation anomaly after drought effect minus multiyear growing-season mean"
+  },
+  "random_forest": {
+    "number_of_models": 4,
+    "groups": [
+      "flash_hotspots",
+      "slow_hotspots",
+      "flash_non_hotspots",
+      "slow_non_hotspots"
+    ],
+    "trees": 300,
+    "version_of_record_hyperparameter_wording": "5 leaves",
+    "peer_review_hyperparameter_wording": "minimum terminal node size = 5",
+    "hyperparameter_conflict": true,
+    "feature_sampling_peer_review": "one covariate chosen at random from full set for splitting rule",
+    "importance": "OOB permutation importance",
+    "vif_threshold": 5,
+    "major_factor_count_for_pdp": 10,
+    "pdp_ci": "AUTHOR_CODE_REQUIRED"
+  },
+  "cmip6": {
+    "scenario": "ssp245",
+    "variable": "mrso",
+    "variant_label": "r1i1p1f1",
+    "future_period": [2024, 2100],
+    "remap": "nearest neighbor to 1 degree",
+    "temporal_aggregation": "5-day mean",
+    "candidate_models": [
+      "ACCESS-CM2",
+      "BCC-CSM2-MR",
+      "CMCC-CM2-SR5",
+      "MIROC6",
+      "MPI-ESM1-2-HR",
+      "MPI-ESM1-2-LR",
+      "MRI-ESM2-0",
+      "NorESM2-LM",
+      "NorESM2-MM"
+    ],
+    "excluded_after_taylor_screening": ["CMCC-CM2-SR5"],
+    "retained_models": [
+      "ACCESS-CM2",
+      "BCC-CSM2-MR",
+      "MIROC6",
+      "MPI-ESM1-2-HR",
+      "MPI-ESM1-2-LR",
+      "MRI-ESM2-0",
+      "NorESM2-LM",
+      "NorESM2-MM"
+    ],
+    "calendar_handling": "AUTHOR_CODE_REQUIRED"
+  }
+}

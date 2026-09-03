@@ -1,0 +1,18 @@
+raw_data/
+cache/
+scratch/
+results/_tmp/
+
+# Official binary assets are ignored until redistribution terms are verified
+vendor/nature/*.pdf
+vendor/nature/*.xlsx
+vendor/codeocean/*.zip
+vendor/codeocean/export/
+
+!vendor/nature/README.md
+!vendor/nature/SHA256_MANIFEST.json
+!vendor/codeocean/README.md
+
+__pycache__/
+*.pyc
+.DS_Store
