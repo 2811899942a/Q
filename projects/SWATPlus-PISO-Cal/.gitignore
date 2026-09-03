@@ -25,3 +25,5 @@ artifacts/a1/models/
 artifacts/a1/selftest/
 artifacts/a1/closure/scratch/
 artifacts/a1/fresh_swat/scratch/
+artifacts/a1_6/qsim/
+artifacts/a1_6/runtime/
