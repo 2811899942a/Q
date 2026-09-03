@@ -1,78 +1,161 @@
 # Google Earth Engine preprocessing track
 
-This directory is the server-side preprocessing track for the Guo et al. (2026) flash-drought reproduction.
+This directory is the server-side preprocessing track for Guo et al. (2026), *Nature Communications* 17:4050.
 
-## Principle
+## Operational principle
 
-Use Google Earth Engine (GEE) to do expensive global spatial/temporal preprocessing whenever the exact paper dataset is available in the official Earth Engine catalog. Download only compact, analysis-ready products to the local workstation. Raw multi-decade global archives should not be downloaded locally unless there is no equivalent server-side route.
+Use GEE for expensive global raster processing whenever the exact paper dataset is available there. Keep the raw native-resolution archives out of the local workstation. Download only compact 1-degree outputs to Google Drive, then clean/validate those products against the official Nature Source Data.
 
-The GEE track is deliberately separated from the author-package rerun. GEE products are for the **independent rebuild** after the Code Ocean implementation has been audited. They must not be used to claim exact reproduction while code-dependent conventions remain unresolved.
+The Code Ocean DOI cited by the paper is currently inaccessible (HTTP 403 in the user environment), so the independent reconstruction track proceeds from the Version of Record + Supplementary + Peer Review + Source Data. Any convention not uniquely recoverable remains an explicit validation branch.
 
-## Current GEE eligibility
+## Run order
 
-### Safe / strong candidates
+### 0. Smoke test first
 
-1. **ERA5-Land**
-   - Official GEE collection: `ECMWF/ERA5_LAND/DAILY_AGGR`
-   - Coverage: 1950 to near-real time.
-   - Required bands are present: `temperature_2m`, `dewpoint_temperature_2m`, `volumetric_soil_water_layer_1`, `volumetric_soil_water_layer_2`, `volumetric_soil_water_layer_3`, `surface_solar_radiation_downwards_sum`, `total_precipitation_sum`, `total_evaporation_sum`.
-   - Paper explicitly aggregates ERA5-Land from 0.1 degree to 1 degree and computes 0-1 m soil moisture as `0.07*SM1 + 0.21*SM2 + 0.72*SM3`.
+Run:
 
-2. **MCD12C1 land cover**
-   - Official GEE collection: `MODIS/061/MCD12C1`.
-   - This is the same MCD12C1 product family named in the paper.
-   - Paper uses an IGBP vegetation-type map and a mode operation for 1-degree upscaling.
-   - Exact year/static-map choice must still be read from author code before final export.
+```text
+00_smoke_test.js
+```
 
-### GEE available but NOT an exact historical substitute
+It creates a single January-2001 ERA5-Land test task over a small Europe window. Do not start global exports until this task completes and its band count/grid are checked.
 
-**GLDAS CLSM**
+### 1. ERA5-Land soil-moisture backbone
 
-GEE currently exposes `NASA/GLDAS/V022/CLSM/G025/DA1D`, a GRACE-assimilated GLDAS-2.2 CLSM product beginning in 2003. The paper's flash/slow drought record is based on the mean of ERA5-Land and GLDAS_CLSM over 1950-2023. Therefore GLDAS-2.2 in GEE cannot be silently substituted for the paper's historical GLDAS chain.
+Run:
 
-NASA documents GLDAS-2.0 CLSM daily 0.25 degree (`GLDAS_CLSM025_D`) from 1948-2014. A continuation after 2014 must be resolved from the Code Ocean capsule/author implementation. If the exact continuation is not in GEE, use GES DISC server-side subsetting/OPeNDAP or the author's processed data rather than downloading the full archive.
+```text
+01_era5_land_prepare.js
+```
 
-### Do not assume official GEE equivalence
+Official GEE collection:
 
-The following paper inputs should first be taken from the author capsule/process data when available; otherwise use targeted source-specific subsets:
+```text
+ECMWF/ERA5_LAND/DAILY_AGGR
+```
+
+The script performs the paper-defined 0-1 m weighting:
+
+```text
+SM_0_1m = 0.07*SM1 + 0.21*SM2 + 0.72*SM3
+```
+
+and simple-mean aggregation from native ERA5-Land resolution to an explicit global 1-degree geographic grid:
+
+```text
+EPSG:4326
+crsTransform = [1, 0, -180, 0, -1, 90]
+```
+
+Exports are yearly daily stacks. Run them in decade-sized blocks:
+
+```text
+1950-1959
+1960-1969
+1970-1979
+1980-1989
+1990-1999
+2000-2009
+2010-2019
+2020-2023
+```
+
+The export target is the unique root-level Google Drive folder:
+
+```text
+FlashDrought_Guo2026_GEE_exports
+```
+
+This keeps the long 1950-2023 soil-moisture backbone compact while preserving daily values for later pentad/calendar sensitivity testing.
+
+### 2. MCD12C1 vegetation classes
+
+Run:
+
+```text
+02_mcd12c1_prepare.js
+```
+
+Official collection:
+
+```text
+MODIS/061/MCD12C1
+```
+
+The paper states IGBP vegetation type and 1-degree upscaling by mode. Since the Version of Record does not identify one exact source year, the script exports annual 2001-2019 1-degree candidate maps. These files are small and allow later validation of the year/static-map convention rather than guessing it.
+
+## Dataset eligibility
+
+### Safe GEE inputs
+
+- ERA5-Land: exact paper product family and required soil-water layers are available.
+- MCD12C1: exact paper land-cover product family is available.
+
+### GLDAS CLSM: source-side subset, not a blind GEE substitute
+
+The paper uses ERA5-Land + GLDAS_CLSM mean soil moisture for the long 1950-2023 drought chain. NASA's historical daily CLSM product is:
+
+```text
+GLDAS_CLSM025_D.2.0
+```
+
+with a temporally consistent GLDAS-2.0 record from 1948 through 2014. GEE's convenient CLSM collection is GLDAS-2.2 GRACE-assimilated and starts in 2003, so it cannot silently replace the historical chain.
+
+The post-2014 continuation used by the paper remains a reconstruction question. Handle GLDAS through GES DISC server-side subsetting/OPeNDAP and validate any stitching strategy against published Source Data before acceptance.
+
+### Other paper inputs
+
+Do not force these into GEE if the exact product is not available:
 
 - FluxSat GPP v2;
 - CSIF;
 - FLUXNET2015;
-- global tree density;
-- global canopy height;
+- tree density;
+- canopy height;
 - maximum rooting depth;
-- Regridded HWSD v1.2 cation exchange capacity;
-- CMIP6 `mrso` SSP2-4.5 for the eight retained ESMs.
+- HWSD v1.2 cation exchange capacity;
+- CMIP6 SSP2-4.5 `mrso` for the exact retained models.
 
-Do not replace the paper's CMIP6 `mrso` with NEX-GDDP-style climate products merely because they are easier to access.
+Use source-side subsets or compact author/source products instead.
 
-## Export strategy
+## Why the ERA5 export remains daily
 
-The local workstation should receive compact products, not raw archives.
+The paper ultimately works at pentad scale, but the exact calendar edge handling remains partly unresolved because the author's executable capsule is not reachable. Exporting **daily 1-degree** ERA5 soil moisture is still small enough to manage and preserves the information needed to test alternative pentad conventions later. This is safer than hard-coding a potentially wrong pentad definition into a 74-year cloud export.
 
-Preferred products after Code Ocean conventions are resolved:
+Once the exact/validated convention is selected, pentad construction, detrending, deseasonalization and percentile conversion can be rerun either in GEE or in the cleaning stage without returning to the native 0.1-degree ERA5 archive.
 
-1. yearly 1-degree pentad ERA5-Land 0-1 m soil-moisture stacks;
-2. 2001-2019 1-degree pentad climate-driver stacks used for RF attribution;
-3. 1-degree MCD12C1 vegetation classes;
-4. if the event state machine is reproduced in GEE, annual flash/slow drought metric maps and compact event tables;
-5. manifests containing source collection, bands, date range, grid transform, units and export-task identifiers.
+## Google Drive organization
 
-Target grid for paper-scale reproduction is expected to be a global geographic 1-degree grid, but exact grid origin/mask must be verified against Code Ocean before G2 is marked PASS.
+See:
 
-## Important ERA5-Land catalog caveats
+```text
+docs/GOOGLE_DRIVE_WORKFLOW.md
+```
 
-- The GEE daily aggregate is derived from the hourly ERA5-Land asset.
-- Flow bands have the `_sum` suffix; non-flow bands are daily means.
-- `total_evaporation_sum` follows ECMWF sign convention: evaporation is normally negative.
-- The catalog documents occasional packing-related negative/large values in accumulated precipitation and related flow variables; validation/QC is required.
-- The catalog documents swapped values for three *component* evaporation bands. This project uses `total_evaporation_sum`, but the known-issues note remains part of provenance.
-- The daily aggregate starts at `1950-01-02` in the catalog. Exact first-day/date-label behavior must be validated before an exact 1950 pentad series is accepted.
+Drive project root already created:
 
-## Scripts
+```text
+FlashDrought_Guo2026_Reproduction
+```
 
-- `01_era5_land_prepare.js`: parameter-locked ERA5-Land spatial preprocessing and optional pentad export scaffold. Export execution is guarded until the paper's pentad/calendar convention is confirmed from Code Ocean.
-- `02_mcd12c1_prepare.js`: MCD12C1 1-degree mode-export scaffold. Final export is guarded until the exact land-cover year/map convention is confirmed.
+GEE staging folder already created:
 
-The guards are intentional. A convenient GEE workflow is not allowed to overwrite an unresolved author-method detail.
+```text
+FlashDrought_Guo2026_GEE_exports
+```
+
+After exports arrive, the workflow is:
+
+```text
+GEE staging -> metadata/QC -> cleaned analysis-ready store -> Source Data validation
+```
+
+Large GeoTIFF/NetCDF/Zarr products remain in Drive. GitHub stores scripts, manifests, logs, small tables and validation metrics.
+
+## Guard rules
+
+1. `exportEnabled` stays `false` until the smoke test passes.
+2. Do not substitute GEE GLDAS-2.2 for the full paper historical GLDAS contribution.
+3. Do not infer an MCD12C1 year silently; export and validate candidates.
+4. Do not claim exact author-package reproduction while Code Ocean remains inaccessible.
+5. Independent reconstruction may still reach PASS if its outputs match the official Source Data within documented tolerances and unresolved conventions are explicitly tested.
