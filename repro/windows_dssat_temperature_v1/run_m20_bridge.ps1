@@ -71,12 +71,20 @@ foreach ($label in @('M0','M19','M20')) {
   if ($LASTEXITCODE -ne 0) { throw "$label CMake configure failed." }
   & cmake --build $v.Build --parallel $BuildJobs
   if ($LASTEXITCODE -ne 0) { throw "$label build failed." }
-  & cmake --install $v.Build
-  if ($LASTEXITCODE -ne 0) { throw "$label install failed." }
+
+  # Upstream DSSAT v4.8.5 CMake install attempts to install Utilities/run_dssat,
+  # a Unix helper, and fails on native Windows even after dscsm048.exe links.
+  # The scientific executable is fully built at this point. Assemble the
+  # runtime explicitly from the built executable plus the frozen DSSAT data.
+  New-Item -ItemType Directory -Force -Path $v.Run | Out-Null
+  $builtExe = Get-ChildItem $v.Build -Recurse -Filter 'dscsm048.exe' | Select-Object -First 1
+  if (-not $builtExe) { throw "$label built dscsm048.exe not found under $($v.Build)" }
+  $runtimeExe = Join-Path $v.Run 'dscsm048.exe'
+  Copy-Item $builtExe.FullName $runtimeExe -Force
   Copy-Item (Join-Path $DataBase '*') $v.Run -Recurse -Force
-  $exe = Get-ChildItem $v.Run -Recurse -Filter 'dscsm048.exe' | Select-Object -First 1
-  if (-not $exe) { throw "$label dscsm048.exe not found under $($v.Run)" }
-  $v.Exe = $exe.FullName
+  if (-not (Test-Path $runtimeExe)) { throw "$label runtime dscsm048.exe assembly failed." }
+  $v.Exe = $runtimeExe
+  Write-Host "$label native Windows build PASS; runtime assembled at $($v.Run)"
 }
 
 Write-Host '=== Add identical Anningqu weather, soil and 10 maize scenarios ==='
@@ -126,7 +134,6 @@ function Run-Mode([string]$Mode) {
   }
 }
 
-# Natural-weather causal test.
 Run-Mode 'NATURAL'
 
 Write-Host '=== Create identical controlled +4 C Tmax / high-DTR weather in all arms ==='
@@ -141,7 +148,6 @@ foreach ($label in @('M0','M19','M20')) {
   }
 }
 
-# Controlled causal stress. All three variants receive the same modified daily input.
 Run-Mode 'STRESS_DTR4'
 
 $Compact = Join-Path $WorkRoot 'compact_results'
@@ -177,6 +183,7 @@ $manifest = [ordered]@{
   m20_stress_changed_scenarios = [int]$str20.changed_scenarios
   exact_cross_platform_equality_required = $false
   causal_bridge_gate = 'PASS'
+  windows_runtime_assembly = 'direct build executable plus frozen data; upstream Unix run_dssat install helper skipped'
 }
 $manifest | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $Compact 'manifest.json') -Encoding UTF8
 
