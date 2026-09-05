@@ -1,38 +1,42 @@
 #!/usr/bin/env python3
-"""Add a single K_RT-controlled hourly thermal crop-response layer to CERES-Maize.
+"""Add one K_RT-controlled hourly thermal crop-response layer to CERES-Maize.
 
-The frozen M15 temperature correction and its existing extreme-DTT propagation
-are left untouched. This patch only propagates the already-corrected hourly
-TGRO curve into existing CERES-Maize physiological temperature-response
-functions:
-  PRFT   : radiation-weighted hourly PRFTC response (photosynthesis)
-  RGFILL : 24-h mean hourly RGFIL response (grain filling)
-
-Runtime DSSAT_KRT in [0,1] blends the official daily response with the hourly
-response. DSSAT_KRT=0 must reproduce the frozen M15 binary scientifically.
+Frozen M15 temperature correction and its existing extreme-DTT propagation are
+left untouched. The patch propagates the already-corrected hourly TGRO curve
+into existing CERES-Maize PRFTC and/or RGFIL response functions. Runtime
+DSSAT_KRT in [0,1] blends official daily response with hourly response;
+DSSAT_KRT=0 is the exact-neutral scientific control.
 """
 from __future__ import annotations
-import argparse, re
+import argparse,re
 from pathlib import Path
+ENC="latin-1"
 
-ENC = "latin-1"
-
-
-def once(text, old, new, label):
+def once(text,old,new,label):
     n=text.count(old)
     if n!=1: raise SystemExit(f"{label}: expected 1 match, found {n}")
     return text.replace(old,new,1)
 
-
 def route_ceres(text):
+    # The frozen M15 extreme-DTT patch may already have routed TGRO. RADHR must
+    # therefore be tested independently; coupling the two tests caused V1 run 1
+    # to omit the RADHR declaration when TGRO was already present.
     if "      REAL            TGRO(TS)\n" not in text:
         text=once(text,"      REAL            TMAX        \n",
-                  "      REAL            TMAX        \n      REAL            TGRO(TS)\n      REAL            RADHR(TS)\n",
-                  "MZ_CERES hourly declarations")
+                  "      REAL            TMAX        \n      REAL            TGRO(TS)\n",
+                  "MZ_CERES TGRO declaration")
+    if "      REAL            RADHR(TS)\n" not in text:
+        text=once(text,"      REAL            TGRO(TS)\n",
+                  "      REAL            TGRO(TS)\n      REAL            RADHR(TS)\n",
+                  "MZ_CERES RADHR declaration")
     if "      TGRO   = WEATHER % TGRO\n" not in text:
         text=once(text,"      TMIN   = WEATHER % TMIN\n",
-                  "      TMIN   = WEATHER % TMIN\n      TGRO   = WEATHER % TGRO\n      RADHR  = WEATHER % RADHR\n",
-                  "MZ_CERES hourly transfer")
+                  "      TMIN   = WEATHER % TMIN\n      TGRO   = WEATHER % TGRO\n",
+                  "MZ_CERES TGRO transfer")
+    if "      RADHR  = WEATHER % RADHR\n" not in text:
+        text=once(text,"      TGRO   = WEATHER % TGRO\n",
+                  "      TGRO   = WEATHER % TGRO\n      RADHR  = WEATHER % RADHR\n",
+                  "MZ_CERES RADHR transfer")
     pat=re.compile(r"CALL MZ_GROSUB \(DYNAMIC, ISWITCH,.*?CropStatus\)",re.S)
     ms=list(pat.finditer(text))
     if not ms: raise SystemExit("MZ_CERES: no MZ_GROSUB blocks")
@@ -47,8 +51,7 @@ def route_ceres(text):
     print(f"Routed TGRO/RADHR through {len(ms)} MZ_GROSUB calls")
     return ''.join(out)
 
-
-def patch_grosub(text, mode):
+def patch_grosub(text,mode):
     sig="     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input\n"
     rep=("     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP,    !Input\n"
          "     &      TSEN, VegFrac,                                  !Input\n")
@@ -57,15 +60,13 @@ def patch_grosub(text, mode):
               "      REAL        TMAX        \n      REAL        TGRO(TS), RADHR(TS)\n",
               "MZ_GROSUB hourly declarations")
     marker="      REAL        PRFT        \n"
-    decl=(marker+
-          "      REAL        KRT_J, PRFT_DEF_J, PRFT_HR_J\n"
-          "      REAL        RGF_DEF_J, RGF_HR_J, RESP_J, RADSUM_J\n"
-          "      INTEGER     IHR_J, KRT_IOS_J\n"
-          "      CHARACTER*32 KRT_ENV_J\n")
-    text=once(text,marker,decl,"joint declarations")
-
+    text=once(text,marker,marker+
+              "      REAL        KRT_J, PRFT_DEF_J, PRFT_HR_J\n"
+              "      REAL        RGF_DEF_J, RGF_HR_J, RESP_J, RADSUM_J\n"
+              "      INTEGER     IHR_J, KRT_IOS_J\n"
+              "      CHARACTER*32 KRT_ENV_J\n","joint declarations")
     anchor="          TEMPM = (TMAX + TMIN)*0.5   !Mean air temperature, C\n"
-    env=anchor+"""
+    text=once(text,anchor,anchor+"""
 C         XJ JOINT THERMAL-CROP V1: one regional coefficient.
           KRT_J = 0.0
           KRT_ENV_J = ' '
@@ -75,14 +76,11 @@ C         XJ JOINT THERMAL-CROP V1: one regional coefficient.
             IF (KRT_IOS_J .NE. 0) KRT_J = 0.0
           ENDIF
           KRT_J = MIN(MAX(KRT_J,0.0),1.0)
-"""
-    text=once(text,anchor,env,"KRT runtime")
-
+""","KRT runtime")
     if mode in ("prft","both"):
         a="          PRFT = MIN(PRFT,1.0)\n"
-        code=a+"""
-C         Hourly PRFTC response, weighted by hourly radiation so night
-C         temperatures do not directly penalize daytime photosynthesis.
+        text=once(text,a,a+"""
+C         Radiation-weighted hourly PRFTC response.
           PRFT_DEF_J = PRFT
           IF (KRT_J .GT. 0.0) THEN
             PRFT_HR_J = 0.0
@@ -101,13 +99,11 @@ C         temperatures do not directly penalize daytime photosynthesis.
               PRFT = (1.0-KRT_J)*PRFT_DEF_J + KRT_J*PRFT_HR_J
             ENDIF
           ENDIF
-"""
-        text=once(text,a,code,"PRFT joint response")
-
+""","PRFT joint response")
     if mode in ("rgfill","both"):
         a="                  RGFILL = AMAX1(0.0,RGFILL)                          !\n"
-        code=a+"""
-C                 Hourly RGFIL response averaged over the full thermal day.
+        text=once(text,a,a+"""
+C                 Full-day hourly RGFIL response.
                   RGF_DEF_J = RGFILL
                   IF (KRT_J .GT. 0.0) THEN
                     RGF_HR_J = 0.0
@@ -120,18 +116,13 @@ C                 Hourly RGFIL response averaged over the full thermal day.
                     RGF_HR_J = RGF_HR_J/FLOAT(TS)
                     RGFILL = (1.0-KRT_J)*RGF_DEF_J + KRT_J*RGF_HR_J
                   ENDIF
-"""
-        text=once(text,a,code,"RGFILL joint response")
+""","RGFILL joint response")
     return text
 
-
 def main():
-    ap=argparse.ArgumentParser()
-    ap.add_argument("source_root",type=Path)
-    ap.add_argument("--mode",choices=["prft","rgfill","both"],required=True)
-    args=ap.parse_args()
-    cp=args.source_root/"Plant/CERES-Maize/MZ_CERES.for"
-    gp=args.source_root/"Plant/CERES-Maize/MZ_GROSUB.for"
+    ap=argparse.ArgumentParser(); ap.add_argument("source_root",type=Path)
+    ap.add_argument("--mode",choices=["prft","rgfill","both"],required=True); args=ap.parse_args()
+    cp=args.source_root/"Plant/CERES-Maize/MZ_CERES.for"; gp=args.source_root/"Plant/CERES-Maize/MZ_GROSUB.for"
     cer=cp.read_text(encoding=ENC); gro=gp.read_text(encoding=ENC)
     if "XJ JOINT THERMAL-CROP V1" in gro: raise SystemExit("joint patch already present")
     cer=route_ceres(cer); gro=patch_grosub(gro,args.mode)
