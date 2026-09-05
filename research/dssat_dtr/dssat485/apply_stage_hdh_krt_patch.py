@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Embed stage-specific hourly heat dose (HDH) and runtime K_RT in CERES-Maize.
 
-Stage 4: accumulate TGRO heat above 35 C and penalize GPP once at transition.
-Stage 5: penalize daily GROGRN using TGRO heat above 35 C.
+Stage 4: accumulate TGRO heat above 33 C and penalize GPP once at transition.
+Stage 5: penalize daily GROGRN using TGRO heat above 33 C.
 DSSAT_KRT=0 leaves crop equations unchanged and is required to close exactly.
 The patch tolerates the existing extreme-DTT TGRO coupling.
+
+The 33 C activation threshold is fixed from the official DSSAT v4.8.5
+CERES-Maize PRFTC upper-optimum point (6.2, 16.5, 33.0, 44.0). It is used as
+a physiological mechanism-screen threshold, not fitted as an additional
+regional parameter. The Xinjiang >35 C criterion remains a separate extreme-
+heat diagnostic rather than a fitted crop parameter.
 """
 from __future__ import annotations
 
@@ -112,7 +118,7 @@ C     XJ V2 HDH/KRT STAGE4: accumulated hourly reproductive heat dose.
         IF (KRT_IOS_H .NE. 0) KRT_H = 0.0
       ENDIF
       IF (KRT_H .GT. 0.0) THEN
-        TCRIT_H = 35.0
+        TCRIT_H = 33.0
         HDH_DAY4 = 0.0
         DO IHDH = 1, TS
           HDH_DAY4 = HDH_DAY4 + AMAX1(0.0,TGRO(IHDH)-TCRIT_H)
@@ -122,8 +128,6 @@ C     XJ V2 HDH/KRT STAGE4: accumulated hourly reproductive heat dose.
 """
     text = once(text, stage, code, "MZ_PHENOL ISTAGE4")
 
-    # Official v4.8.5.0 code clamps GPP with spaces and 51.0. Insert directly
-    # after that physiological kernel-number calculation and before barrenness.
     pattern = r"^(\s*GPP\s*=\s*AMAX1\s*\(GPP,51\.0\)\s*\n)"
     repl = (r"\1"
         "C           XJ V2 HDH/KRT: stage-4 heat acts on kernel number once.\n"
@@ -163,7 +167,7 @@ C                 XJ V2 HDH/KRT STAGE5: hourly heat reduces grain growth.
                     IF (KRT_IOS_H5 .NE. 0) KRT_H5 = 0.0
                   ENDIF
                   IF (KRT_H5 .GT. 0.0) THEN
-                    TCRIT_H5 = 35.0
+                    TCRIT_H5 = 33.0
                     W5_H = 0.5
                     HDH_DAY5 = 0.0
                     DO IHDH5 = 1, TS
@@ -195,7 +199,7 @@ def main() -> None:
     cp.write_text(ceres, encoding=ENC)
     pp.write_text(phenol, encoding=ENC)
     gp.write_text(grosub, encoding=ENC)
-    print("Applied V2 stage HDH/KRT patch: Tcrit=35 C, w4=1.0, w5=0.5")
+    print("Applied V2 stage HDH/KRT patch: Tcrit=33 C, w4=1.0, w5=0.5")
 
 
 if __name__ == "__main__":
