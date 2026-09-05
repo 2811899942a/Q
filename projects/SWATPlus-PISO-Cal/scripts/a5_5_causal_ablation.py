@@ -919,6 +919,7 @@ def aggregate_group(summaries: list[dict[str, Any]]) -> dict[str, Any]:
         mean_curve.append(float(np.mean([item["curve"][index] for item in summaries])))
     best = max((item["best_record"] for item in summaries), key=lambda item: item["mean_nse"])
     return {
+        "group": summaries[0]["group"],
         "n_seeds": len(summaries),
         "final_best_mean_nse_mean": float(np.mean(final)),
         "final_best_mean_nse_median": float(np.median(final)),
@@ -1185,6 +1186,7 @@ def build_gate(pre: dict[str, Any], new_ledger: dict[str, Any], statistics: dict
         "schema": "a5_5-causal-ablation-gate-v1",
         "stage": "A5_5_CAUSAL_ABLATION",
         "A5_5_GATE": "PASS" if new_complete and statistics is not None else "FAIL",
+        "causal_decisions": decisions,
         "ABLATION_RESULT": decisions["ABLATION_RESULT"],
         "REGION_GUIDANCE_VALUE": decisions["REGION_GUIDANCE_VALUE"],
         "AI_INFORMATION_VALUE": decisions["AI_INFORMATION_VALUE"],
