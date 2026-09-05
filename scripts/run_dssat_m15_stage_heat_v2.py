@@ -70,6 +70,10 @@ def make_runtime(src: Path, data: Path, runtime: Path):
         shutil.rmtree(runtime)
     shutil.copytree(data, runtime)
     shutil.copytree(src / "Data", runtime, dirs_exist_ok=True)
+    if not (runtime / "DSSATPRO.L48").exists():
+        raise FileNotFoundError(
+            "DSSATPRO.L48 missing after CMake configure; build official source before runtime copy"
+        )
     if not (runtime / "Maize" / "UFGA8201.MZX").exists():
         raise FileNotFoundError("UFGA8201.MZX missing")
 
@@ -215,11 +219,11 @@ def main():
     cases = out / "cases"
     cases.mkdir(exist_ok=True)
 
+    # M0 official baseline. CMake configure generates Data/DSSATPRO.L48,
+    # therefore the official source must be built before copying runtime Data.
+    exe0 = build_dssat(base, out / "build_m0")
     runtime = out / "runtime"
     make_runtime(base, data, runtime)
-
-    # M0 official baseline.
-    exe0 = build_dssat(base, out / "build_m0")
     install_exe(exe0, runtime)
     m0 = run_case(runtime, cases, "M0_official")
 
@@ -271,16 +275,16 @@ def main():
     ordered += [(f"M15_hourlyDTT_HDH_KRT={k:.3f}", combo[k]) for k in KRT_GRID]
     rows = [metric_row(label, path) for label, path in ordered]
 
+    base_rmse = next(r["HWAM_RMSE"] for r in rows if r["case"] == "M15_13p5")
+    dtt_rmse = next(r["HWAM_RMSE"] for r in rows if r["case"] == "M15_hourlyDTT")
+    for r in rows:
+        r["delta_vs_M15_pct"] = 100.0 * (base_rmse - r["HWAM_RMSE"]) / base_rmse
+
     csv_path = out / "m15_stage_heat_v2_screen.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
-
-    base_rmse = next(r["HWAM_RMSE"] for r in rows if r["case"] == "M15_13p5")
-    dtt_rmse = next(r["HWAM_RMSE"] for r in rows if r["case"] == "M15_hourlyDTT")
-    for r in rows:
-        r["delta_vs_M15_pct"] = 100.0 * (base_rmse - r["HWAM_RMSE"]) / base_rmse
 
     best_hdh = min((r for r in rows if r["case"].startswith("M15_HDH_KRT=") and not r["case"].endswith("0.000")), key=lambda x: x["HWAM_RMSE"])
     best_combo = min((r for r in rows if r["case"].startswith("M15_hourlyDTT_HDH_KRT=") and not r["case"].endswith("0.000")), key=lambda x: x["HWAM_RMSE"])
