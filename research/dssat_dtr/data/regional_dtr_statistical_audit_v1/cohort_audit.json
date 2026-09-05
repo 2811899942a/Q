@@ -1,0 +1,17 @@
+{
+  "rule": "frozen formal_dtr_c >= 15.0",
+  "computed_float_vs_formal_membership_disagreements": 8,
+  "max_abs_computed_vs_formal_DTR_C": 4.440892098500626e-15,
+  "groups": [
+    {
+      "group": "MaySep",
+      "n_records": 5917,
+      "n_dates": 748
+    },
+    {
+      "group": "DTR_GE15_FORMAL",
+      "n_records": 975,
+      "n_dates": 123
+    }
+  ]
+}

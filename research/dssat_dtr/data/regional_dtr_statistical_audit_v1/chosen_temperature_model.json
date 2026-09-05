@@ -1,0 +1,8 @@
+{
+  "model": "REG_SEASONAL_Q0",
+  "seasonal": true,
+  "q": 0.0,
+  "beta": 1.1085040032549534,
+  "CV_RMSE_C": 1.8910221954339166,
+  "CV_n": 2564
+}
