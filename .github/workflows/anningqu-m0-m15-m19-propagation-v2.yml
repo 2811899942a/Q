@@ -4,6 +4,7 @@ on:
     branches: [research/dssat-regional-dtr-joint-v1]
     paths:
       - 'research/dssat_dtr/dssat485/apply_m19_htemp_patch_2call.py'
+      - 'research/dssat_dtr/scripts/parse_m0_m15_m19_propagation.py'
       - '.github/workflows/anningqu-m0-m15-m19-propagation-v2.yml'
   workflow_dispatch:
 permissions:
@@ -80,67 +81,18 @@ jobs:
       - name: Parse propagation evidence
         run: |
           set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import csv,re,statistics
-          models=['M0','M15','M19']
-          scenarios=[f'ANQH{yy}{i:02d}' for yy in ('21','22') for i in range(1,6)]
-          dates={1:'Apr21',2:'Apr26',3:'May06',4:'May16',5:'May26'}
-          targets=['PDAT','EDAT','ADAT','MDAT','HDAT','CWAM','HWAM','HIAM','LAIX','NDCH','TMAXA','TMINA','SRADA','DAYLA','CRST']
-          def parse_summary(path):
-              lines=Path(path).read_text(errors='replace').splitlines()
-              hi=next(i for i,l in enumerate(lines) if l.startswith('@') and 'RUNNO' in l and 'HWAM' in l)
-              header=lines[hi]
-              starts=[x.start() for x in re.finditer(r'\S+',header)]
-              names=[x.group() for x in re.finditer(r'\S+',header)]
-              if names[0]=='@':names=names[1:];starts=starts[1:]
-              data=next(l for l in lines[hi+1:] if l.strip() and not l.startswith('!') and not l.startswith('@'))
-              out={}
-              for j,n in enumerate(names):
-                  a=starts[j];b=starts[j+1] if j+1<len(starts) else len(data)
-                  out[n]=data[a:b].strip()
-              return out
-          rows=[]
-          for sc in scenarios:
-              got={md:parse_summary(f'/tmp/results/{md}/{sc}_Summary.OUT') for md in models}
-              yy=2000+int(sc[4:6]);idx=int(sc[6:8])
-              r={'scenario':sc,'year':yy,'sowing':dates[idx]}
-              for md in models:
-                  for k in targets:r[f'{md}_{k}']=got[md].get(k,'')
-              for md in ('M15','M19'):
-                  for k in ['ADAT','MDAT','CWAM','HWAM','HIAM','LAIX']:
-                      try:r[f'{md}_minus_M0_{k}']=float(got[md][k])-float(got['M0'][k])
-                      except:r[f'{md}_minus_M0_{k}']=''
-              rows.append(r)
-          out=Path('research/dssat_dtr/data/anningqu/m19_source_propagation');out.mkdir(parents=True,exist_ok=True)
-          with (out/'m0_m15_m19_crop_outputs.csv').open('w',newline='',encoding='utf-8-sig') as f:
-              w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
-          def num(x):
-              try:return float(x)
-              except:return None
-          summary=[]
-          for md in ('M15','M19'):
-              dy=[num(r[f'{md}_minus_M0_HWAM']) for r in rows];dy=[x for x in dy if x is not None]
-              da=[num(r[f'{md}_minus_M0_ADAT']) for r in rows];da=[x for x in da if x is not None]
-              dm=[num(r[f'{md}_minus_M0_MDAT']) for r in rows];dm=[x for x in dm if x is not None]
-              changed=sum(1 for r in rows if any(abs(num(r.get(f'{md}_minus_M0_{k}')) or 0)>1e-9 for k in ['ADAT','MDAT','CWAM','HWAM','HIAM','LAIX']))
-              summary.append({'model':md,'scenarios':len(rows),'changed_scenarios':changed,'mean_delta_yield_kg_ha':statistics.mean(dy),'max_abs_delta_yield_kg_ha':max(abs(x) for x in dy),'mean_delta_anthesis_day':statistics.mean(da),'mean_delta_maturity_day':statistics.mean(dm)})
-          with (out/'propagation_summary.csv').open('w',newline='',encoding='utf-8-sig') as f:
-              w=csv.DictWriter(f,fieldnames=list(summary[0]));w.writeheader();w.writerows(summary)
-          mdout=['# Source-level DSSAT 4.8.5 M19 crop propagation','',
-              'All three arms use identical DSSAT data, Anningqu weather/soil, fixed proxy cultivar IB0035, sowing dates, WATER=N and NITRO=N. Only HTEMP source differs.','',
-              '|Model|Changed scenarios|Mean delta yield vs M0 (kg/ha)|Max abs delta yield (kg/ha)|Mean delta anthesis (d)|Mean delta maturity (d)|','|---|---:|---:|---:|---:|---:|']
-          for s in summary:mdout.append(f"|{s['model']}|{s['changed_scenarios']}/{s['scenarios']}|{s['mean_delta_yield_kg_ha']:.2f}|{s['max_abs_delta_yield_kg_ha']:.2f}|{s['mean_delta_anthesis_day']:.2f}|{s['mean_delta_maturity_day']:.2f}|")
-          mdout+=['','Interpretation: reproducible M19-M0 crop-output differences establish source-level propagation from regional HTEMP correction into CERES-Maize. Proxy-cultivar runs are a mechanism test, not observed-yield validation.']
-          (out/'README.md').write_text('\n'.join(mdout)+'\n',encoding='utf-8');print('\n'.join(mdout))
-          PY
+          python research/dssat_dtr/scripts/parse_m0_m15_m19_propagation.py \
+            --results-root /tmp/results \
+            --output-dir research/dssat_dtr/data/anningqu/m19_source_propagation
       - name: Upload complete audit outputs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: anningqu-m0-m15-m19-v2-${{ github.run_id }}
           path: |
             /tmp/results
             research/dssat_dtr/data/anningqu/m19_source_propagation
+          if-no-files-found: warn
           retention-days: 30
       - name: Commit compact propagation evidence
         run: |
