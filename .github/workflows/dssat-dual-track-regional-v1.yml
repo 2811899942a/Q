@@ -1,0 +1,62 @@
+name: DSSAT Dual Track Regional V1
+on:
+  push:
+    branches: [research/dssat-regional-dtr-joint-v1]
+    paths:
+      - '.github/workflows/dssat-dual-track-regional-v1.yml'
+      - 'research/dssat_dtr/scripts/dual_track_regional_v1.py'
+      - 'research/dssat_dtr/scripts/run_dual_track_regional_v1.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: dssat-dual-track-regional-v1
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-regional-dtr-joint-v1
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical and compiler dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+          python -m pip install numpy scipy
+      - name: Compile Python and run complete dual-track pilot
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile research/dssat_dtr/scripts/dual_track_regional_v1.py research/dssat_dtr/scripts/run_dual_track_regional_v1.py
+          python -u research/dssat_dtr/scripts/run_dual_track_regional_v1.py 2>&1 | tee /tmp/dual_track_console.log
+      - name: Show compact results and diagnostic log
+        if: always()
+        run: |
+          cat research/dssat_dtr/data/dual_track_regional_v1/README.md || true
+          cat research/dssat_dtr/data/dual_track_regional_v1/FAILED_TRACEBACK.txt || true
+          tail -n 100 research/dssat_dtr/data/dual_track_regional_v1/execution.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dssat-dual-track-regional-v1-${{ github.run_id }}
+          path: |
+            research/dssat_dtr/data/dual_track_regional_v1/
+            /tmp/dual_track_console.log
+          retention-days: 30
+          if-no-files-found: error
+      - name: Commit completed evidence, including negative scientific results
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/dual_track_regional_v1
+          if ! git diff --cached --quiet; then
+            git commit -m 'results(dssat): regional HTEMP and joint crop pilot evidence'
+            git push origin HEAD:research/dssat-regional-dtr-joint-v1
+          fi
