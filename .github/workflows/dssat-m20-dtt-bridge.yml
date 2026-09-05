@@ -1,0 +1,149 @@
+name: DSSAT M20 Hourly to DTT Bridge
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/dssat-regional-dtr-joint-v1]
+    paths:
+      - 'research/dssat_dtr/dssat485/apply_m20_dtt_bridge_patch.py'
+      - 'research/dssat_dtr/scripts/build_controlled_dtr_weather.py'
+      - 'research/dssat_dtr/scripts/parse_m0_m19_m20_bridge.py'
+      - '.github/workflows/dssat-m20-dtt-bridge.yml'
+permissions:
+  contents: write
+jobs:
+  bridge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-regional-dtr-joint-v1
+      - name: Install build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+      - name: Fetch frozen DSSAT 4.8.5 source and data
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/m0-os
+          git -C /tmp/m0-os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          git clone -q https://github.com/DSSAT/dssat-csm-data.git /tmp/base-data
+          git -C /tmp/base-data checkout -q 79cb5db71bbca186add92a6a9695866a09c8b51d
+          cp -a /tmp/m0-os /tmp/m19-os
+          cp -a /tmp/m0-os /tmp/m20-os
+      - name: Apply M19 and M20 source patches
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/dssat485/apply_m19_htemp_patch_2call.py /tmp/m19-os
+          python research/dssat_dtr/dssat485/apply_m19_htemp_patch_2call.py /tmp/m20-os
+          python research/dssat_dtr/dssat485/apply_m20_dtt_bridge_patch.py /tmp/m20-os
+          grep -q 'M20 bridge' /tmp/m20-os/Plant/CERES-Maize/MZ_PHENOL.for
+          grep -q 'TAIRHR = WEATHER % TAIRHR' /tmp/m20-os/Plant/CERES-Maize/MZ_CERES.for
+      - name: Build M0 M19 M20
+        run: |
+          set -euo pipefail
+          for V in m0 m19 m20; do
+            cmake -S /tmp/${V}-os -B /tmp/${V}-build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/${V}-run >/tmp/${V}-cmake.log
+            cmake --build /tmp/${V}-build --parallel 2 >>/tmp/${V}-cmake.log
+            cmake --install /tmp/${V}-build >>/tmp/${V}-cmake.log
+            cp -a /tmp/base-data/. /tmp/${V}-run/
+            test -x /tmp/${V}-run/dscsm048
+          done
+      - name: Add identical Anningqu inputs and experiments
+        run: |
+          set -euo pipefail
+          for V in m0 m19 m20; do
+            R=/tmp/${V}-run
+            cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2101.WTH "$R/Weather/ANQH2101.WTH"
+            cp research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH2201.WTH "$R/Weather/ANQH2201.WTH"
+            cp research/dssat_dtr/anningqu/AN.SOL "$R/Soil/AN.SOL"
+            python research/dssat_dtr/anningqu/build_stageA_propagation_experiments.py "$R/Maize/UFGA8201.MZX" "$R/Maize" >/dev/null
+          done
+      - name: Run natural weather A/B
+        run: |
+          set -euo pipefail
+          SCENS='ANQH2101 ANQH2102 ANQH2103 ANQH2104 ANQH2105 ANQH2201 ANQH2202 ANQH2203 ANQH2204 ANQH2205'
+          for SPEC in 'M0:m0' 'M19:m19' 'M20:m20'; do
+            LABEL=${SPEC%%:*}; V=${SPEC##*:}; DEST=/tmp/results/NATURAL/${LABEL}
+            mkdir -p "$DEST"
+            sudo rm -rf /DSSAT48; sudo ln -s /tmp/${V}-run /DSSAT48
+            cd /tmp/${V}-run/Maize
+            for X in $SCENS; do
+              rm -f Summary.OUT PlantGro.OUT Evaluate.OUT ERROR.OUT WARNING.OUT
+              ../dscsm048 A ${X}.MZX > "$DEST/${X}.stdout" 2>&1
+              test -s Summary.OUT; test -s PlantGro.OUT
+              cp Summary.OUT "$DEST/${X}_Summary.OUT"
+              cp PlantGro.OUT "$DEST/${X}_PlantGro.OUT"
+              if test -s ERROR.OUT; then cat ERROR.OUT; exit 1; fi
+            done
+          done
+      - name: Build identical controlled high-DTR weather in all arms
+        run: |
+          set -euo pipefail
+          for V in m0 m19 m20; do
+            for YY in 21 22; do
+              python research/dssat_dtr/scripts/build_controlled_dtr_weather.py \
+                research/dssat_dtr/data/anningqu/formal_ghcn_rain/ANQH${YY}01.WTH \
+                /tmp/${V}-run/Weather/ANQH${YY}01.WTH \
+                --delta-tmax 4.0 --start-doy 121 --end-doy 273
+            done
+          done
+      - name: Run controlled high-DTR A/B
+        run: |
+          set -euo pipefail
+          SCENS='ANQH2101 ANQH2102 ANQH2103 ANQH2104 ANQH2105 ANQH2201 ANQH2202 ANQH2203 ANQH2204 ANQH2205'
+          for SPEC in 'M0:m0' 'M19:m19' 'M20:m20'; do
+            LABEL=${SPEC%%:*}; V=${SPEC##*:}; DEST=/tmp/results/STRESS_DTR4/${LABEL}
+            mkdir -p "$DEST"
+            sudo rm -rf /DSSAT48; sudo ln -s /tmp/${V}-run /DSSAT48
+            cd /tmp/${V}-run/Maize
+            for X in $SCENS; do
+              rm -f Summary.OUT PlantGro.OUT Evaluate.OUT ERROR.OUT WARNING.OUT
+              ../dscsm048 A ${X}.MZX > "$DEST/${X}.stdout" 2>&1
+              test -s Summary.OUT; test -s PlantGro.OUT
+              cp Summary.OUT "$DEST/${X}_Summary.OUT"
+              cp PlantGro.OUT "$DEST/${X}_PlantGro.OUT"
+              if test -s ERROR.OUT; then cat ERROR.OUT; exit 1; fi
+            done
+          done
+      - name: Parse bridge evidence and enforce causal gate
+        run: |
+          set -euo pipefail
+          OUT=research/dssat_dtr/data/anningqu/m20_dtt_bridge
+          python research/dssat_dtr/scripts/parse_m0_m19_m20_bridge.py --results-root /tmp/results --output-dir "$OUT"
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+          p=Path('research/dssat_dtr/data/anningqu/m20_dtt_bridge/bridge_summary.csv')
+          rows=list(csv.DictReader(p.open(encoding='utf-8-sig')))
+          key={(r['mode'],r['model']):r for r in rows}
+          assert int(key[('NATURAL','M19')]['changed_scenarios']) == 0, key
+          assert int(key[('STRESS_DTR4','M19')]['changed_scenarios']) == 0, key
+          assert int(key[('STRESS_DTR4','M20')]['changed_scenarios']) >= 1, key
+          print('M20 causal bridge gate PASS')
+          PY
+      - name: Upload complete audit outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dssat-m20-dtt-bridge-${{ github.run_id }}
+          path: |
+            /tmp/results
+            /tmp/m0-cmake.log
+            /tmp/m19-cmake.log
+            /tmp/m20-cmake.log
+            research/dssat_dtr/data/anningqu/m20_dtt_bridge
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Commit compact M20 evidence
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/anningqu/m20_dtt_bridge
+          if ! git diff --cached --quiet; then
+            git commit -m 'results(dssat): M20 hourly-to-DTT bridge evidence'
+            git pull --rebase origin research/dssat-regional-dtr-joint-v1
+            git push origin HEAD:research/dssat-regional-dtr-joint-v1
+          fi
