@@ -1,0 +1,26 @@
+name: Shihezi Joint Patch Compile Debug
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/dssat-m15-joint-thermal-crop-v2]
+    paths: ['.github/workflows/shihezi-joint-patch-compile-debug.yml']
+permissions:
+  contents: read
+jobs:
+  debug:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-m15-joint-thermal-crop-v2
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+          git clone -q https://github.com/DSSAT/dssat-csm-os.git /tmp/os
+          git -C /tmp/os checkout -q 0b91373806786b600d89ccfcfff78fa2f82cb26b
+          python research/dssat_dtr/dssat485/apply_m15_htemp_patch.py /tmp/os
+          python research/dssat_dtr/dssat485/apply_m15_extreme_dtt_patch.py /tmp/os
+          python research/dssat_dtr/dssat485/apply_joint_hourly_crop_response.py /tmp/os --mode prft
+          cmake -S /tmp/os -B /tmp/build -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=/tmp/run
+          cmake --build /tmp/build --parallel 2
