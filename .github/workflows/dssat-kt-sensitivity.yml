@@ -1,0 +1,61 @@
+name: DSSAT KT Sensitivity Screen
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/dssat-kt-sensitivity
+    paths:
+      - '.github/workflows/dssat-kt-sensitivity.yml'
+      - 'scripts/run_dssat_kt_screen.py'
+      - 'scripts/validate_dssat_temperature_ab.py'
+      - 'results/DSSAT_UFGA8201_observed_targets.csv'
+
+permissions:
+  contents: read
+
+jobs:
+  kt-screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+
+      - name: Install compiler toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran cmake make
+
+      - name: Checkout official DSSAT v4.8.5.0 source and data
+        run: |
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-os.git _dssat_os
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git _dssat_data
+
+      - name: Build, run official closure, and screen KT
+        run: |
+          python3 scripts/run_dssat_kt_screen.py _dssat_os _dssat_data _kt_results 2>&1 | tee _kt_run.log
+
+      - name: Print sensitivity summary
+        if: always()
+        run: |
+          echo '--- KT run log tail ---'
+          tail -n 120 _kt_run.log || true
+          echo '--- KT summary CSV ---'
+          cat _kt_results/KT_screen_summary.csv || true
+
+      - name: Upload DSSAT KT outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dssat-kt-sensitivity-results
+          path: |
+            _kt_results/KT_screen_summary.csv
+            _kt_results/cases/**/Summary.OUT
+            _kt_results/cases/**/PlantGro.OUT
+            _kt_results/cases/**/Overview.OUT
+            _kt_results/cases/**/Evaluate.OUT
+            _kt_results/cases/**/WARNING.OUT
+            _kt_run.log
+          if-no-files-found: warn
+          retention-days: 30
