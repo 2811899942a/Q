@@ -1,0 +1,47 @@
+name: DSSAT One-off Shihezi Climatology Fetch
+on:
+  push:
+    branches: [research/dssat-regional-dtr-joint-v1]
+    paths:
+      - '.github/workflows/dssat-oneoff-shihezi-climatology.yml'
+permissions:
+  contents: read
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-regional-dtr-joint-v1
+      - name: Fetch frozen Shihezi 2000-2016 POWER climatology inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/shihezi_clim
+          URL='https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M_MAX,T2M_MIN,ALLSKY_SFC_SW_DWN&community=AG&longitude=85.9964&latitude=44.3244&start=20000101&end=20161231&format=JSON'
+          curl -fL --retry 3 --retry-delay 2 "$URL" -o /tmp/shihezi_clim/shihezi_power_2000_2016.json
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('/tmp/shihezi_clim/shihezi_power_2000_2016.json')
+          d=json.loads(p.read_text())
+          par=d['properties']['parameter']
+          keys=set(par['T2M_MAX']) & set(par['T2M_MIN']) & set(par['ALLSKY_SFC_SW_DWN'])
+          valid=[k for k in keys if par['T2M_MAX'][k]>-900 and par['T2M_MIN'][k]>-900 and par['ALLSKY_SFC_SW_DWN'][k]>-900]
+          assert min(valid).startswith('2000') and max(valid).startswith('2016')
+          Path('/tmp/shihezi_clim/manifest.txt').write_text(
+              'source=NASA POWER Daily API\n'
+              'location=44.3244N,85.9964E\n'
+              'period=2000-01-01..2016-12-31\n'
+              'parameters=T2M_MAX,T2M_MIN,ALLSKY_SFC_SW_DWN\n'
+              f'valid_days={len(valid)}\n'
+              f'sha256={hashlib.sha256(p.read_bytes()).hexdigest()}\n')
+          print(Path('/tmp/shihezi_clim/manifest.txt').read_text())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shihezi-power-climatology-${{ github.run_id }}
+          path: /tmp/shihezi_clim
+          retention-days: 3
+          if-no-files-found: error
