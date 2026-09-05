@@ -1,8 +1,0 @@
-{
-  "engineering": "COMPLETE",
-  "temperature_superiority_all_registered_CIs": false,
-  "crop_no_year_scenario_regression": false,
-  "representative_shape_checks_pass": true,
-  "release_promoted": false,
-  "independent_final_validation": "NOT_PERFORMED"
-}

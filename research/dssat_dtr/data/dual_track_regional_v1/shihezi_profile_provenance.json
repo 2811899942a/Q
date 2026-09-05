@@ -1,7 +1,0 @@
-{
-  "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M_MAX,T2M_MIN&community=AG&longitude=85.9964&latitude=44.3244&start=20000101&end=20161231&format=JSON&time-standard=LST",
-  "sha256": "37d319f01cb6215568e833d604ac45cb1cf4025085005d72587b851a72978b04",
-  "training_days": 2601,
-  "years": "2000-2016",
-  "source": "NASA POWER; consistent with reconstructed crop weather; not station observations"
-}
