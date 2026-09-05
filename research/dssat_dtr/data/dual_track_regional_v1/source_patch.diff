@@ -1,0 +1,352 @@
+--- a/Weather/HMET.for
++++ b/Weather/HMET.for
+@@ -36,7 +36,7 @@
+ C  Calls:     HANG, HTEMP, HRAD, FRACD, HPAR
+ C=======================================================================
+ 
+-      SUBROUTINE HMET(
++      SUBROUTINE HMET(DOY,
+      &    CLOUDS, DAYL, DEC, ISINB, PAR, REFHT,           !Input
+      &    SNDN, SNUP, S0N, SRAD, TDEW, TMAX,              !Input
+      &    TMIN, WINDHT, WINDSP, XLAT,                     !Input
+@@ -50,8 +50,9 @@
+                          ! parameters, hourly weather data.
+ !     TS defined in ModuleDefs.for
+       IMPLICIT NONE
+-      EXTERNAL HANG, HTEMP, VPSAT, HWIND, HRAD, FRACD, HPAR
+-      INTEGER H,NDAY
++      EXTERNAL HANG, HTEMP, HTEMP_DTRCLOUD, VPSAT, HWIND, HRAD,
++     &  FRACD, HPAR
++      INTEGER H,NDAY,DOY
+ 
+       REAL, DIMENSION(TS) :: AMTRH, AZZON, BETA, FRDIFP, FRDIFR, PARHR
+       REAL, DIMENSION(TS) :: RADHR, RHUMHR, TAIRHR, TGRO, WINDHR
+@@ -84,6 +85,12 @@
+         CALL HTEMP(
+      &    DAYL, HS, SNDN, SNUP, TMAX, TMIN,               !Input
+      &    TAIRHR(H))                                      !Output
++
++C       Urumqi high-DTR correction. Official HTEMP above is preserved and
++C       this routine returns immediately outside the calibrated regime.
++        CALL HTEMP_DTRCLOUD(DOY,
++     &    CLOUDS, DAYL, HS, SNDN, SNUP, TMAX, TMIN,        !Input
++     &    TAIRHR(H))                                      !In/Output
+ 
+         RH = VPSAT(TDEW) / VPSAT(TAIRHR(H)) * 100.0
+         RHUMHR(H) = MIN(RH,100.0)
+@@ -330,6 +337,99 @@
+ 
+ 
+ 
++
++C=======================================================================
++C  HTEMP_DTRCLOUD, Urumqi high-DTR extension to HTEMP.
++C  Keeps official Parton-Logan HTEMP unchanged outside a locally observed
++C  high-DTR regime and modifies the sunset anchor using DSSAT-native CLOUDS.
++C-----------------------------------------------------------------------
++C  Called by: HMET (after official HTEMP)
++C  Calls:     None
++C-----------------------------------------------------------------------
++C  Calibration/validation provenance:
++C    DTRC  = 14.8 C, primary Urumqi calibration period (2000-2016)
++C    ALPHA = 7.8094, dense Diwopu sunset-anchor calibration (2000-2016)
++C    Primary 51463 validation period (2017-2024) was not used to fit ALPHA.
++C=======================================================================
++
++      SUBROUTINE HTEMP_DTRCLOUD(
++     &    DOY,CLOUDS,DAYL,HS,SNDN,SNUP,TMAX,TMIN,TAIRHR)
++      IMPLICIT NONE
++      INTEGER DOY,KM,I,KU,IOS
++      REAL CLOUDS,DAYL,HS,SNDN,SNUP,TMAX,TMIN,TAIRHR
++      REAL KB,KQ,PM(366),PS(366),PE(366),MN,MX,TS0,TS1
++      REAL PI,EB,TT,TI,DR,DELTA,R,Z,KK,TH,AL
++      LOGICAL FIRST
++      CHARACTER*512 CF
++      SAVE FIRST,KM,KB,KQ,PM,PS,PE
++      DATA FIRST /.TRUE./
++      PARAMETER (PI=3.14159)
++      IF (FIRST) THEN
++        CF=' '
++        CALL GET_ENVIRONMENT_VARIABLE('DSSAT_KDTR_CONFIG',CF)
++        IF (LEN_TRIM(CF).EQ.0) STOP 81
++        OPEN(NEWUNIT=KU,FILE=TRIM(CF),STATUS='OLD',IOSTAT=IOS)
++        IF (IOS.NE.0) STOP 82
++        READ(KU,*,IOSTAT=IOS) KM,KB,KQ
++        IF (IOS.NE.0) STOP 83
++        DO I=1,366
++          READ(KU,*,IOSTAT=IOS) PM(I),PS(I),PE(I)
++          IF (IOS.NE.0.OR.PS(I).LE.0.) STOP 84
++        ENDDO
++        CLOSE(KU)
++        FIRST=.FALSE.
++      ENDIF
++      IF (KM.EQ.0) RETURN
++      DR=TMAX-TMIN
++      IF (DR.LE.0..OR.CLOUDS.LE.0.) RETURN
++      MN=SNUP+1.
++      MX=MN+DAYL/2.+2.
++      TS0=TMIN+DR*SIN(.5*PI*(SNDN-MN)/(MX-MN))
++      IF (KM.EQ.1.OR.KM.EQ.2) THEN
++        TH=13.8
++        AL=6.7498
++        IF (KM.EQ.1) THEN
++          TH=13.5
++          AL=6.4080
++        ENDIF
++        IF (DR.LE.TH) RETURN
++        DELTA=AL*(DR-TH)*CLOUDS
++      ELSE IF (KM.EQ.3) THEN
++        I=MIN(MAX(DOY,1),366)
++        IF (PE(I).LE.0.) RETURN
++        Z=(DR-PM(I))/PS(I)
++        KK=1.-EXP(-KB*MIN(MAX(CLOUDS,0.),1.)*MAX(Z-KQ,0.))
++        DELTA=(TS0-TMIN)*KK
++      ELSE
++        STOP 85
++      ENDIF
++      TS1=MAX(TMIN,TS0-DELTA)
++      IF (HS.GT.MX.AND.HS.LE.SNDN) THEN
++        IF (ABS(TMAX-TS0).GT.1.E-6) THEN
++          R=MIN(MAX((TMAX-TAIRHR)/(TMAX-TS0),0.),1.)
++          TAIRHR=TMAX-(TMAX-TS1)*R
++        ENDIF
++      ELSE IF (HS.GT.SNDN.OR.HS.LT.MN) THEN
++        EB=EXP(-2.2)
++        TI=(TMIN-TS1*EB)/(1.-EB)
++        TT=HS-SNDN
++        IF (HS.LT.MN) TT=24.+HS-SNDN
++        TAIRHR=TI+(TS1-TI)*EXP(-2.2*TT/(25.-DAYL))
++      ENDIF
++      END SUBROUTINE HTEMP_DTRCLOUD
++C=======================================================================
++! HTEMP_DTRCLOUD Variables
++!-----------------------------------------------------------------------
++! ALPHA     Dense-station sunset correction coefficient
++! CLOUDS    DSSAT relative cloudiness factor (0-1)
++! DTR       Daily temperature range (C)
++! DTRC      Urumqi high-DTR trigger (C)
++! DTS       Reduction applied to official sunset-temperature anchor (C)
++! TS0       Official Parton-Logan sunset temperature (C)
++! TS1       Corrected sunset temperature, constrained not below TMIN (C)
++C=======================================================================
++
++
+ C=======================================================================
+ C  HRAD, Subroutine, N.B. Pickering, 03/19/91
+ C  Computes total hourly solar radiation (Spitters, 1986).
+--- a/Weather/weathr.for
++++ b/Weather/weathr.for
+@@ -294,7 +294,7 @@
+       ENDIF
+ 
+ C     Calculate hourly weather data.
+-      CALL HMET(
++      CALL HMET(DOY,
+      &    CLOUDS, DAYL, DEC, ISINB, PAR, REFHT,           !Input
+      &    SNDN, SNUP, S0N, SRAD, TDEW, TMAX,              !Input
+      &    TMIN, WINDHT, WINDSP, XLAT,                     !Input
+@@ -428,7 +428,7 @@
+       ENDIF      
+       
+ C     Calculate hourly weather data.
+-      CALL HMET(
++      CALL HMET(DOY,
+      &    CLOUDS, DAYL, DEC, ISINB, PAR, REFHT,           !Input
+      &    SNDN, SNUP, S0N, SRAD, TDEW, TMAX,              !Input
+      &    TMIN, WINDHT, WINDSP, XLAT,                     !Input
+--- a/Plant/CERES-Maize/MZ_CERES.for
++++ b/Plant/CERES-Maize/MZ_CERES.for
+@@ -169,6 +169,8 @@
+       REAL            TLNO 
+       REAL            TMIN    
+       REAL            TMAX        
++      REAL            TGRO(TS)
++      REAL            RADHR(TS)
+       REAL            TOPWT      
+       REAL            TRWUP     
+       REAL            TSEN     
+@@ -266,6 +268,8 @@
+       SRAD   = WEATHER % SRAD
+       TMAX   = WEATHER % TMAX
+       TMIN   = WEATHER % TMIN
++      TGRO   = WEATHER % TGRO
++      RADHR  = WEATHER % RADHR
+       TWILEN = WEATHER % TWILEN
+ 
+       DATA MZSTGNAM /
+@@ -322,7 +326,7 @@
+           IF(MODEL(1:5).EQ.'MZCER'.OR.MODEL(1:5).EQ.'SWCER') THEN
+             CALL MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,             !C
+      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+-     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
++     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN,TGRO,TWILEN,              !I
+      &    XN,YRDOY,YRSIM,                                         !I
+      &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+@@ -346,7 +350,7 @@
+      &      FracRts, ISTAGE, KG2PPM, LL, NLAYR, NH4, NO3, P3, !Input
+      &      PLTPOP, PPLTD, RLV, RTDEP, RUE, SAT, SeedFrac,    !Input
+      &      SHF, SLPF, SPi_AVAIL, SRAD, STGDOY, SUMDTT, SW,   !Input
+-     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
++     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
+      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
+      &      YRDOY, YRPLT, SKi_Avail,                          !Input
+      &      EARS, GPP, MDATE,                                 !I/O
+@@ -478,7 +482,7 @@
+           IF(MODEL(1:5).EQ.'MZCER'.OR.MODEL(1:5).EQ.'SWCER') THEN
+             CALL MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,             !C
+      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+-     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
++     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN,TGRO,TWILEN,              !I
+      &    XN,YRDOY,YRSIM,                                         !I
+      &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+@@ -499,7 +503,7 @@
+      &      FracRts, ISTAGE, KG2PPM, LL, NLAYR, NH4, NO3, P3, !Input
+      &      PLTPOP, PPLTD, RLV, RTDEP, RUE, SAT, SeedFrac,    !Input
+      &      SHF, SLPF, SPi_AVAIL, SRAD, STGDOY, SUMDTT, SW,   !Input
+-     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
++     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
+      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
+      &      YRDOY, YRPLT, SKi_Avail,                          !Input
+      &      EARS, GPP, MDATE,                                 !I/O
+@@ -637,7 +641,7 @@
+             IF(MODEL(1:5).EQ.'MZCER'.OR.MODEL(1:5).EQ.'SWCER') THEN
+               CALL MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,             !C
+      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+-     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
++     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN,TGRO,TWILEN,              !I
+      &    XN,YRDOY,YRSIM,                                         !I
+      &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+@@ -663,7 +667,7 @@
+      &      FracRts, ISTAGE, KG2PPM, LL, NLAYR, NH4, NO3, P3, !Input
+      &      PLTPOP, PPLTD, RLV, RTDEP, RUE, SAT, SeedFrac,    !Input
+      &      SHF, SLPF, SPi_AVAIL, SRAD, STGDOY, SUMDTT, SW,   !Input
+-     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
++     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
+      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
+      &      YRDOY, YRPLT, SKi_Avail,                          !Input
+      &      EARS, GPP, MDATE,                                 !I/O
+@@ -764,7 +768,7 @@
+      &      FracRts, ISTAGE, KG2PPM, LL, NLAYR, NH4, NO3, P3, !Input
+      &      PLTPOP, PPLTD, RLV, RTDEP, RUE, SAT, SeedFrac,    !Input
+      &      SHF, SLPF, SPi_AVAIL, SRAD, STGDOY, SUMDTT, SW,   !Input
+-     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
++     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
+      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
+      &      YRDOY, YRPLT, SKi_Avail,                          !Input
+      &      EARS, GPP, MDATE,                                 !I/O
+@@ -872,7 +876,7 @@
+      &      FracRts, ISTAGE, KG2PPM, LL, NLAYR, NH4, NO3, P3, !Input
+      &      PLTPOP, PPLTD, RLV, RTDEP, RUE, SAT, SeedFrac,    !Input
+      &      SHF, SLPF, SPi_AVAIL, SRAD, STGDOY, SUMDTT, SW,   !Input
+-     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
++     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
+      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
+      &      YRDOY, YRPLT, SKi_Avail,                          !Input
+      &      EARS, GPP, MDATE,                                 !I/O
+--- a/Plant/CERES-Maize/MZ_PHENOL.for
++++ b/Plant/CERES-Maize/MZ_PHENOL.for
+@@ -21,7 +21,7 @@
+ !----------------------------------------------------------------------
+       SUBROUTINE MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,           !C
+      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+-     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
++     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN,TGRO,TWILEN,              !I
+      &    XN,YRDOY,YRSIM,                                         !I
+      &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+@@ -132,6 +132,7 @@
+       REAL            TH             
+       REAL            TLNO           
+       REAL            TMAX           
++      REAL            TGRO(TS)
+       REAL            TMIN           
+       REAL            TMSOIL         
+       REAL            TNSOIL         
+@@ -492,7 +493,8 @@
+           ELSEIF (TMIN .LT. TBASE .OR. TMAX .GT. DOPT) THEN
+               DTT = 0.0
+               DO I = 1, 24
+-                  TH = (TMAX+TMIN)/2. + (TMAX-TMIN)/2. * SIN(3.14/12.*I)
++                  ! M15-XJ EXTREME-DTT: use HMET hourly temperature on existing extreme branch
++                  TH = TGRO(I)
+                   IF (TH .LT. TBASE) THEN
+                       TH = TBASE
+                   ENDIF
+--- a/Plant/CERES-Maize/MZ_GROSUB.for
++++ b/Plant/CERES-Maize/MZ_GROSUB.for
+@@ -44,7 +44,8 @@
+      &      FracRts, ISTAGE, KG2PPM, LL, NLAYR, NH4, NO3, P3, !Input
+      &      PLTPOP, PPLTD, RLV, RTDEP, RUE, SAT, SeedFrac,    !Input
+      &      SHF, SLPF, SPi_AVAIL, SRAD, STGDOY, SUMDTT, SW,   !Input
+-     &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
++     &      SWIDOT, TLNO, TGRO, RADHR, TMAX, TMIN, TRWUP,    !Input
++     &      TSEN, VegFrac,                                  !Input
+      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
+      &      YRDOY, YRPLT, SKi_Avail,                          !Input
+      &      EARS, GPP, MDATE,                                 !I/O
+@@ -219,6 +220,10 @@
+       REAL        PORMIN
+       REAL        PPLTD 
+       REAL        PRFT        
++      REAL        KRT_J, PRFT_DEF_J, PRFT_HR_J
++      REAL        RGF_DEF_J, RGF_HR_J, RESP_J, RADSUM_J
++      INTEGER     IHR_J, KRT_IOS_J
++      CHARACTER*32 KRT_ENV_J
+       REAL        PTF         
+       REAL        RANC        
+       REAL        RANCE
+@@ -297,6 +302,7 @@
+       REAL        TI         
+       REAL        TLNO        
+       REAL        TMAX        
++      REAL        TGRO(TS), RADHR(TS)
+       REAL        TMNC        
+       REAL        TNLAB
+       REAL        TMIN        
+@@ -1021,6 +1027,16 @@
+       
+           TEMPM = (TMAX + TMIN)*0.5   !Mean air temperature, C
+ 
++C         XJ JOINT THERMAL-CROP V1: one regional coefficient.
++          KRT_J = 0.0
++          KRT_ENV_J = ' '
++          CALL GET_ENVIRONMENT_VARIABLE('DSSAT_KRT',KRT_ENV_J)
++          IF (LEN_TRIM(KRT_ENV_J) .GT. 0) THEN
++            READ(KRT_ENV_J,*,IOSTAT=KRT_IOS_J) KRT_J
++            IF (KRT_IOS_J .NE. 0) KRT_J = 0.0
++          ENDIF
++          KRT_J = MIN(MAX(KRT_J,0.0),1.0)
++
+           !-------------------------------------------------------------
+           !           Compute critical nitrogen contents
+           !-------------------------------------------------------------
+@@ -1150,6 +1166,26 @@
+           PRFT = CURV('LIN',PRFTC(1),PRFTC(2),PRFTC(3),PRFTC(4),TAVGD)
+           PRFT  = AMAX1 (PRFT,0.0)
+           PRFT = MIN(PRFT,1.0)
++
++C         Radiation-weighted hourly PRFTC response.
++          PRFT_DEF_J = PRFT
++          IF (KRT_J .GT. 0.0) THEN
++            PRFT_HR_J = 0.0
++            RADSUM_J = 0.0
++            DO IHR_J = 1, TS
++              IF (RADHR(IHR_J) .GT. 0.0) THEN
++                RESP_J = CURV('LIN',PRFTC(1),PRFTC(2),PRFTC(3),
++     &                        PRFTC(4),TGRO(IHR_J))
++                RESP_J = MIN(MAX(RESP_J,0.0),1.0)
++                PRFT_HR_J = PRFT_HR_J + RADHR(IHR_J)*RESP_J
++                RADSUM_J = RADSUM_J + RADHR(IHR_J)
++              ENDIF
++            ENDDO
++            IF (RADSUM_J .GT. 1.0E-8) THEN
++              PRFT_HR_J = PRFT_HR_J/RADSUM_J
++              PRFT = (1.0-KRT_J)*PRFT_DEF_J + KRT_J*PRFT_HR_J
++            ENDIF
++          ENDIF
+ 
+ !**************************************************************************
+ !**************************************************************************

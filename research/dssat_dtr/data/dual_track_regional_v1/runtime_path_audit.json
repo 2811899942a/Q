@@ -1,0 +1,8 @@
+{
+  "working_directory": "/tmp/dssat_dual_v1_s30egzz1/run_DUAL/Maize",
+  "profile_source": "/tmp/dssat_dual_v1_s30egzz1/run_DUAL/DSSATPRO.L48",
+  "profile_local": "/tmp/dssat_dual_v1_s30egzz1/run_DUAL/Maize/DSSATPRO.L48",
+  "profile_sha256": "06890bb280b54ffbcbd7e7feb3d298c73bdeecb62423589602c0659fd3c9572d",
+  "weather_files_present": true,
+  "pathd_rule": "Current-directory profile precedes executable-directory profile"
+}
