@@ -1,0 +1,134 @@
+{
+  "schema": "a5_5-causal-ablation-prereg-v1",
+  "stage": "A5_5_CAUSAL_ABLATION",
+  "status": "FROZEN_BEFORE_A6_RESULT_REVIEW",
+  "created_at_utc": "2026-09-05T10:18:00.8542903Z",
+  "git_commit_at_freeze": "f0fe3a3ec86b98a688a958487a614c6513bf5da1",
+  "baseline_short": "f0fe3a3",
+  "a2_region_sha256": "b118b549611cf9c065090d1617267ccfa66d86f5f204628a0566393ea3e76d2d",
+  "scientific_question": [
+    "Does the frozen A2 region provide value beyond a single A2-centre point warm start?",
+    "Does the frozen A2 region provide value beyond a generic 16-point global initialization?"
+  ],
+  "existing_arms_reused_without_recalculation": {
+    "DDS_GLOBAL": {
+      "source": "A5 formal results.csv",
+      "seeds": [20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912, 20260913, 20260914, 20260915],
+      "evaluations_per_seed": 250,
+      "definition": "standard sequential DDS over complete formal normalized [0,1]^14"
+    },
+    "DDS_SOFT_AI": {
+      "source": "A5 formal results.csv",
+      "seeds": [20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912, 20260913, 20260914, 20260915],
+      "evaluations_per_seed": 250,
+      "definition": "evaluation 1 frozen A2 centre; evaluations 2-16 frozen A2-region samples; evaluation 17 onward standard sequential DDS over complete formal normalized [0,1]^14"
+    },
+    "DDS_HARD_AI": {
+      "source": "A3 mechanism evidence only",
+      "use": "auxiliary explanation; not pooled with the ten-seed confirmatory comparisons",
+      "interpretation": "hard restriction can suppress global correction"
+    }
+  },
+  "new_arms": {
+    "DDS_POINT_AI": {
+      "seeds": [20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912, 20260913, 20260914, 20260915],
+      "evaluations_per_seed": 250,
+      "evaluation_1": "frozen A2 centre",
+      "evaluation_2_to_250": "standard sequential DDS over complete formal normalized [0,1]^14",
+      "sigma": 0.2,
+      "objective_for_eval_1": "one fresh Real-SWAT development evaluation",
+      "history_warm_start": false,
+      "interpretation": "AI point prior to global DDS"
+    },
+    "DDS_RANDOM_SOFT": {
+      "seeds": [20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912, 20260913, 20260914, 20260915],
+      "evaluations_per_seed": 250,
+      "evaluation_1_to_16": "deterministic scrambled Sobol design, 16 points, 14 dimensions, seed equal to paired seed, normalized [0,1]^14 then mapped to complete formal bounds",
+      "evaluation_17_to_250": "standard sequential DDS over complete formal normalized [0,1]^14 using the best development objective among evaluations 1-16 as incumbent",
+      "sobol_implementation": "scipy.stats.qmc.Sobol(d=14, scramble=true, seed=paired_seed).random_base2(m=4)",
+      "a2_centre_used": false,
+      "a2_region_used": false,
+      "transformer_or_ridge_used": false,
+      "historical_best_theta_used": false,
+      "a5_results_used": false,
+      "sigma": 0.2,
+      "interpretation": "16-point generic global initialization to DDS"
+    }
+  },
+  "fairness": {
+    "paired_seeds": [20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912, 20260913, 20260914, 20260915],
+    "all_arms": ["DDS_GLOBAL", "DDS_POINT_AI", "DDS_RANDOM_SOFT", "DDS_SOFT_AI"],
+    "development_period": ["2003-01-01", "2016-12-31"],
+    "warmup_period": ["2000-01-01", "2002-12-31"],
+    "swatplus_revision": "62.0.0",
+    "gauges": ["01605500", "01606000", "01606500"],
+    "formal_parameter_dimension": 14,
+    "formal_parameter_ranges": "frozen A5/A0 parameter_bounds.csv",
+    "dds_sigma": 0.2,
+    "objective": "A5 formal development objective: three-station mean NSE",
+    "new_real_swat_evaluations": {
+      "DDS_POINT_AI": 2500,
+      "DDS_RANDOM_SOFT": 2500,
+      "total": 5000
+    },
+    "validation_feedback_to_candidates": false,
+    "method_tuning_after_observing_results": false
+  },
+  "primary_metrics": {
+    "anytime_auc": {
+      "curve": "development best-so-far mean NSE at every evaluation 1-250",
+      "integral": "trapezoidal integral over evaluations 1-250",
+      "normalization": "divide by 249 evaluations",
+      "nodes_reported": [25, 50, 100, 150, 200, 250]
+    },
+    "thresholds": [0.5, 0.52, 0.54, 0.55],
+    "paired_statistics": "ten paired seeds; mean, median, sample standard deviation, paired delta, deterministic bootstrap 95% CI, and wins/ties"
+  },
+  "bootstrap": {
+    "samples": 20000,
+    "resample_unit": "paired seed",
+    "seeds": {
+      "POINT_MINUS_GLOBAL_AUC": 2026091901,
+      "SOFT_MINUS_POINT_AUC": 2026091902,
+      "RANDOM_MINUS_GLOBAL_AUC": 2026091903,
+      "SOFT_MINUS_RANDOM_AUC": 2026091904,
+      "POINT_MINUS_GLOBAL_FINAL": 2026091905,
+      "SOFT_MINUS_POINT_FINAL": 2026091906,
+      "RANDOM_MINUS_GLOBAL_FINAL": 2026091907,
+      "SOFT_MINUS_RANDOM_FINAL": 2026091908
+    }
+  },
+  "causal_decisions": {
+    "REGION_GUIDANCE_VALUE": {
+      "CONFIRMED": "SOFT_AI minus POINT_AI paired AUC mean > 0 and bootstrap 95% CI lower bound > 0",
+      "SUPPORTED": "paired AUC mean > 0 and bootstrap 95% CI crosses 0",
+      "NOT_SUPPORTED": "otherwise"
+    },
+    "AI_INFORMATION_VALUE": {
+      "CONFIRMED": "SOFT_AI minus RANDOM_SOFT paired AUC mean > 0 and bootstrap 95% CI lower bound > 0",
+      "SUPPORTED": "paired AUC mean > 0 and bootstrap 95% CI crosses 0",
+      "NOT_SUPPORTED": "otherwise"
+    },
+    "POINT_WARMSTART_VALUE": "report DDS_POINT_AI minus DDS_GLOBAL paired AUC and final-best comparison; do not use this comparison to retune any arm",
+    "soft_ai_final_no_stable_degradation": "paired final-best mean delta is not below -0.005 and its bootstrap 95% CI is not wholly below zero",
+    "ABLATION_RESULT": {
+      "STRONG": "REGION_GUIDANCE_VALUE=CONFIRMED and AI_INFORMATION_VALUE=CONFIRMED and SOFT_AI 250-evaluation final accuracy has no stable degradation",
+      "PARTIAL": "at least one of the two values is CONFIRMED, or both are SUPPORTED",
+      "NONE": "otherwise"
+    }
+  },
+  "data_boundary": {
+    "validation_read": false,
+    "final_test_read": false,
+    "allowed_observations": "2003-2016 development only",
+    "forbidden_period": "2021-01-01 through 2024-12-31 final test"
+  },
+  "recovery_and_integrity": {
+    "ledger": "per-evaluation formal results ledger",
+    "after_successful_evaluation": ["write formal result", "flush/fsync", "atomic checkpoint", "atomic heartbeat"],
+    "checkpoint_protocol": "write temp, fsync, atomic rename",
+    "resume_protocol": "formal ledger-only deterministic no-SWAT replay; never rerun completed evaluations",
+    "bios_driver_power_changes": false,
+    "maximum_active_swat_processes": 6
+  }
+}
