@@ -1,0 +1,24 @@
+{
+  "model": "M19_regional_anomaly_threshold",
+  "parameter_name": "K_RT",
+  "parameter_definition": "seasonally standardized DTR anomaly threshold (SD)",
+  "K_RT": 1.4,
+  "K_RT_screen_bounds": [
+    -2.0,
+    3.0
+  ],
+  "Kt0": 0.7,
+  "P_TARGET": 20.0,
+  "gain_scale": 0.25,
+  "response": "S=1-exp(-E/gain_scale); q_new=(1-S)q+S*q**P_TARGET",
+  "E": "max(z_DTR-K_RT,0)*max(Kt0-Kt,0)/0.1",
+  "calibration_best": {
+    "K_RT": 1.4,
+    "gain_scale": 0.25,
+    "cal_all_rmse": 2.394598708376031,
+    "cal_high_rmse": 5.302980877848949,
+    "cal_all_bias": 0.43467354651782747,
+    "cal_high_bias": 1.2755157648842872
+  },
+  "closure_max_abs_c_at_K_RT_99": 0.0
+}
