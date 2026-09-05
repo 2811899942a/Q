@@ -1,0 +1,39 @@
+name: DSSAT M19 Anningqu Activation Diagnostic
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/dssat-regional-dtr-joint-v1]
+    paths:
+      - 'research/dssat_dtr/scripts/diagnose_m19_anningqu_activation.py'
+      - '.github/workflows/dssat-m19-anningqu-activation.yml'
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: research/dssat-regional-dtr-joint-v1
+      - name: Diagnose M19 trigger days
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/scripts/diagnose_m19_anningqu_activation.py
+          cat research/dssat_dtr/data/anningqu/m19_activation_diagnostic/activation_summary.csv
+      - name: Upload activation audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: m19-anningqu-activation-${{ github.run_id }}
+          path: research/dssat_dtr/data/anningqu/m19_activation_diagnostic
+          retention-days: 30
+      - name: Commit compact diagnostic
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/anningqu/m19_activation_diagnostic
+          if ! git diff --cached --quiet; then
+            git commit -m 'results(dssat): M19 Anningqu activation diagnostic'
+            git pull --rebase origin research/dssat-regional-dtr-joint-v1
+            git push origin HEAD:research/dssat-regional-dtr-joint-v1
+          fi
