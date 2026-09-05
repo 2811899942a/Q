@@ -1,0 +1,5 @@
+﻿mode,model,scenarios,changed_scenarios,mean_delta_yield_kg_ha,max_abs_delta_yield_kg_ha,min_delta_yield_kg_ha,max_delta_yield_kg_ha,mean_delta_anthesis_day,mean_delta_maturity_day
+NATURAL,M19,10,0,0.0,0.0,0.0,0.0,0.0,0.0
+NATURAL,M20,10,10,-0.5,4.0,-4.0,1.0,0.0,0.0
+STRESS_DTR4,M19,10,0,0.0,0.0,0.0,0.0,0.0,0.0
+STRESS_DTR4,M20,10,10,-9.8,224.0,-224.0,208.0,0.0,0.2
