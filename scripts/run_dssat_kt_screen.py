@@ -9,6 +9,7 @@ the official DSSAT 4.8.5 baseline?
 from __future__ import annotations
 
 import csv
+import math
 import os
 import shutil
 import subprocess
@@ -18,7 +19,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 sys.path.insert(0, str(HERE))
-from validate_dssat_temperature_ab import load_sim, load_observed, metrics, date_error_days  # noqa: E402
+from validate_dssat_temperature_ab import load_observed, metrics, date_error_days  # noqa: E402
 
 KT_GRID = [-0.75, -0.50, -0.25, 0.0, 0.25, 0.50, 0.75, 1.00]
 
@@ -54,8 +55,6 @@ def make_runtime(src: Path, data: Path, runtime: Path, exe: Path):
     if runtime.exists():
         shutil.rmtree(runtime)
     shutil.copytree(data, runtime)
-    # Source Data contains model support/configuration files. Overlay it on the
-    # experimental-data checkout, matching the layout documented by DSSAT.
     shutil.copytree(src / 'Data', runtime, dirs_exist_ok=True)
     shutil.copy2(exe, runtime / 'dscsm048')
     os.chmod(runtime / 'dscsm048', 0o755)
@@ -125,16 +124,61 @@ def patch_kt(src: Path):
     print(f'Patched {path}', flush=True)
 
 
+def load_summary(path: Path):
+    """Parse DSSAT Summary.OUT, preserving multiword TNAM fields."""
+    lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
+    header = None
+    out = []
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith('@'):
+            h = line.split()
+            if h and h[0] == '@':
+                h = h[1:]
+            header = [x.lstrip('@').upper() for x in h]
+            continue
+        if line.startswith('*') or line.startswith('!') or header is None or 'HWAM' not in header:
+            continue
+        parts = line.split()
+        if len(parts) < len(header):
+            continue
+        extra = len(parts) - len(header)
+        if extra:
+            tnam_idx = next((i for i, x in enumerate(header) if x.startswith('TNAM')), None)
+            if tnam_idx is None:
+                continue
+            parts = parts[:tnam_idx] + [' '.join(parts[tnam_idx:tnam_idx + extra + 1])] + parts[tnam_idx + extra + 1:]
+        if len(parts) != len(header):
+            continue
+        row = dict(zip(header, parts))
+        try:
+            out.append({
+                'treatment': int(float(row['TRNO'])),
+                'HWAM': float(row['HWAM']),
+                'ADAT': int(float(row['ADAT'])),
+                'MDAT': int(float(row['MDAT'])),
+            })
+        except (KeyError, ValueError):
+            continue
+    dedup = {r['treatment']: r for r in out}
+    parsed = [dedup[k] for k in sorted(dedup)]
+    if len(parsed) != 6:
+        raise ValueError(f'Expected 6 UFGA8201 treatments in {path}, parsed {len(parsed)}: {sorted(dedup)}')
+    return parsed
+
+
 def metric_row(label, summary, observed):
-    sim = {r['treatment']: r for r in load_sim(summary)}
+    sim = {r['treatment']: r for r in load_summary(summary)}
     trts = sorted(observed)
     hw_o = [observed[t]['HWAM'] for t in trts]
     hw_s = [sim[t]['HWAM'] for t in trts]
     hw = metrics(hw_o, hw_s)
     adat = [date_error_days(sim[t]['ADAT'], observed[t]['ADAT']) for t in trts]
     mdat = [date_error_days(sim[t]['MDAT'], observed[t]['MDAT']) for t in trts]
-    adat_abs = [abs(x) for x in adat if x == x]
-    mdat_abs = [abs(x) for x in mdat if x == x]
+    adat_abs = [abs(x) for x in adat if not (isinstance(x, float) and math.isnan(x))]
+    mdat_abs = [abs(x) for x in mdat if not (isinstance(x, float) and math.isnan(x))]
     return {
         'case': label,
         'HWAM_bias': hw['bias'], 'HWAM_MAE': hw['mae'], 'HWAM_RMSE': hw['rmse'], 'HWAM_d': hw['d'],
@@ -153,13 +197,11 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     observed = load_observed(REPO / 'results' / 'DSSAT_UFGA8201_observed_targets.csv')
 
-    # 1) Unmodified official v4.8.5 baseline.
     exe = build_dssat(src, out / 'build_official')
     runtime = out / 'runtime'
     make_runtime(src, data, runtime, exe)
     official_summary = run_case(runtime, out / 'cases', None)
 
-    # 2) Inject KT, rebuild, and verify KT=0 closure before screening.
     patch_kt(src)
     exe_kt = build_dssat(src, out / 'build_kt')
     shutil.copy2(exe_kt, runtime / 'dscsm048')
@@ -172,8 +214,8 @@ def main():
         summaries[kt] = s
         rows.append(metric_row(f'KT={kt:+.2f}', s, observed))
 
-    official = {r['treatment']: r for r in load_sim(official_summary)}
-    zero = {r['treatment']: r for r in load_sim(summaries[0.0])}
+    official = {r['treatment']: r for r in load_summary(official_summary)}
+    zero = {r['treatment']: r for r in load_summary(summaries[0.0])}
     fields = ['HWAM', 'ADAT', 'MDAT']
     closure = all(official[t][f] == zero[t][f] for t in official for f in fields)
 
