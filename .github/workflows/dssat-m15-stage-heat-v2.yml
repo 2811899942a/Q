@@ -1,0 +1,66 @@
+name: DSSAT M15 Stage Heat V2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/dssat-m15-hourly-heat-v2
+    paths:
+      - '.github/workflows/dssat-m15-stage-heat-v2.yml'
+      - 'scripts/run_dssat_m15_stage_heat_v2.py'
+      - 'research/dssat_dtr/dssat485/apply_m15_htemp_patch.py'
+      - 'research/dssat_dtr/dssat485/apply_m15_frozen_patch.py'
+      - 'research/dssat_dtr/dssat485/apply_extreme_dtt_tgro_patch.py'
+      - 'research/dssat_dtr/dssat485/apply_stage_hdh_krt_patch.py'
+
+permissions:
+  contents: read
+
+jobs:
+  stage-heat-v2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout V2 branch
+        uses: actions/checkout@v4
+
+      - name: Install compiler toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran cmake make
+
+      - name: Checkout official DSSAT 4.8.5 source and data
+        run: |
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-os.git _dssat_os
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git _dssat_data
+
+      - name: Run source-level V2 mechanism screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /DSSAT48
+          sudo ln -s "$GITHUB_WORKSPACE/_v2_results/runtime" /DSSAT48
+          python3 scripts/run_dssat_m15_stage_heat_v2.py \
+            _dssat_os _dssat_data _v2_results 2>&1 | tee _v2_run.log
+
+      - name: Print V2 result table
+        if: always()
+        run: |
+          echo '--- V2 log tail ---'
+          tail -n 180 _v2_run.log || true
+          echo '--- V2 CSV ---'
+          cat _v2_results/m15_stage_heat_v2_screen.csv || true
+
+      - name: Upload V2 outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dssat-m15-stage-heat-v2-results
+          path: |
+            _v2_results/m15_stage_heat_v2_screen.csv
+            _v2_results/cases/**/Summary.OUT
+            _v2_results/cases/**/PlantGro.OUT
+            _v2_results/cases/**/WARNING.OUT
+            _v2_run.log
+          if-no-files-found: warn
+          retention-days: 30
