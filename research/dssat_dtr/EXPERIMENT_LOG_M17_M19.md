@@ -167,19 +167,77 @@ Causal test design:
 - STRESS_DTR4: identical controlled weather in all three arms, with TMAX +4 C during DOY 121-273 to force a stronger high-DTR causal test
 - 5 sowing dates x 2 years per arm and weather mode
 
-Workflow: `DSSAT M20 Hourly to DTT Bridge`, run `33956296856`.
-Final compile/run/gate metrics must be appended only after the workflow reaches a terminal state.
+Workflow `DSSAT M20 Hourly to DTT Bridge`, run **33956296856: SUCCESS**.
 
-## Windows reproduction assets
+Execution audit:
+- exact frozen source/data fetched successfully;
+- M0/M19/M20 independently patched and compiled;
+- NATURAL: 30/30 DSSAT runs completed;
+- STRESS_DTR4: 30/30 DSSAT runs completed;
+- total: **60/60 DSSAT crop runs**;
+- Summary.OUT / PlantGro.OUT parsed and raw outputs retained;
+- causal gate PASS.
+
+NATURAL result:
+- M19 vs M0: 0/10 changed scenarios;
+- M20 vs M0: **10/10 changed scenarios**;
+- M20 mean yield delta: **-0.5 kg/ha**;
+- M20 max absolute yield delta: **4 kg/ha**;
+- mean anthesis delta: 0 d;
+- mean maturity delta: 0 d.
+
+STRESS_DTR4 result:
+- M19 vs M0: 0/10 changed scenarios;
+- M20 vs M0: **10/10 changed scenarios**;
+- M20 mean yield delta: **-9.8 kg/ha**;
+- yield delta range: **-224 to +208 kg/ha**;
+- max absolute yield delta: **224 kg/ha**;
+- mean anthesis delta: 0 d;
+- mean maturity delta: **+0.2 d**.
+
+Representative controlled-stress cases:
+- 2021-04-21 sowing: +138 kg/ha;
+- 2021-04-26 sowing: +208 kg/ha;
+- 2022-04-26 sowing: -224 kg/ha;
+- 2022-05-16 sowing: -202 kg/ha and maturity +1 d.
+
+Interpretation boundary: the controlled +4 C Tmax weather is a causal stress experiment and the crop is a fixed proxy cultivar. The positive/negative yield directions are not regional impact estimates. The mechanistic conclusion is that M19 hourly thermal information becomes reproducibly visible in CERES-Maize only after the neutral M20 DTT bridge.
+
+Decision: **M19 + M20 is the current core innovation architecture.** M17b remains the temperature-fit performance benchmark. Publication-level improvement claims await real Xinjiang target-cultivar phenology/yield validation.
+
+## E20-WIN — native Windows reproduction audit
 
 Folder: `repro/windows_dssat_temperature_v1/`
 
-Tracked files include:
-- `environment_check.ps1`
-- `requirements.txt`
-- `run_temperature_only.ps1`
-- `run_full_crop_ab.ps1`
-- `parse_crop_ab.py`
-- `README_WINDOWS.md`
+Canonical Windows entry:
+- `run_m20_bridge.ps1`
 
-Reproduction philosophy: exact Linux/Windows floating-point equality is secondary. Required invariants are the same formula/parameter definition, neutral closure, physical validity, successful DSSAT source compilation/execution, and reproducible propagation direction into crop outputs. The Windows full-source route is being upgraded from the obsolete M0/M15/M19 crop gate to the M0/M19/M20 bridge gate after E20 Linux CI is finalized.
+Legacy `run_full_crop_ab.ps1` now forwards to the M20 bridge route so future local runs do not accidentally use the obsolete HTEMP-only crop gate.
+
+First native Windows GitHub Actions run: **33956557399, FAILURE at runtime installation stage**.
+
+What passed before failure:
+- Windows Server 2022 runner;
+- Python 3.12.10 / CMake 3.31.6 / Git 2.55.0;
+- MinGW gfortran 16.1.0 and mingw32-make detected;
+- exact DSSAT source/data clone and checkout;
+- M19 source patch PASS;
+- M20 source patch PASS;
+- M0 CMake configure PASS;
+- M0 native Windows Fortran compile reached 100% and linked `dscsm048.exe` successfully.
+
+Failure:
+- official upstream `cmake --install` attempted to install `Utilities/run_dssat`, a Unix helper, and Windows CMake reported it could not install that helper even though the scientific executable had already linked.
+
+Fix committed:
+- skip upstream Unix-helper install on native Windows;
+- retain normal CMake configure/build;
+- copy the successfully built `dscsm048.exe` directly into each variant runtime directory;
+- copy the exact frozen DSSAT data tree into that runtime;
+- preserve the source-patched Windows `STDPATH` so each executable points at its own M0/M19/M20 runtime;
+- then execute the same 60-run NATURAL/STRESS_DTR4 causal gate.
+
+Fix commit: `315d2272a99607d3759d0f4281a9d562e04023a9`.
+Second Windows workflow run: `33956729437` (terminal outcome to be appended after completion).
+
+Reproduction philosophy: exact Linux/Windows floating-point equality is secondary. Required invariants are the same formula/parameter definition, neutral closure, physical validity, successful DSSAT source compilation/execution, and reproducible propagation direction into crop outputs.
