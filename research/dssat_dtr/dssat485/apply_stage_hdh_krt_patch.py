@@ -122,16 +122,17 @@ C     XJ V2 HDH/KRT STAGE4: accumulated hourly reproductive heat dose.
 """
     text = once(text, stage, code, "MZ_PHENOL ISTAGE4")
 
-    anchor = "            GPP = AMAX1(GPP,51.)\n"
-    code = anchor + """
-C           XJ V2 HDH/KRT: stage-4 heat acts on kernel number once.
-            IF (KRT_H .GT. 0.0 .AND. HDH4 .GT. 0.0) THEN
-              W4_H = 1.0
-              FHEAT4 = EXP(-KRT_H*W4_H*HDH4/24.0)
-              GPP = GPP * FHEAT4
-            ENDIF
-"""
-    return once(text, anchor, code, "MZ_PHENOL GPP heat")
+    # Official v4.8.5.0 code clamps GPP with spaces and 51.0. Insert directly
+    # after that physiological kernel-number calculation and before barrenness.
+    pattern = r"^(\s*GPP\s*=\s*AMAX1\s*\(GPP,51\.0\)\s*\n)"
+    repl = (r"\1"
+        "C           XJ V2 HDH/KRT: stage-4 heat acts on kernel number once.\n"
+        "            IF (KRT_H .GT. 0.0 .AND. HDH4 .GT. 0.0) THEN\n"
+        "              W4_H = 1.0\n"
+        "              FHEAT4 = EXP(-KRT_H*W4_H*HDH4/24.0)\n"
+        "              GPP = GPP * FHEAT4\n"
+        "            ENDIF\n")
+    return regex_once(text, pattern, repl, "MZ_PHENOL GPP heat")
 
 
 def patch_grosub(text: str) -> str:
