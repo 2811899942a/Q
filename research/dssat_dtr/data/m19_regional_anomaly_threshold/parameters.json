@@ -20,5 +20,6 @@
     "cal_all_bias": 0.43467354651782747,
     "cal_high_bias": 1.2755157648842872
   },
-  "closure_max_abs_c_at_K_RT_99": 0.0
+  "closure_max_abs_c_at_K_RT_99": 0.0,
+  "source_propagation_trigger": "2026-09-05"
 }
