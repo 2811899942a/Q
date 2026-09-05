@@ -40,7 +40,12 @@ def find_exe(build: Path) -> Path:
 def build_dssat(src: Path, build: Path) -> Path:
     if build.exists():
         shutil.rmtree(build)
-    run(['cmake', '-S', str(src), '-B', str(build), '-DCMAKE_BUILD_TYPE=RELEASE', '-DCMAKE_Fortran_COMPILER=gfortran'])
+    run([
+        'cmake', '-S', str(src), '-B', str(build),
+        '-DCMAKE_BUILD_TYPE=RELEASE',
+        '-DCMAKE_Fortran_COMPILER=gfortran',
+        '-DCMAKE_INSTALL_PREFIX=/DSSAT48',
+    ])
     run(['cmake', '--build', str(build), '-j', '2'])
     return find_exe(build)
 
