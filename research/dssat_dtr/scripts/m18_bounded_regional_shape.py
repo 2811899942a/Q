@@ -21,6 +21,14 @@ P_MAX is a structural hyperparameter selected only by 2000-2016 leave-one-year-
 out CV together with q and Kt0. Only K_RT is continuously fitted for the region.
 The convex blend keeps q_new in [0,1], preserves Tmin/Tmax anchors, and preserves
 monotonicity when the official branch is monotonic.
+
+Implementation note
+-------------------
+For fixed q/Kt0/P_MAX the prediction is linear in K_RT:
+    T_new = T_official + K_RT * delta
+Therefore the least-squares optimum has a closed-form solution and is clipped to
+[0,1]. This removes thousands of redundant scalar optimizations and is exactly
+suited to native Windows reproduction.
 """
 from __future__ import annotations
 
@@ -31,7 +39,6 @@ import math
 from pathlib import Path
 
 import numpy as np
-from scipy.optimize import minimize_scalar
 
 HERE = Path(__file__).resolve()
 spec = importlib.util.spec_from_file_location(
@@ -57,42 +64,46 @@ def write(name, rows):
 
 
 def bounded_gain(e):
-    """Monotone bounded exposure activation in [0,1)."""
     return e / (1.0 + e) if e > 0 else 0.0
 
 
-def pred(r, prof, q, kt0, pmax, krt):
-    br, qt, lo, hi = m.segment(r)
+def static_segment(r):
+    """Cache the geometry of the official HTEMP shoulder once per observation."""
+    if "_seg" not in r:
+        r["_seg"] = m.segment(r)
+    return r["_seg"]
+
+
+def delta_for_unit_krt(r, prof, q, kt0, pmax):
+    """Return T(K_RT=1)-T(K_RT=0); prediction is affine in K_RT."""
+    br, qt, lo, hi = static_segment(r)
     if br == "none":
-        return r["p0"]
+        return 0.0
     e = m.exposure(r, prof, q, kt0)
     if e <= 0:
-        return r["p0"]
+        return 0.0
     g = bounded_gain(e)
-    s = min(max(krt * g, 0.0), 1.0)
     qtarget = qt ** pmax
-    qnew = (1.0 - s) * qt + s * qtarget
-    return lo + (hi - lo) * qnew
+    return (hi - lo) * g * (qtarget - qt)
+
+
+def pred(r, prof, q, kt0, pmax, krt):
+    return r["p0"] + krt * delta_for_unit_krt(r, prof, q, kt0, pmax)
 
 
 def fit_krt(rows, prof, q, kt0, pmax):
-    active = [
-        r for r in rows
-        if m.segment(r)[0] != "none" and m.exposure(r, prof, q, kt0) > 0
-    ]
-    if not active:
+    """Closed-form bounded least squares for the single regional coefficient."""
+    num = 0.0
+    den = 0.0
+    for r in rows:
+        d = delta_for_unit_krt(r, prof, q, kt0, pmax)
+        if abs(d) <= 1e-15:
+            continue
+        num += d * (r["obs"] - r["p0"])
+        den += d * d
+    if den <= 1e-15:
         return 0.0
-
-    def loss(krt):
-        return m.mean([
-            (pred(r, prof, q, kt0, pmax, krt) - r["obs"]) ** 2
-            for r in active
-        ])
-
-    z = minimize_scalar(
-        loss, bounds=KBOUND, method="bounded", options={"xatol": 1e-7}
-    )
-    return float(z.x)
+    return min(max(num / den, KBOUND[0]), KBOUND[1])
 
 
 def metrics(rows, pf):
@@ -108,9 +119,22 @@ def metrics(rows, pf):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     rows, daily = m.enrich()
+    for r in rows:
+        static_segment(r)
     cal = [r for r in rows if r["year"] <= 2016]
     val = [r for r in rows if r["year"] >= 2017]
     years = sorted(set(r["year"] for r in cal))
+
+    # Cache folds and their regional climatology once; only q/Kt0/P_MAX vary.
+    folds = []
+    for y in years:
+        train_years = set(years) - {y}
+        folds.append((
+            y,
+            [r for r in cal if r["year"] != y],
+            [r for r in cal if r["year"] == y],
+            m.profile(daily, train_years),
+        ))
 
     # Structural selection is calibration-only leave-one-year-out CV.
     cv = []
@@ -119,14 +143,12 @@ def main():
             for pmax in PMAXGRID:
                 held = []
                 fold_ks = []
-                for y in years:
-                    tr = [r for r in cal if r["year"] != y]
-                    te = [r for r in cal if r["year"] == y]
-                    pf = m.profile(daily, set(years) - {y})
-                    krt = fit_krt(tr, pf, q, kt0, pmax)
+                for y, tr, te, pfold in folds:
+                    krt = fit_krt(tr, pfold, q, kt0, pmax)
                     fold_ks.append(krt)
-                    for r in te:
-                        held.append((r, pred(r, pf, q, kt0, pmax, krt)))
+                    held.extend(
+                        (r, pred(r, pfold, q, kt0, pmax, krt)) for r in te
+                    )
                 ee = [p - r["obs"] for r, p in held]
                 high = [(r, p) for r, p in held if r["formal_dtr"] >= 15]
                 cv.append({
@@ -147,7 +169,6 @@ def main():
     official_cal_rmse = metrics(cal, lambda r: r["p0"])["rmse"]
     feasible = [x for x in cv if x["cv_all_rmse"] <= official_cal_rmse + 1e-12]
     pool = feasible if feasible else cv
-    # Primary objective remains high-DTR error; then overall error, then simpler shape.
     best = min(
         pool,
         key=lambda x: (
@@ -207,12 +228,13 @@ def main():
 
     # Calibration sensitivity curve of the single regional coefficient.
     sens = []
+    high_cal = [r for r in cal if r["formal_dtr"] >= 15]
     for kg in [i / 20 for i in range(21)]:
         fn = lambda r, kk=kg: pred(
             r, pf, best["q"], best["kt0"], best["pmax"], kk
         )
         a = metrics(cal, fn)
-        h = metrics([r for r in cal if r["formal_dtr"] >= 15], fn)
+        h = metrics(high_cal, fn)
         sens.append({
             "krt": kg,
             "cal_all_rmse": a["rmse"],
@@ -230,6 +252,7 @@ def main():
     pars = {
         "model": "M18_bounded_regional_shape",
         "formula": "q_new=(1-S)*q_temp+S*q_temp**P_MAX; S=K_RT*E/(1+E)",
+        "solver": "closed_form_bounded_least_squares",
         "q": best["q"],
         "kt0": best["kt0"],
         "pmax": best["pmax"],
@@ -249,14 +272,13 @@ def main():
         c["below"] > 1e-6 or c["above"] > 1e-6 or c["rise_bad"] or c["fall_bad"]
         for c in checks
     )
-    # Idea-feasibility gate: beat locked physical M15 benchmark and preserve physics.
     gate = na["rmse"] < 2.7962 and nh["rmse"] < 4.6344 and bad == 0
     interior = krt < 0.995
     annual_pairs = {}
     for r in byyear:
         annual_pairs.setdefault(r["year"], {})[r["model"]] = r["rmse"]
     annual_wins = sum(
-        1 for _, x in annual_pairs.items()
+        1 for x in annual_pairs.values()
         if "OFFICIAL" in x and "M18" in x and x["M18"] < x["OFFICIAL"]
     )
     annual_total = sum(
@@ -274,6 +296,7 @@ Selected using **2000-2016 leave-one-year-out CV only**:
 - Kt0 = {best['kt0']}
 - structural P_MAX = {best['pmax']}
 - final regional K_RT = {krt:.8f}
+- solver = closed-form bounded least squares
 - CV all/high-DTR RMSE = {best['cv_all_rmse']:.4f} / {best['cv_high_rmse']:.4f} C
 - CV folds at K_RT boundary >=0.995 = {best['boundary_fold_count']}
 
