@@ -1,0 +1,62 @@
+name: DSSAT M15 Focused KRT Screen
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/dssat-m15-hourly-heat-v2
+    paths:
+      - '.github/workflows/dssat-m15-krt-focused.yml'
+      - 'scripts/run_dssat_m15_krt_focused.py'
+      - 'research/dssat_dtr/dssat485/apply_stage_hdh_krt_patch.py'
+      - 'research/dssat_dtr/dssat485/apply_m15_frozen_patch.py'
+
+permissions:
+  contents: read
+
+jobs:
+  focused-krt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout V2 branch
+        uses: actions/checkout@v4
+
+      - name: Install compiler toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran cmake make
+
+      - name: Checkout official DSSAT 4.8.5 source and data
+        run: |
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-os.git _dssat_os
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git _dssat_data
+
+      - name: Run focused M15 HDH33 KRT screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /DSSAT48
+          sudo ln -s "$GITHUB_WORKSPACE/_focused_results/runtime" /DSSAT48
+          python3 scripts/run_dssat_m15_krt_focused.py \
+            _dssat_os _dssat_data _focused_results 2>&1 | tee _focused_run.log
+
+      - name: Print focused result table
+        if: always()
+        run: |
+          tail -n 160 _focused_run.log || true
+          cat _focused_results/m15_krt_focused_screen.csv || true
+
+      - name: Upload focused outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dssat-m15-krt-focused-results
+          path: |
+            _focused_results/m15_krt_focused_screen.csv
+            _focused_results/cases/**/Summary.OUT
+            _focused_results/cases/**/PlantGro.OUT
+            _focused_results/cases/**/WARNING.OUT
+            _focused_run.log
+          if-no-files-found: warn
+          retention-days: 30
