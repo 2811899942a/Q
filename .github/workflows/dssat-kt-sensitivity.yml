@@ -33,7 +33,11 @@ jobs:
           git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git _dssat_data
 
       - name: Build, run official closure, and screen KT
+        shell: bash
         run: |
+          set -euo pipefail
+          sudo rm -rf /DSSAT48
+          sudo ln -s "$GITHUB_WORKSPACE/_kt_results/runtime" /DSSAT48
           python3 scripts/run_dssat_kt_screen.py _dssat_os _dssat_data _kt_results 2>&1 | tee _kt_run.log
 
       - name: Print sensitivity summary
