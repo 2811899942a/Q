@@ -1,0 +1,67 @@
+name: Shihezi Joint Thermal Crop V1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/dssat-m15-joint-thermal-crop-v2
+    paths:
+      - '.github/workflows/shihezi-joint-thermal-crop-v1.yml'
+      - 'research/dssat_dtr/scripts/run_shihezi_joint_thermal_crop_v1.py'
+      - 'research/dssat_dtr/dssat485/apply_joint_hourly_crop_response.py'
+
+permissions:
+  contents: write
+
+jobs:
+  joint-screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout joint branch
+        uses: actions/checkout@v4
+        with:
+          ref: research/dssat-m15-joint-thermal-crop-v2
+          fetch-depth: 0
+
+      - name: Install DSSAT build dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y gfortran cmake make
+
+      - name: Run same-Shihezi joint thermal crop screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python research/dssat_dtr/scripts/run_shihezi_joint_thermal_crop_v1.py 2>&1 | tee /tmp/shihezi_joint_v1.log
+
+      - name: Print result
+        if: always()
+        run: |
+          cat research/dssat_dtr/data/shihezi_real_case/joint_thermal_crop_v1/README.md || true
+          tail -n 120 /tmp/shihezi_joint_v1.log || true
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shihezi-joint-thermal-crop-v1-results
+          path: |
+            research/dssat_dtr/data/shihezi_real_case/joint_thermal_crop_v1/**
+            /tmp/shihezi_joint_v1.log
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Commit successful result tables
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/dssat_dtr/data/shihezi_real_case/joint_thermal_crop_v1
+          if ! git diff --cached --quiet; then
+            git commit -m 'results(dssat): add Shihezi joint thermal crop V1 screen'
+            git pull --rebase origin research/dssat-m15-joint-thermal-crop-v2
+            git push origin HEAD:research/dssat-m15-joint-thermal-crop-v2
+          fi
