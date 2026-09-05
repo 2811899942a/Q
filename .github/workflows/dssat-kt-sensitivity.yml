@@ -1,4 +1,4 @@
-name: DSSAT KT Sensitivity Screen
+name: DSSAT Temperature Sensitivity Screens
 
 on:
   workflow_dispatch:
@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/dssat-kt-sensitivity.yml'
       - 'scripts/run_dssat_kt_screen.py'
+      - 'scripts/run_dssat_temperature_component_screen.py'
       - 'scripts/validate_dssat_temperature_ab.py'
       - 'results/DSSAT_UFGA8201_observed_targets.csv'
 
@@ -17,7 +18,7 @@ permissions:
 jobs:
   kt-screen:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - name: Checkout research branch
         uses: actions/checkout@v4
@@ -27,12 +28,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gfortran cmake make
 
-      - name: Checkout official DSSAT v4.8.5.0 source and data
+      - name: Phase 1 - checkout official DSSAT v4.8.5.0 source and data
         run: |
           git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-os.git _dssat_os
           git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git _dssat_data
 
-      - name: Build, run official closure, and screen KT
+      - name: Phase 1 - build, closure, and KT screen
         shell: bash
         run: |
           set -euo pipefail
@@ -40,26 +41,37 @@ jobs:
           sudo ln -s "$GITHUB_WORKSPACE/_kt_results/runtime" /DSSAT48
           python3 scripts/run_dssat_kt_screen.py _dssat_os _dssat_data _kt_results 2>&1 | tee _kt_run.log
 
-      - name: Print sensitivity summary
+      - name: Phase 2 - fresh official source and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-os.git _dssat_os_p2
+          git clone --depth 1 --branch v4.8.5.0 https://github.com/DSSAT/dssat-csm-data.git _dssat_data_p2
+          sudo rm -rf /DSSAT48
+          sudo ln -s "$GITHUB_WORKSPACE/_component_results/runtime" /DSSAT48
+          python3 scripts/run_dssat_temperature_component_screen.py _dssat_os_p2 _dssat_data_p2 _component_results 2>&1 | tee _component_run.log
+
+      - name: Print sensitivity summaries
         if: always()
         run: |
-          echo '--- KT run log tail ---'
-          tail -n 120 _kt_run.log || true
-          echo '--- KT summary CSV ---'
+          echo '--- KT summary ---'
+          tail -n 80 _kt_run.log || true
           cat _kt_results/KT_screen_summary.csv || true
+          echo '--- Component summary ---'
+          tail -n 120 _component_run.log || true
+          cat _component_results/temperature_component_screen.csv || true
 
-      - name: Upload DSSAT KT outputs
+      - name: Upload DSSAT temperature outputs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dssat-kt-sensitivity-results
+          name: dssat-temperature-sensitivity-results
           path: |
             _kt_results/KT_screen_summary.csv
             _kt_results/cases/**/Summary.OUT
-            _kt_results/cases/**/PlantGro.OUT
-            _kt_results/cases/**/Overview.OUT
-            _kt_results/cases/**/Evaluate.OUT
-            _kt_results/cases/**/WARNING.OUT
+            _component_results/temperature_component_screen.csv
+            _component_results/cases/**/Summary.OUT
             _kt_run.log
+            _component_run.log
           if-no-files-found: warn
           retention-days: 30
